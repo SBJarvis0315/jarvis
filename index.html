@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J.A.R.V.I.S.</title>
+<style>
+  :root {
+    --bg: #030a14;
+    --bg-panel: rgba(8, 22, 36, 0.72);
+    --line: rgba(82, 229, 255, 0.18);
+    --line-strong: rgba(82, 229, 255, 0.45);
+    --cyan: #52e5ff;
+    --cyan-dim: #1ba9c9;
+    --cyan-deep: #0a4a5e;
+    --amber: #ffb84d;
+    --red: #ff5f6b;
+    --text: #c8e6f0;
+    --text-dim: #5e8fa3;
+    --mono: 'Cascadia Mono', 'Consolas', 'D2Coding', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+    overflow: hidden;
+    position: relative;
+  }
+  /* ambient grid */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 50% 45%, rgba(27,169,201,0.10), transparent 70%),
+      repeating-linear-gradient(0deg, transparent 0 39px, rgba(82,229,255,0.028) 39px 40px),
+      repeating-linear-gradient(90deg, transparent 0 39px, rgba(82,229,255,0.028) 39px 40px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #app { position: relative; z-index: 1; height: 100vh; display: flex; flex-direction: column; }
+
+  /* ── header ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 22px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: baseline; gap: 12px; }
+  .brand h1 {
+    font-size: 19px; font-weight: 300; letter-spacing: 0.55em; color: var(--cyan);
+    text-shadow: 0 0 18px rgba(82,229,255,0.5);
+  }
+  .brand .sub { font-size: 10px; letter-spacing: 0.2em; color: var(--text-dim); }
+  .head-right { display: flex; align-items: center; gap: 18px; }
+  #clock { font-family: var(--mono); font-size: 20px; color: var(--cyan); font-variant-numeric: tabular-nums; text-shadow: 0 0 12px rgba(82,229,255,0.4); }
+  #dateline { font-size: 11px; color: var(--text-dim); letter-spacing: 0.08em; text-align: right; }
+  .icon-btn {
+    background: none; border: 1px solid var(--line-strong); color: var(--cyan);
+    width: 34px; height: 34px; border-radius: 50%; cursor: pointer; font-size: 15px;
+    transition: all .2s;
+  }
+  .icon-btn:hover { background: rgba(82,229,255,0.12); box-shadow: 0 0 14px rgba(82,229,255,0.35); }
+
+  /* ── main grid ── */
+  main {
+    flex: 1; display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(340px, 1.2fr) minmax(280px, 1fr);
+    gap: 16px; padding: 16px 22px; min-height: 0;
+  }
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    display: flex; flex-direction: column; min-height: 0;
+    backdrop-filter: blur(4px);
+  }
+  .panel-head {
+    padding: 9px 14px; border-bottom: 1px solid var(--line);
+    font-size: 10px; letter-spacing: 0.28em; color: var(--cyan-dim);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .panel-head .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+
+  /* ── log ── */
+  #log { flex: 1; overflow-y: auto; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; scrollbar-width: thin; scrollbar-color: var(--cyan-deep) transparent; }
+  .msg { max-width: 92%; font-size: 13.5px; line-height: 1.55; animation: fadeUp .25s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .msg .who { font-size: 9px; letter-spacing: 0.22em; color: var(--text-dim); margin-bottom: 3px; }
+  .msg.user { align-self: flex-end; text-align: right; }
+  .msg.user .bubble { background: rgba(82,229,255,0.10); border: 1px solid var(--line); border-radius: 8px 8px 2px 8px; padding: 8px 12px; display: inline-block; text-align: left; }
+  .msg.jarvis .bubble { background: rgba(10,74,94,0.25); border: 1px solid rgba(82,229,255,0.28); border-radius: 8px 8px 8px 2px; padding: 8px 12px; display: inline-block; color: #d9f3fa; }
+  .msg.sys { align-self: center; font-size: 11px; color: var(--amber); opacity: .85; }
+  #typebar { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); }
+  #typebox {
+    flex: 1; background: rgba(3,10,20,0.6); border: 1px solid var(--line);
+    color: var(--text); padding: 9px 12px; border-radius: 4px; font-size: 13px; outline: none;
+    font-family: inherit;
+  }
+  #typebox:focus { border-color: var(--line-strong); box-shadow: 0 0 10px rgba(82,229,255,0.15); }
+  #sendbtn { background: rgba(82,229,255,0.12); border: 1px solid var(--line-strong); color: var(--cyan); padding: 0 16px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+  #sendbtn:hover { background: rgba(82,229,255,0.22); }
+
+  /* ── center / reactor ── */
+  #center { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; min-height: 0; }
+  #reactor-wrap { position: relative; width: min(340px, 60vw); aspect-ratio: 1; cursor: pointer; }
+  #reactor { width: 100%; height: 100%; }
+  #state-label {
+    font-size: 11px; letter-spacing: 0.4em; color: var(--cyan-dim); text-align: center; min-height: 16px;
+    text-transform: uppercase;
+  }
+  #state-label.live { color: var(--cyan); text-shadow: 0 0 10px rgba(82,229,255,0.6); }
+  #interim { font-size: 14px; color: var(--text); min-height: 22px; text-align: center; max-width: 90%; opacity: .9; }
+  #hint { font-size: 11px; color: var(--text-dim); text-align: center; line-height: 1.7; }
+  #hint b { color: var(--cyan-dim); font-weight: 600; }
+  .mode-row { display: flex; gap: 8px; }
+  .chip {
+    font-size: 10.5px; letter-spacing: 0.1em; padding: 5px 12px; border-radius: 20px;
+    border: 1px solid var(--line); color: var(--text-dim); cursor: pointer; background: none; transition: all .2s;
+  }
+  .chip.on { border-color: var(--cyan); color: var(--cyan); box-shadow: 0 0 10px rgba(82,229,255,0.25); }
+
+  /* ── right panel ── */
+  #cam-area { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+  #cam-frame { position: relative; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: #000; aspect-ratio: 4/3; }
+  #cam { width: 100%; height: 100%; object-fit: cover; display: block; transform: scaleX(-1); }
+  #motion-overlay { position: absolute; inset: 0; width: 100%; height: 100%; transform: scaleX(-1); pointer-events: none; }
+  #cam-off-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; color: var(--text-dim); font-size: 12px; }
+  #cam-corner { position: absolute; top: 6px; left: 8px; font-size: 9px; letter-spacing: 0.2em; color: var(--cyan); text-shadow: 0 0 6px rgba(0,0,0,0.9); }
+  #motion-bar-wrap { margin-top: 10px; }
+  .stat-row { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: 0.14em; color: var(--text-dim); margin-bottom: 4px; }
+  .stat-row .val { color: var(--cyan); font-family: var(--mono); }
+  #motion-bar { height: 4px; background: rgba(82,229,255,0.08); border-radius: 2px; overflow: hidden; }
+  #motion-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan-deep), var(--cyan)); transition: width .12s; border-radius: 2px; }
+  #status-list { flex: 1; overflow-y: auto; padding: 10px 14px; font-family: var(--mono); font-size: 11px; line-height: 1.9; color: var(--text-dim); scrollbar-width: thin; }
+  #status-list .t { color: var(--cyan-deep); margin-right: 8px; }
+  #status-list .warn { color: var(--amber); }
+  #status-list .ok { color: var(--cyan-dim); }
+
+  /* ── footer ── */
+  footer {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 22px; border-top: 1px solid var(--line);
+    font-size: 10px; letter-spacing: 0.16em; color: var(--text-dim);
+  }
+  .foot-item { display: flex; align-items: center; gap: 6px; }
+  .lamp { width: 7px; height: 7px; border-radius: 50%; background: #23404f; transition: all .3s; }
+  .lamp.on { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+  .lamp.warn { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+
+  /* ── modal ── */
+  #modal-bg {
+    position: fixed; inset: 0; background: rgba(2,6,12,0.8); backdrop-filter: blur(3px);
+    display: none; align-items: center; justify-content: center; z-index: 50;
+  }
+  #modal-bg.show { display: flex; }
+  #modal {
+    width: min(560px, 92vw); max-height: 88vh; overflow-y: auto;
+    background: #071523; border: 1px solid var(--line-strong); border-radius: 8px;
+    padding: 26px 30px; box-shadow: 0 0 60px rgba(82,229,255,0.15);
+  }
+  #modal h2 { font-size: 13px; letter-spacing: 0.35em; color: var(--cyan); font-weight: 400; margin-bottom: 20px; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 11px; letter-spacing: 0.12em; color: var(--text-dim); margin-bottom: 6px; }
+  .field input, .field select {
+    width: 100%; background: rgba(3,10,20,0.7); border: 1px solid var(--line);
+    color: var(--text); padding: 9px 12px; border-radius: 4px; font-size: 13px; outline: none; font-family: inherit;
+  }
+  .field input:focus, .field select:focus { border-color: var(--line-strong); }
+  .field .note { font-size: 10.5px; color: var(--text-dim); margin-top: 5px; line-height: 1.6; }
+  .field-row { display: flex; gap: 12px; }
+  .field-row .field { flex: 1; }
+  .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 22px; }
+  .btn { padding: 9px 20px; border-radius: 4px; font-size: 12.5px; letter-spacing: 0.08em; cursor: pointer; border: 1px solid var(--line-strong); background: none; color: var(--text-dim); }
+  .btn.primary { background: rgba(82,229,255,0.15); color: var(--cyan); }
+  .btn.primary:hover { background: rgba(82,229,255,0.28); }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
+  .toggle-row span { font-size: 12px; color: var(--text); }
+  .switch { position: relative; width: 40px; height: 20px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider-t { position: absolute; inset: 0; background: #10293a; border: 1px solid var(--line); border-radius: 20px; cursor: pointer; transition: .2s; }
+  .slider-t::before { content: ''; position: absolute; width: 12px; height: 12px; left: 3px; top: 3px; background: var(--text-dim); border-radius: 50%; transition: .2s; }
+  .switch input:checked + .slider-t { background: rgba(82,229,255,0.2); border-color: var(--cyan-dim); }
+  .switch input:checked + .slider-t::before { transform: translateX(20px); background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+  hr.sep { border: none; border-top: 1px solid var(--line); margin: 18px 0; }
+
+  /* ── boot overlay ── */
+  #boot {
+    position: fixed; inset: 0; z-index: 100; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px;
+    transition: opacity .8s;
+  }
+  #boot.gone { opacity: 0; pointer-events: none; }
+  #boot h1 { font-size: 28px; font-weight: 200; letter-spacing: 0.7em; color: var(--cyan); text-shadow: 0 0 30px rgba(82,229,255,0.6); animation: bootPulse 2s infinite; }
+  @keyframes bootPulse { 50% { opacity: .6; } }
+  #boot p { font-size: 12px; color: var(--text-dim); letter-spacing: 0.2em; }
+  #boot-start {
+    padding: 13px 44px; font-size: 14px; letter-spacing: 0.3em; color: var(--cyan);
+    background: rgba(82,229,255,0.08); border: 1px solid var(--cyan-dim); border-radius: 30px; cursor: pointer;
+    transition: all .25s;
+  }
+  #boot-start:hover { background: rgba(82,229,255,0.2); box-shadow: 0 0 30px rgba(82,229,255,0.35); }
+
+  /* ── HUD decorations (MK-II) ── */
+  #bgfx { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+  .panel { position: relative; }
+  .panel::after {
+    content: ''; position: absolute; inset: -2px; pointer-events: none;
+    background:
+      linear-gradient(var(--cyan), var(--cyan)) left 0 top 0 / 16px 2px,
+      linear-gradient(var(--cyan), var(--cyan)) left 0 top 0 / 2px 16px,
+      linear-gradient(var(--cyan), var(--cyan)) right 0 top 0 / 16px 2px,
+      linear-gradient(var(--cyan), var(--cyan)) right 0 top 0 / 2px 16px,
+      linear-gradient(var(--cyan), var(--cyan)) left 0 bottom 0 / 16px 2px,
+      linear-gradient(var(--cyan), var(--cyan)) left 0 bottom 0 / 2px 16px,
+      linear-gradient(var(--cyan), var(--cyan)) right 0 bottom 0 / 16px 2px,
+      linear-gradient(var(--cyan), var(--cyan)) right 0 bottom 0 / 2px 16px;
+    background-repeat: no-repeat;
+    opacity: .5;
+  }
+  #cam-frame::after {
+    content: ''; position: absolute; left: 0; right: 0; height: 30px; top: -30px;
+    background: linear-gradient(to bottom, transparent, rgba(82,229,255,0.16), transparent);
+    animation: scan 3.4s linear infinite; pointer-events: none;
+  }
+  @keyframes scan { from { top: -30px; } to { top: 100%; } }
+  #day-ring {
+    width: 46px; height: 46px; border-radius: 50%; position: relative; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    background: conic-gradient(var(--cyan) 0deg, rgba(82,229,255,0.12) 0deg);
+    box-shadow: 0 0 14px rgba(82,229,255,0.2);
+  }
+  #day-ring::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; background: #04101c; }
+  #day-ring span { position: relative; z-index: 1; font-family: var(--mono); font-size: 15px; color: var(--cyan); }
+  #day-ring small { position: absolute; z-index: 1; bottom: 6px; font-size: 6.5px; letter-spacing: 0.15em; color: var(--text-dim); }
+
+  @media (max-width: 980px) {
+    main { grid-template-columns: 1fr; overflow-y: auto; }
+    body { overflow: auto; }
+    #center { order: -1; padding: 10px 0; }
+    #reactor-wrap { width: min(240px, 55vw); }
+    .panel { min-height: 260px; }
+    #day-ring { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bgfx"></canvas>
+
+<div id="boot">
+  <h1>J.A.R.V.I.S.</h1>
+  <p>JUST A RATHER VERY INTELLIGENT SYSTEM</p>
+  <button id="boot-start">시스템 기동</button>
+</div>
+
+<div id="app">
+  <header>
+    <div class="brand">
+      <h1>J.A.R.V.I.S.</h1>
+      <span class="sub">MK-II &nbsp;PERSONAL ASSISTANT</span>
+    </div>
+    <div class="head-right">
+      <div id="day-ring"><span id="day-num">--</span><small id="day-mon">---</small></div>
+      <div>
+        <div id="clock">--:--:--</div>
+        <div id="dateline">-</div>
+      </div>
+      <button class="icon-btn" id="settings-btn" title="설정">⚙</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- left: conversation -->
+    <section class="panel" id="left">
+      <div class="panel-head"><span>대화 기록 · COMMS</span><span class="dot"></span></div>
+      <div id="log"></div>
+      <div id="typebar">
+        <input id="typebox" type="text" placeholder="음성 대신 입력할 수도 있습니다..." autocomplete="off">
+        <button id="sendbtn">전송</button>
+      </div>
+    </section>
+
+    <!-- center: reactor -->
+    <section id="center">
+      <div id="reactor-wrap" title="클릭해서 말하기">
+        <canvas id="reactor"></canvas>
+      </div>
+      <div id="state-label">STANDBY</div>
+      <div id="interim"></div>
+      <div class="mode-row">
+        <button class="chip" id="chip-wake">웨이크워드 대기</button>
+        <button class="chip" id="chip-clap">박수 감지</button>
+        <button class="chip" id="chip-cam">모션 인식</button>
+      </div>
+      <div id="hint">원을 <b>클릭</b> · <b>"자비스"</b> 부르기 · <b>박수 두 번</b> · 카메라에 <b>손 흔들기</b>로 호출합니다</div>
+    </section>
+
+    <!-- right: vision + status -->
+    <section class="panel" id="right">
+      <div class="panel-head"><span>시각 시스템 · VISION</span><span class="dot" id="cam-dot" style="background:#23404f;box-shadow:none"></span></div>
+      <div id="cam-area">
+        <div id="cam-frame">
+          <video id="cam" autoplay playsinline muted></video>
+          <canvas id="motion-overlay"></canvas>
+          <div id="cam-off-msg"><span>📷</span><span>모션 인식 꺼짐</span></div>
+          <div id="cam-corner">CAM-01</div>
+        </div>
+        <div id="motion-bar-wrap">
+          <div class="stat-row"><span>MOTION LEVEL</span><span class="val" id="motion-val">0%</span></div>
+          <div id="motion-bar"><div id="motion-fill"></div></div>
+        </div>
+      </div>
+      <div class="panel-head"><span>시스템 로그 · SYSLOG</span></div>
+      <div id="status-list"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="foot-item"><span class="lamp" id="lamp-stt"></span>음성 인식</div>
+    <div class="foot-item"><span class="lamp" id="lamp-brain"></span>AI 두뇌</div>
+    <div class="foot-item"><span class="lamp" id="lamp-cam"></span>시각 센서</div>
+    <div class="foot-item"><span class="lamp" id="lamp-clap"></span>박수 감지</div>
+    <div class="foot-item" id="foot-ver">JARVIS v2.0 · MK-II</div>
+  </footer>
+</div>
+
+<!-- settings modal -->
+<div id="modal-bg">
+  <div id="modal">
+    <h2>SYSTEM CONFIG · 설정</h2>
+
+    <div class="field">
+      <label>Claude API 키 (AI 두뇌 연결)</label>
+      <input type="password" id="set-apikey" placeholder="sk-ant-api03-...">
+      <div class="note">
+        키가 없으면 기본 모드(시간·날짜·타이머·메모·계산)로만 작동합니다.<br>
+        발급: <b>console.anthropic.com</b> → API Keys → Create Key. 키는 이 컴퓨터의 브라우저에만 저장됩니다.
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>AI 모델</label>
+        <select id="set-model">
+          <option value="claude-opus-5">Claude Opus 5 (기본·가장 똑똑함)</option>
+          <option value="claude-sonnet-5">Claude Sonnet 5 (빠르고 저렴)</option>
+          <option value="claude-haiku-4-5">Claude Haiku 4.5 (가장 빠름)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>응답 속도/깊이</label>
+        <select id="set-effort">
+          <option value="low">빠른 응답 (권장)</option>
+          <option value="medium">보통</option>
+          <option value="high">깊은 사고</option>
+        </select>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <div class="field-row">
+      <div class="field">
+        <label>웨이크워드 (부르는 이름)</label>
+        <input type="text" id="set-wake" placeholder="자비스">
+      </div>
+      <div class="field">
+        <label>나를 부르는 호칭</label>
+        <input type="text" id="set-honorific" placeholder="보스">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>목소리</label>
+        <select id="set-voice"><option value="">자동 선택</option></select>
+      </div>
+      <div class="field">
+        <label>말하기 속도</label>
+        <select id="set-rate">
+          <option value="0.9">느리게</option>
+          <option value="1.05">보통</option>
+          <option value="1.2">빠르게</option>
+        </select>
+      </div>
+    </div>
+
+    <hr class="sep">
+
+    <div class="toggle-row">
+      <span>시작할 때 웨이크워드 대기 자동 켜기</span>
+      <label class="switch"><input type="checkbox" id="set-autowake"><span class="slider-t"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span>시작할 때 박수 감지 자동 켜기</span>
+      <label class="switch"><input type="checkbox" id="set-autoclap"><span class="slider-t"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span>시작할 때 모션 인식 자동 켜기</span>
+      <label class="switch"><input type="checkbox" id="set-autocam"><span class="slider-t"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span>모션 감지 민감도 높이기</span>
+      <label class="switch"><input type="checkbox" id="set-sensitive"><span class="slider-t"></span></label>
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn" id="modal-close">닫기</button>
+      <button class="btn primary" id="modal-save">저장</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ═══════════════════════ JARVIS CORE ═══════════════════════ */
+
+const $ = id => document.getElementById(id);
+
+/* ── settings ── */
+const DEFAULTS = {
+  apiKey: '', model: 'claude-opus-5', effort: 'low',
+  wake: '자비스', honorific: '보스',
+  voiceName: '', rate: 1.05,
+  autoWake: true, autoCam: false, autoClap: true, sensitive: false
+};
+let settings = { ...DEFAULTS };
+try { Object.assign(settings, JSON.parse(localStorage.getItem('jarvis_settings') || '{}')); } catch (e) {}
+
+function saveSettings() { localStorage.setItem('jarvis_settings', JSON.stringify(settings)); }
+
+/* ── state ── */
+const S = {
+  booted: false,
+  sttSupported: false,
+  listening: false,      // recognition engine running
+  mode: 'idle',          // idle | standby(wake-word wait) | command(capturing a command)
+  speaking: false,
+  wakeOn: false,
+  camOn: false,
+  commandTimer: null,
+  busy: false,
+  timers: [],            // user timers
+  lastWaveAt: 0,
+  clapOn: false
+};
+
+let history = [];        // Claude conversation history
+try { history = JSON.parse(localStorage.getItem('jarvis_history') || '[]'); } catch (e) {}
+function saveHistory() {
+  if (history.length > 24) history = history.slice(-24);
+  localStorage.setItem('jarvis_history', JSON.stringify(history));
+}
+
+/* ── UI helpers ── */
+function addMsg(who, text) {
+  const log = $('log');
+  const div = document.createElement('div');
+  if (who === 'sys') {
+    div.className = 'msg sys';
+    div.textContent = text;
+  } else {
+    div.className = 'msg ' + (who === 'user' ? 'user' : 'jarvis');
+    const label = document.createElement('div');
+    label.className = 'who';
+    label.textContent = who === 'user' ? 'YOU' : 'J.A.R.V.I.S.';
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+    div.appendChild(label); div.appendChild(bubble);
+  }
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+
+function syslog(text, cls) {
+  const list = $('status-list');
+  const line = document.createElement('div');
+  const t = new Date().toTimeString().slice(0, 8);
+  line.innerHTML = `<span class="t">${t}</span><span class="${cls || ''}"></span>`;
+  line.lastChild.textContent = text;
+  list.appendChild(line);
+  list.scrollTop = list.scrollHeight;
+  while (list.children.length > 80) list.removeChild(list.firstChild);
+}
+
+function setStateLabel(text, live) {
+  const el = $('state-label');
+  el.textContent = text;
+  el.classList.toggle('live', !!live);
+}
+function lamp(id, mode) {
+  const el = $(id);
+  el.className = 'lamp' + (mode === 'on' ? ' on' : mode === 'warn' ? ' warn' : '');
+}
+
+/* ── clock ── */
+const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
+const MONS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+function tickClock() {
+  const n = new Date();
+  $('clock').textContent = n.toTimeString().slice(0, 8);
+  $('dateline').textContent = `${n.getFullYear()}.${String(n.getMonth() + 1).padStart(2, '0')}.${String(n.getDate()).padStart(2, '0')} (${DAYS[n.getDay()]})`;
+  const ring = $('day-ring');
+  if (ring) {
+    const deg = (n.getSeconds() / 60) * 360;
+    ring.style.background = `conic-gradient(var(--cyan) ${deg}deg, rgba(82,229,255,0.12) ${deg}deg)`;
+    $('day-num').textContent = n.getDate();
+    $('day-mon').textContent = MONS[n.getMonth()];
+  }
+}
+setInterval(tickClock, 1000); tickClock();
+
+/* ═══════════════════════ TTS ═══════════════════════ */
+let voices = [];
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+  const sel = $('set-voice');
+  const cur = settings.voiceName;
+  sel.innerHTML = '<option value="">자동 선택</option>';
+  voices.filter(v => v.lang.startsWith('ko') || v.lang.startsWith('en')).forEach(v => {
+    const op = document.createElement('option');
+    op.value = v.name;
+    op.textContent = `${v.name} (${v.lang})`;
+    if (v.name === cur) op.selected = true;
+    sel.appendChild(op);
+  });
+}
+speechSynthesis.onvoiceschanged = loadVoices;
+
+function pickVoice() {
+  if (settings.voiceName) {
+    const v = voices.find(v => v.name === settings.voiceName);
+    if (v) return v;
+  }
+  return voices.find(v => v.lang === 'ko-KR' && /google/i.test(v.name))
+      || voices.find(v => v.lang.startsWith('ko'))
+      || null;
+}
+
+function speak(text, onDone) {
+  if (!text) { if (onDone) onDone(); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const v = pickVoice();
+  if (v) u.voice = v;
+  u.lang = 'ko-KR';
+  u.rate = Number(settings.rate) || 1.05;
+  u.pitch = 1.0;
+  S.speaking = true;
+  pauseRecognition();               // don't hear ourselves
+  setStateLabel('SPEAKING', true);
+  u.onend = u.onerror = () => {
+    S.speaking = false;
+    lastTTSEnd = performance.now();
+    if (!S.busy) setStateLabel(S.wakeOn ? 'LISTENING · WAKE WORD' : 'STANDBY', S.wakeOn);
+    setTimeout(resumeRecognition, 250);
+    if (onDone) onDone();
+  };
+  speechSynthesis.speak(u);
+}
+
+/* ═══════════════════════ STT ═══════════════════════ */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null;
+let recShouldRun = false;
+
+function initSTT() {
+  if (!SR) {
+    S.sttSupported = false;
+    lamp('lamp-stt', 'warn');
+    syslog('이 브라우저는 음성 인식을 지원하지 않습니다. Chrome 또는 Edge를 사용하세요.', 'warn');
+    addMsg('sys', '⚠ 음성 인식이 지원되지 않는 브라우저입니다. Chrome/Edge에서 열어주세요. (텍스트 입력은 가능)');
+    return;
+  }
+  S.sttSupported = true;
+  rec = new SR();
+  rec.lang = 'ko-KR';
+  rec.continuous = true;
+  rec.interimResults = true;
+
+  rec.onstart = () => { S.listening = true; lamp('lamp-stt', 'on'); };
+  rec.onend = () => {
+    S.listening = false;
+    if (S.sttSupported) lamp('lamp-stt', '');
+    // Chrome stops recognition periodically — restart if we should still be listening
+    if (recShouldRun && !S.speaking) {
+      setTimeout(() => { try { rec.start(); } catch (e) {} }, 200);
+    }
+  };
+  rec.onerror = (e) => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      recShouldRun = false;
+      S.wakeOn = false;
+      $('chip-wake').classList.remove('on');
+      lamp('lamp-stt', 'warn');
+      syslog('마이크 권한이 거부되었습니다. 주소창의 자물쇠 → 마이크 허용 후 새로고침하세요.', 'warn');
+      addMsg('sys', '⚠ 마이크 권한이 필요합니다. 주소창 자물쇠 아이콘에서 마이크를 허용해주세요.');
+    }
+  };
+
+  rec.onresult = (ev) => {
+    let interim = '', finalText = '';
+    for (let i = ev.resultIndex; i < ev.results.length; i++) {
+      const r = ev.results[i];
+      if (r.isFinal) finalText += r[0].transcript;
+      else interim += r[0].transcript;
+    }
+    if (interim) $('interim').textContent = '「 ' + interim.trim() + ' 」';
+    if (finalText) {
+      $('interim').textContent = '';
+      handleTranscript(finalText.trim());
+    }
+  };
+}
+
+function startRecognition() {
+  if (!rec) return;
+  recShouldRun = true;
+  try { rec.start(); } catch (e) {}
+}
+function stopRecognition() {
+  recShouldRun = false;
+  if (rec) { try { rec.abort(); } catch (e) {} }
+}
+function pauseRecognition() { if (rec && S.listening) { try { rec.abort(); } catch (e) {} } }
+function resumeRecognition() {
+  if (recShouldRun && rec && !S.listening && !S.speaking) { try { rec.start(); } catch (e) {} }
+}
+
+/* wake-word matching: tolerate spacing and common mishearings of '자비스' */
+function findWake(text) {
+  const wake = (settings.wake || '자비스').replace(/\s/g, '');
+  const variants = [wake];
+  if (wake === '자비스') variants.push('자비수', '차비스', '쟈비스', 'jarvis');
+  for (const v of variants) {
+    const re = new RegExp(v.split('').map(ch => ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s*'), 'i');
+    const m = text.match(re);
+    if (m) {
+      const after = text.slice(m.index + m[0].length).replace(/^[\s,.!?야씨~]+/, '').trim();
+      return { hit: true, command: after };
+    }
+  }
+  return { hit: false, command: '' };
+}
+
+function handleTranscript(text) {
+  if (!text || S.speaking) return;
+
+  if (S.mode === 'command') {
+    clearTimeout(S.commandTimer);
+    exitCommandMode();
+    processCommand(text);
+    return;
+  }
+
+  if (S.mode === 'standby') {
+    const w = findWake(text);
+    if (w.hit) {
+      if (w.command) {
+        processCommand(w.command);
+      } else {
+        enterCommandMode();
+      }
+    }
+  }
+}
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function enterCommandMode(greeting) {
+  S.mode = 'command';
+  setStateLabel('AWAITING COMMAND', true);
+  chime();
+  speak(greeting || pick(['네, ' + settings.honorific + '.', '네, 말씀하세요.', '부르셨습니까?']));
+  clearTimeout(S.commandTimer);
+  S.commandTimer = setTimeout(() => {
+    if (S.mode === 'command') {
+      exitCommandMode();
+      setStateLabel(S.wakeOn ? 'LISTENING · WAKE WORD' : 'STANDBY', S.wakeOn);
+    }
+  }, 9000);
+}
+function exitCommandMode() {
+  S.mode = S.wakeOn ? 'standby' : 'idle';
+  clearTimeout(S.commandTimer);
+}
+
+/* one-shot listen from orb click */
+function orbListen() {
+  if (!S.sttSupported) { addMsg('sys', '음성 인식 미지원 — 아래 텍스트 입력을 사용하세요.'); return; }
+  if (S.speaking) { speechSynthesis.cancel(); S.speaking = false; }
+  if (S.mode === 'command') return;
+  if (!recShouldRun) startRecognition();
+  enterCommandMode();
+}
+
+/* wake toggle */
+function setWakeMode(on) {
+  S.wakeOn = on;
+  $('chip-wake').classList.toggle('on', on);
+  if (on) {
+    S.mode = 'standby';
+    startRecognition();
+    setStateLabel('LISTENING · WAKE WORD', true);
+    syslog(`웨이크워드 "${settings.wake}" 대기 시작`, 'ok');
+  } else {
+    S.mode = 'idle';
+    stopRecognition();
+    setStateLabel('STANDBY', false);
+    syslog('웨이크워드 대기 중지');
+  }
+}
+
+/* ═══════════════════════ sounds ═══════════════════════ */
+let actx = null;
+function chime(freq1, freq2) {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const t = actx.currentTime;
+    [freq1 || 880, freq2 || 1320].forEach((f, i) => {
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.frequency.value = f; o.type = 'sine';
+      g.gain.setValueAtTime(0.0001, t + i * 0.09);
+      g.gain.exponentialRampToValueAtTime(0.12, t + i * 0.09 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.09 + 0.25);
+      o.connect(g); g.connect(actx.destination);
+      o.start(t + i * 0.09); o.stop(t + i * 0.09 + 0.3);
+    });
+  } catch (e) {}
+}
+
+/* ═══════════════════════ BRAIN ═══════════════════════ */
+function processCommand(text) {
+  addMsg('user', text);
+  const local = tryLocalIntent(text);
+  if (local !== null) {
+    respond(local);
+    return;
+  }
+  if (settings.apiKey) {
+    askClaude(text);
+  } else {
+    respond(basicFallback());
+  }
+}
+
+function respond(text) {
+  addMsg('jarvis', text);
+  speak(text);
+}
+
+/* ── local intents (fast, offline) ── */
+function tryLocalIntent(raw) {
+  const t = raw.replace(/\s/g, '');
+  const n = new Date();
+
+  if (/^(그만|멈춰|중지|조용히해|쉿|스탑)$/.test(t)) {
+    speechSynthesis.cancel();
+    return '알겠습니다.';
+  }
+  if (/몇시|지금시간|시간알려|시간이야/.test(t) && t.length < 16) {
+    const h = n.getHours(), m = n.getMinutes();
+    const ampm = h < 12 ? '오전' : '오후';
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    return `현재 시각은 ${ampm} ${h12}시 ${m}분입니다.`;
+  }
+  if (/(며칠|몇일|날짜|몇월)/.test(t) && t.length < 14) {
+    return `오늘은 ${n.getFullYear()}년 ${n.getMonth() + 1}월 ${n.getDate()}일 ${DAYS[n.getDay()]}요일입니다.`;
+  }
+  if (/무슨요일|요일이야|요일인지/.test(t)) {
+    return `오늘은 ${DAYS[n.getDay()]}요일입니다.`;
+  }
+
+  // timer: "5분 타이머", "타이머 30초", "10분 뒤에 알려줘"
+  const tm = raw.match(/(\d+)\s*(분|초|시간)/);
+  if (tm && /(타이머|알람|뒤에|후에|있다가|맞춰|재\s*줘)/.test(raw)) {
+    const num = parseInt(tm[1], 10);
+    const unit = tm[2];
+    const ms = unit === '초' ? num * 1000 : unit === '분' ? num * 60000 : num * 3600000;
+    if (ms > 0 && ms <= 12 * 3600000) {
+      const id = setTimeout(() => {
+        chime(1046, 1568);
+        respond(`${settings.honorific}, 설정하신 ${num}${unit} 타이머가 완료되었습니다.`);
+      }, ms);
+      S.timers.push(id);
+      syslog(`타이머 설정: ${num}${unit}`, 'ok');
+      return `${num}${unit} 타이머를 시작합니다.`;
+    }
+  }
+  if (/타이머(취소|삭제|꺼)/.test(t)) {
+    S.timers.forEach(clearTimeout); S.timers = [];
+    return '모든 타이머를 취소했습니다.';
+  }
+
+  // memo
+  if (/메모(읽어|알려|보여|뭐)/.test(t)) {
+    let memos = [];
+    try { memos = JSON.parse(localStorage.getItem('jarvis_memos') || '[]'); } catch (e) {}
+    if (!memos.length) return '저장된 메모가 없습니다.';
+    return `메모 ${memos.length}건입니다. ` + memos.map((m, i) => `${i + 1}번, ${m.text}`).join('. ');
+  }
+  if (/메모(전부|전체|다)?(지워|삭제)/.test(t)) {
+    localStorage.removeItem('jarvis_memos');
+    return '메모를 모두 삭제했습니다.';
+  }
+  const memoSave = raw.match(/^메모\s+(.+)/) || raw.match(/(.+?)\s*(라고|이라고)\s*메모/);
+  if (memoSave) {
+    const content = (memoSave[1] || '').trim();
+    if (content && !/읽|삭제|지워/.test(content)) {
+      let memos = [];
+      try { memos = JSON.parse(localStorage.getItem('jarvis_memos') || '[]'); } catch (e) {}
+      memos.push({ text: content, at: n.toISOString() });
+      localStorage.setItem('jarvis_memos', JSON.stringify(memos));
+      return '메모했습니다: ' + content;
+    }
+  }
+
+  // arithmetic: "3 더하기 5", "12 곱하기 8"
+  const calc = raw.match(/(-?[\d.]+)\s*(더하기|플러스|빼기|마이너스|곱하기|나누기)\s*(-?[\d.]+)/);
+  if (calc) {
+    const a = parseFloat(calc[1]), b = parseFloat(calc[3]);
+    let r;
+    switch (calc[2]) {
+      case '더하기': case '플러스': r = a + b; break;
+      case '빼기': case '마이너스': r = a - b; break;
+      case '곱하기': r = a * b; break;
+      case '나누기': r = b === 0 ? null : a / b; break;
+    }
+    if (r === null) return '0으로는 나눌 수 없습니다, ' + settings.honorific + '.';
+    return `계산 결과는 ${Math.round(r * 10000) / 10000}입니다.`;
+  }
+
+  if (/^(고마워|감사|땡큐|고맙다)/.test(t)) return pick(['별말씀을요.', '언제든지요, ' + settings.honorific + '.', '제 일인걸요.']);
+  if (/^(안녕|하이|헬로)/.test(t)) return pick(['안녕하세요, ' + settings.honorific + '.', '네, 대기 중입니다.']);
+  if (/(누구야|누구니|정체가|이름이뭐)/.test(t)) return '저는 자비스, ' + settings.honorific + '의 개인 비서 시스템입니다.';
+
+  return null; // not a local intent
+}
+
+function basicFallback() {
+  return pick([
+    '죄송합니다. 그 질문에 답하려면 AI 두뇌 연결이 필요합니다. 오른쪽 위 설정에서 Claude API 키를 등록해주세요.',
+    '현재 기본 모드로 작동 중입니다. 시간, 날짜, 타이머, 메모, 계산은 가능합니다. 더 똑똑해지려면 설정에서 API 키를 연결해주세요.'
+  ]);
+}
+
+/* ── Claude API ── */
+function buildSystemPrompt() {
+  const n = new Date();
+  return `너는 아이언맨의 자비스(J.A.R.V.I.S.)를 모델로 한 한국어 개인 비서 AI다. 사용자를 "${settings.honorific}"라고 부른다.
+
+규칙:
+- 모든 응답은 음성으로 읽힌다. 마크다운, 목록 기호, 이모지, 코드블록을 절대 쓰지 말고 자연스러운 구어체 문장으로만 답한다.
+- 기본적으로 2~3문장 이내로 간결하게 답한다. 사용자가 자세히 설명해달라고 할 때만 길게 답한다.
+- 말투는 자비스처럼 정중하고 차분하며 유능하게. 존댓말을 쓰되 가끔 위트있는 한마디를 섞어도 좋다.
+- 확실하지 않은 정보는 확실하지 않다고 말한다. 실시간 정보(오늘 날씨, 뉴스 등)는 조회할 수 없음을 인정하고 아는 범위에서 답한다.
+
+현재 시각: ${n.getFullYear()}년 ${n.getMonth() + 1}월 ${n.getDate()}일 ${DAYS[n.getDay()]}요일 ${n.getHours()}시 ${n.getMinutes()}분`;
+}
+
+async function askClaude(text) {
+  S.busy = true;
+  setStateLabel('PROCESSING', true);
+  const thinkingMsg = document.createElement('div');
+  thinkingMsg.className = 'msg jarvis';
+  thinkingMsg.innerHTML = '<div class="who">J.A.R.V.I.S.</div><div class="bubble" style="opacity:.55">분석 중...</div>';
+  $('log').appendChild(thinkingMsg);
+  $('log').scrollTop = $('log').scrollHeight;
+
+  const messages = [...history, { role: 'user', content: text }];
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': settings.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: settings.model,
+        max_tokens: 1024,
+        output_config: { effort: settings.effort || 'low' },
+        system: buildSystemPrompt(),
+        messages
+      })
+    });
+
+    thinkingMsg.remove();
+
+    if (!res.ok) {
+      let detail = '';
+      try { detail = (await res.json()).error?.message || ''; } catch (e) {}
+      let msg;
+      if (res.status === 401) msg = 'API 키가 올바르지 않습니다. 설정에서 키를 확인해주세요.';
+      else if (res.status === 429) msg = 'API 사용량 한도에 도달했습니다. 잠시 후 다시 시도해주세요.';
+      else if (res.status >= 500) msg = 'AI 서버가 일시적으로 불안정합니다. 잠시 후 다시 시도해주세요.';
+      else msg = 'AI 연결 오류가 발생했습니다. 오류 코드 ' + res.status + '.';
+      syslog('API 오류 ' + res.status + ': ' + detail, 'warn');
+      respond(msg);
+      return;
+    }
+
+    const data = await res.json();
+
+    if (data.stop_reason === 'refusal') {
+      respond('죄송합니다. 그 요청은 안전상의 이유로 처리할 수 없습니다.');
+      return;
+    }
+
+    const answer = (data.content || [])
+      .filter(b => b.type === 'text')
+      .map(b => b.text)
+      .join(' ')
+      .trim();
+
+    if (!answer) { respond('응답을 생성하지 못했습니다. 다시 말씀해주시겠습니까?'); return; }
+
+    history.push({ role: 'user', content: text });
+    history.push({ role: 'assistant', content: answer });
+    saveHistory();
+    respond(answer);
+
+  } catch (err) {
+    thinkingMsg.remove();
+    syslog('네트워크 오류: ' + err.message, 'warn');
+    respond('네트워크 연결에 문제가 있습니다. 인터넷 상태를 확인해주세요.');
+  } finally {
+    S.busy = false;
+    if (!S.speaking) setStateLabel(S.wakeOn ? 'LISTENING · WAKE WORD' : 'STANDBY', S.wakeOn);
+  }
+}
+
+/* ═══════════════════════ MOTION / VISION ═══════════════════════ */
+let camStream = null;
+let motionInterval = null;
+let prevFrame = null;
+const centroidHist = [];   // {t, x}
+let lastPresence = Date.now();
+
+const MW = 96, MH = 72;    // processing resolution
+const procCanvas = document.createElement('canvas');
+procCanvas.width = MW; procCanvas.height = MH;
+const procCtx = procCanvas.getContext('2d', { willReadFrequently: true });
+
+async function setCam(on) {
+  if (on) {
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+    } catch (e) {
+      syslog('카메라 접근 실패: ' + e.name, 'warn');
+      addMsg('sys', '⚠ 카메라 권한이 필요합니다. 주소창 자물쇠 아이콘에서 카메라를 허용해주세요.');
+      $('chip-cam').classList.remove('on');
+      return;
+    }
+    $('cam').srcObject = camStream;
+    $('cam-off-msg').style.display = 'none';
+    $('cam-dot').style.cssText = 'background:var(--cyan);box-shadow:0 0 8px var(--cyan)';
+    S.camOn = true;
+    $('chip-cam').classList.add('on');
+    lamp('lamp-cam', 'on');
+    prevFrame = null;
+    centroidHist.length = 0;
+    motionInterval = setInterval(processMotion, 110);
+    syslog('시각 센서 활성화 — 손 흔들기 감지 대기', 'ok');
+  } else {
+    S.camOn = false;
+    $('chip-cam').classList.remove('on');
+    clearInterval(motionInterval);
+    if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+    $('cam').srcObject = null;
+    $('cam-off-msg').style.display = 'flex';
+    $('cam-dot').style.cssText = 'background:#23404f;box-shadow:none';
+    lamp('lamp-cam', '');
+    $('motion-fill').style.width = '0%';
+    $('motion-val').textContent = '0%';
+    const oc = $('motion-overlay');
+    oc.getContext('2d').clearRect(0, 0, oc.width, oc.height);
+    syslog('시각 센서 비활성화');
+  }
+}
+
+function processMotion() {
+  const video = $('cam');
+  if (!video.videoWidth) return;
+  procCtx.drawImage(video, 0, 0, MW, MH);
+  const frame = procCtx.getImageData(0, 0, MW, MH).data;
+
+  const overlay = $('motion-overlay');
+  if (overlay.width !== overlay.clientWidth) {
+    overlay.width = overlay.clientWidth;
+    overlay.height = overlay.clientHeight;
+  }
+  const octx = overlay.getContext('2d');
+  octx.clearRect(0, 0, overlay.width, overlay.height);
+
+  if (!prevFrame) { prevFrame = new Uint8ClampedArray(frame); return; }
+
+  const threshold = settings.sensitive ? 22 : 30;
+  let count = 0, sumX = 0;
+  const cellW = overlay.width / MW, cellH = overlay.height / MH;
+  octx.fillStyle = 'rgba(82,229,255,0.35)';
+
+  for (let y = 0; y < MH; y += 2) {
+    for (let x = 0; x < MW; x += 2) {
+      const i = (y * MW + x) * 4;
+      const lum1 = frame[i] * 0.3 + frame[i + 1] * 0.59 + frame[i + 2] * 0.11;
+      const lum2 = prevFrame[i] * 0.3 + prevFrame[i + 1] * 0.59 + prevFrame[i + 2] * 0.11;
+      if (Math.abs(lum1 - lum2) > threshold) {
+        count++;
+        sumX += x;
+        octx.fillRect(x * cellW, y * cellH, cellW * 2, cellH * 2);
+      }
+    }
+  }
+  prevFrame.set(frame);
+
+  const sampled = (MW / 2) * (MH / 2);
+  const energy = count / sampled;                    // 0..1
+  const pct = Math.min(100, Math.round(energy * 400));
+  $('motion-fill').style.width = pct + '%';
+  $('motion-val').textContent = pct + '%';
+
+  const now = Date.now();
+
+  // presence: greet when motion returns after long absence
+  if (energy > 0.01) {
+    if (now - lastPresence > 120000 && !S.speaking && S.mode !== 'command') {
+      syslog('움직임 재감지 — 사용자 복귀', 'ok');
+      speak(pick(['다시 오셨군요, ' + settings.honorific + '.', '어서 오세요, ' + settings.honorific + '.']));
+    }
+    lastPresence = now;
+  }
+
+  // wave detection: horizontal oscillation of motion centroid
+  const minEnergy = settings.sensitive ? 0.025 : 0.04;
+  if (energy > minEnergy && count > 0) {
+    centroidHist.push({ t: now, x: sumX / count });
+  }
+  while (centroidHist.length && now - centroidHist[0].t > 1400) centroidHist.shift();
+
+  if (centroidHist.length >= 6 && now - S.lastWaveAt > 6000) {
+    let dirChanges = 0, lastDir = 0, travel = 0;
+    for (let i = 1; i < centroidHist.length; i++) {
+      const dx = centroidHist[i].x - centroidHist[i - 1].x;
+      travel += Math.abs(dx);
+      if (Math.abs(dx) > 2.5) {
+        const dir = Math.sign(dx);
+        if (lastDir !== 0 && dir !== lastDir) dirChanges++;
+        lastDir = dir;
+      }
+    }
+    if (dirChanges >= 3 && travel > 30) {
+      S.lastWaveAt = now;
+      centroidHist.length = 0;
+      onWaveDetected();
+    }
+  }
+}
+
+function onWaveDetected() {
+  syslog('제스처 감지: 손 흔들기 → 호출', 'ok');
+  if (S.speaking || S.mode === 'command' || S.busy) return;
+  if (!S.sttSupported) { chime(); addMsg('sys', '👋 손 흔들기 감지 (음성 인식 미지원 — 텍스트로 입력해주세요)'); return; }
+  if (!recShouldRun) startRecognition();
+  enterCommandMode(pick(['부르셨습니까, ' + settings.honorific + '?', '네, 손짓 확인했습니다. 말씀하세요.']));
+}
+
+/* ═══════════════════════ CLAP DETECTION ═══════════════════════ */
+let clapStream = null, clapAnalyser = null, clapData = null, clapRAF = 0;
+let clapTimes = [], lastTransient = 0, lastTTSEnd = 0;
+
+async function setClap(on) {
+  if (on) {
+    try {
+      clapStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: false }
+      });
+    } catch (e) {
+      syslog('마이크 접근 실패(박수 감지): ' + e.name, 'warn');
+      addMsg('sys', '⚠ 박수 감지에는 마이크 권한이 필요합니다. 주소창 자물쇠에서 마이크를 허용해주세요.');
+      $('chip-clap').classList.remove('on');
+      return;
+    }
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === 'suspended') actx.resume();
+      const src = actx.createMediaStreamSource(clapStream);
+      clapAnalyser = actx.createAnalyser();
+      clapAnalyser.fftSize = 1024;
+      src.connect(clapAnalyser);
+      clapData = new Uint8Array(clapAnalyser.fftSize);
+    } catch (e) {
+      syslog('오디오 분석기 초기화 실패', 'warn');
+      return;
+    }
+    S.clapOn = true;
+    $('chip-clap').classList.add('on');
+    lamp('lamp-clap', 'on');
+    clapTimes = [];
+    clapLoop();
+    syslog('박수 감지 활성화 — 짝짝, 두 번 치면 호출됩니다', 'ok');
+  } else {
+    S.clapOn = false;
+    $('chip-clap').classList.remove('on');
+    lamp('lamp-clap', '');
+    cancelAnimationFrame(clapRAF);
+    if (clapStream) { clapStream.getTracks().forEach(t => t.stop()); clapStream = null; }
+    syslog('박수 감지 비활성화');
+  }
+}
+
+function clapLoop() {
+  if (!S.clapOn) return;
+  clapAnalyser.getByteTimeDomainData(clapData);
+  let peak = 0;
+  for (let i = 0; i < clapData.length; i++) {
+    const v = Math.abs(clapData[i] - 128) / 128;
+    if (v > peak) peak = v;
+  }
+  const now = performance.now();
+
+  if (S.speaking || now - lastTTSEnd < 700) {
+    clapTimes.length = 0;                          // ignore our own voice
+  } else if (peak > 0.45 && now - lastTransient > 160) {
+    lastTransient = now;
+    clapTimes.push(now);
+    while (clapTimes.length && now - clapTimes[0] > 900) clapTimes.shift();
+    if (clapTimes.length >= 2) {
+      const gap = clapTimes[clapTimes.length - 1] - clapTimes[clapTimes.length - 2];
+      if (gap >= 160 && gap <= 700) {
+        clapTimes.length = 0;
+        onClapDetected();
+      }
+    }
+  }
+  clapRAF = requestAnimationFrame(clapLoop);
+}
+
+function onClapDetected() {
+  syslog('박수 2회 감지 → 호출', 'ok');
+  if (S.speaking || S.mode === 'command' || S.busy) return;
+  if (!S.sttSupported) { chime(); addMsg('sys', '👏 박수 감지 (음성 인식 미지원 — 텍스트로 입력해주세요)'); return; }
+  if (!recShouldRun) startRecognition();
+  enterCommandMode(pick(['네, 박수 확인했습니다. 말씀하세요.', '부르셨습니까, ' + settings.honorific + '?']));
+}
+
+/* ═══════════════════════ BACKGROUND HUD FX ═══════════════════════ */
+const bgCanvas = $('bgfx');
+const bgCtx = bgCanvas.getContext('2d');
+const ELEM_TILES = ['Zn 30', 'Se 34', 'Cr 24', 'Te 52', 'Pd 46', 'Fe 26', 'Ti 22', 'Ni 28', 'Cu 29', 'Au 79'];
+let bgTiles = [];
+
+function initBgfx() {
+  bgCanvas.width = innerWidth;
+  bgCanvas.height = innerHeight;
+  bgTiles = ELEM_TILES.map(e => ({
+    e,
+    x: Math.random() * innerWidth,
+    y: Math.random() * innerHeight,
+    s: 30 + Math.random() * 20,
+    ph: Math.random() * Math.PI * 2,
+    dx: (Math.random() - 0.5) * 0.08,
+    dy: (Math.random() - 0.5) * 0.05
+  }));
+}
+addEventListener('resize', initBgfx);
+
+function drawBgfx() {
+  const W = bgCanvas.width, H = bgCanvas.height;
+  const t = performance.now() / 1000;
+  bgCtx.clearRect(0, 0, W, H);
+
+  // faint hex grid
+  const r = 34, hstep = r * 1.732, vstep = r * 1.5;
+  bgCtx.strokeStyle = 'rgba(82,229,255,0.035)';
+  bgCtx.lineWidth = 1;
+  for (let row = 0; row * vstep < H + r; row++) {
+    for (let col = 0; col * hstep < W + r; col++) {
+      const cx = col * hstep + (row % 2 ? hstep / 2 : 0);
+      const cy = row * vstep;
+      bgCtx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = Math.PI / 6 + i * Math.PI / 3;
+        const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+        if (i === 0) bgCtx.moveTo(x, y); else bgCtx.lineTo(x, y);
+      }
+      bgCtx.closePath();
+      bgCtx.stroke();
+    }
+  }
+
+  // drifting element tiles (periodic-table motif)
+  bgCtx.textAlign = 'center';
+  for (const tl of bgTiles) {
+    tl.x += tl.dx; tl.y += tl.dy;
+    if (tl.x < -60) tl.x = W + 40; if (tl.x > W + 60) tl.x = -40;
+    if (tl.y < -60) tl.y = H + 40; if (tl.y > H + 60) tl.y = -40;
+    const alpha = 0.05 + 0.06 * (0.5 + 0.5 * Math.sin(t * 0.6 + tl.ph));
+    bgCtx.strokeStyle = `rgba(82,229,255,${alpha * 1.4})`;
+    bgCtx.fillStyle = `rgba(82,229,255,${alpha * 0.35})`;
+    bgCtx.lineWidth = 1;
+    bgCtx.beginPath();
+    bgCtx.roundRect(tl.x - tl.s / 2, tl.y - tl.s / 2, tl.s, tl.s, 3);
+    bgCtx.fill(); bgCtx.stroke();
+    bgCtx.fillStyle = `rgba(82,229,255,${alpha * 2.2})`;
+    const [sym, num] = tl.e.split(' ');
+    bgCtx.font = `${tl.s * 0.38}px Consolas, monospace`;
+    bgCtx.fillText(sym, tl.x, tl.y + tl.s * 0.08);
+    bgCtx.font = `${tl.s * 0.2}px Consolas, monospace`;
+    bgCtx.fillText(num, tl.x, tl.y - tl.s * 0.24);
+  }
+
+  // large faint concentric arcs (corner decorations)
+  const arcs = [
+    { x: 0, y: H, r1: 120, r2: 200 },
+    { x: W, y: 0, r1: 90, r2: 170 }
+  ];
+  for (const a of arcs) {
+    for (let k = 0; k < 3; k++) {
+      const rr = a.r1 + (a.r2 - a.r1) * k / 2;
+      const start = t * 0.1 * (k % 2 ? 1 : -1) + k;
+      bgCtx.strokeStyle = `rgba(82,229,255,${0.06 - k * 0.012})`;
+      bgCtx.lineWidth = k === 0 ? 2 : 1;
+      bgCtx.beginPath();
+      bgCtx.arc(a.x, a.y, rr, start, start + Math.PI * (0.5 + 0.3 * k));
+      bgCtx.stroke();
+    }
+  }
+}
+let bgInterval = null;
+function startBgfx() {
+  initBgfx();
+  drawBgfx();
+  bgInterval = setInterval(drawBgfx, 120);
+}
+
+/* ═══════════════════════ ARC REACTOR ═══════════════════════ */
+const reactorCanvas = $('reactor');
+const rctx = reactorCanvas.getContext('2d');
+let rot = 0;
+
+// particle swirl ring (holographic dust)
+const PARTICLES = [];
+for (let i = 0; i < 170; i++) {
+  PARTICLES.push({
+    a: Math.random() * Math.PI * 2,
+    w: 0.4 + Math.random() * 0.9,
+    ph: Math.random() * Math.PI * 2,
+    band: Math.random(),
+    sz: 0.6 + Math.random() * 1.3
+  });
+}
+
+function drawReactor() {
+  const wrap = $('reactor-wrap');
+  const size = wrap.clientWidth;
+  if (size > 0 && reactorCanvas.width !== Math.round(size * devicePixelRatio)) {
+    reactorCanvas.width = Math.round(size * devicePixelRatio);
+    reactorCanvas.height = Math.round(size * devicePixelRatio);
+  }
+  const ctx = rctx;
+  const W = reactorCanvas.width, c = W / 2;
+  ctx.clearRect(0, 0, W, W);
+  ctx.save();
+  ctx.translate(c, c);
+
+  const active = S.mode === 'command' || S.speaking || S.busy;
+  const wakeLive = S.wakeOn && S.mode === 'standby';
+  const t = performance.now() / 1000;
+  const basePulse = 0.5 + 0.5 * Math.sin(t * (active ? 6 : wakeLive ? 2.2 : 1.1));
+  const intensity = active ? 0.75 + 0.25 * basePulse : wakeLive ? 0.45 + 0.2 * basePulse : 0.3 + 0.1 * basePulse;
+
+  const R = W * 0.46;
+
+  // outer glow
+  const glow = ctx.createRadialGradient(0, 0, R * 0.1, 0, 0, R);
+  glow.addColorStop(0, `rgba(82,229,255,${0.28 * intensity})`);
+  glow.addColorStop(0.55, `rgba(27,169,201,${0.10 * intensity})`);
+  glow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = glow;
+  ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
+
+  // outer ring ticks
+  ctx.strokeStyle = `rgba(82,229,255,${0.5 * intensity + 0.2})`;
+  ctx.lineWidth = W * 0.004;
+  for (let i = 0; i < 60; i++) {
+    const a = (i / 60) * Math.PI * 2 + rot * 0.15;
+    const long = i % 5 === 0;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a) * R * 0.97, Math.sin(a) * R * 0.97);
+    ctx.lineTo(Math.cos(a) * R * (long ? 0.90 : 0.94), Math.sin(a) * R * (long ? 0.90 : 0.94));
+    ctx.stroke();
+  }
+
+  // rotating arc segments
+  ctx.lineWidth = W * 0.012;
+  for (let s = 0; s < 3; s++) {
+    const start = rot + s * (Math.PI * 2 / 3);
+    ctx.strokeStyle = `rgba(82,229,255,${0.55 * intensity + 0.15})`;
+    ctx.beginPath(); ctx.arc(0, 0, R * 0.82, start, start + 1.1); ctx.stroke();
+  }
+  ctx.lineWidth = W * 0.007;
+  for (let s = 0; s < 4; s++) {
+    const start = -rot * 1.6 + s * (Math.PI / 2);
+    ctx.strokeStyle = `rgba(27,169,201,${0.5 * intensity + 0.1})`;
+    ctx.beginPath(); ctx.arc(0, 0, R * 0.70, start, start + 0.7); ctx.stroke();
+  }
+
+  // holographic particle swirl (between outer ring and coils)
+  for (const p of PARTICLES) {
+    const ang = p.a + t * 0.15 * p.w + rot * 0.4;
+    const wob = 0.045 * Math.sin(t * 0.9 + p.ph + ang * 3) + 0.035 * (p.band - 0.5);
+    const rad = R * (0.885 + wob);
+    const alpha = (0.10 + 0.30 * Math.abs(Math.sin(t * 0.7 + p.ph))) * (0.5 + intensity);
+    ctx.fillStyle = `rgba(120,235,255,${Math.min(alpha, 0.55)})`;
+    ctx.beginPath();
+    ctx.arc(Math.cos(ang) * rad, Math.sin(ang) * rad, p.sz * (W / 340), 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // mechanical gear-teeth ring
+  const teeth = 40;
+  ctx.fillStyle = `rgba(82,229,255,${0.30 * intensity + 0.12})`;
+  for (let i = 0; i < teeth; i++) {
+    const a = (i / teeth) * Math.PI * 2 - rot * 1.9;
+    ctx.save();
+    ctx.rotate(a);
+    ctx.fillRect(R * 0.625, -W * 0.006, W * 0.016, W * 0.012);
+    ctx.restore();
+  }
+  ctx.strokeStyle = `rgba(82,229,255,${0.22 * intensity + 0.08})`;
+  ctx.lineWidth = W * 0.003;
+  ctx.beginPath(); ctx.arc(0, 0, R * 0.625, 0, Math.PI * 2); ctx.stroke();
+
+  // segmented mid ring (reactor coils)
+  const segs = 10;
+  for (let i = 0; i < segs; i++) {
+    const a0 = (i / segs) * Math.PI * 2 + 0.06;
+    const a1 = ((i + 1) / segs) * Math.PI * 2 - 0.06;
+    ctx.beginPath();
+    ctx.arc(0, 0, R * 0.55, a0, a1);
+    ctx.strokeStyle = `rgba(82,229,255,${0.35 + 0.45 * intensity * (0.5 + 0.5 * Math.sin(t * 3 + i))})`;
+    ctx.lineWidth = W * 0.030;
+    ctx.stroke();
+  }
+
+  // audio-reactive spikes when listening/speaking
+  if (active || wakeLive) {
+    ctx.strokeStyle = `rgba(82,229,255,${0.5 * intensity + 0.2})`;
+    ctx.lineWidth = W * 0.005;
+    const bars = 48;
+    for (let i = 0; i < bars; i++) {
+      const a = (i / bars) * Math.PI * 2;
+      const amp = active ? (0.4 + 0.6 * Math.abs(Math.sin(t * 7 + i * 1.7))) : 0.25 * basePulse;
+      const r0 = R * 0.60, r1 = R * (0.60 + 0.07 * amp);
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * r0, Math.sin(a) * r0);
+      ctx.lineTo(Math.cos(a) * r1, Math.sin(a) * r1);
+      ctx.stroke();
+    }
+  }
+
+  // core
+  const core = ctx.createRadialGradient(0, 0, 0, 0, 0, R * 0.34);
+  core.addColorStop(0, `rgba(235,253,255,${0.95 * intensity + 0.05})`);
+  core.addColorStop(0.4, `rgba(82,229,255,${0.8 * intensity})`);
+  core.addColorStop(1, 'rgba(10,74,94,0.05)');
+  ctx.fillStyle = core;
+  ctx.beginPath(); ctx.arc(0, 0, R * 0.34, 0, Math.PI * 2); ctx.fill();
+
+  // core triangle (mk-armor motif)
+  ctx.strokeStyle = 'rgba(3,16,26,0.55)';
+  ctx.lineWidth = W * 0.010;
+  ctx.beginPath();
+  for (let i = 0; i < 3; i++) {
+    const a = -Math.PI / 2 + i * (Math.PI * 2 / 3);
+    const x = Math.cos(a) * R * 0.17, y = Math.sin(a) * R * 0.17;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath(); ctx.stroke();
+
+  ctx.restore();
+  rot += active ? 0.02 : 0.006;
+  requestAnimationFrame(drawReactor);
+}
+
+/* ═══════════════════════ SETTINGS UI ═══════════════════════ */
+function openSettings() {
+  $('set-apikey').value = settings.apiKey;
+  $('set-model').value = settings.model;
+  $('set-effort').value = settings.effort;
+  $('set-wake').value = settings.wake;
+  $('set-honorific').value = settings.honorific;
+  $('set-rate').value = String(settings.rate);
+  $('set-autowake').checked = settings.autoWake;
+  $('set-autoclap').checked = settings.autoClap;
+  $('set-autocam').checked = settings.autoCam;
+  $('set-sensitive').checked = settings.sensitive;
+  loadVoices();
+  $('modal-bg').classList.add('show');
+}
+function closeSettings() { $('modal-bg').classList.remove('show'); }
+
+$('settings-btn').onclick = openSettings;
+$('modal-close').onclick = closeSettings;
+$('modal-bg').onclick = e => { if (e.target === $('modal-bg')) closeSettings(); };
+$('modal-save').onclick = () => {
+  const hadKey = !!settings.apiKey;
+  settings.apiKey = $('set-apikey').value.trim();
+  settings.model = $('set-model').value;
+  settings.effort = $('set-effort').value;
+  settings.wake = $('set-wake').value.trim() || '자비스';
+  settings.honorific = $('set-honorific').value.trim() || '보스';
+  settings.voiceName = $('set-voice').value;
+  settings.rate = parseFloat($('set-rate').value);
+  settings.autoWake = $('set-autowake').checked;
+  settings.autoClap = $('set-autoclap').checked;
+  settings.autoCam = $('set-autocam').checked;
+  settings.sensitive = $('set-sensitive').checked;
+  saveSettings();
+  closeSettings();
+  lamp('lamp-brain', settings.apiKey ? 'on' : '');
+  syslog('설정 저장 완료', 'ok');
+  if (!hadKey && settings.apiKey) {
+    respond('AI 두뇌 연결이 확인되었습니다. 이제 무엇이든 물어보실 수 있습니다, ' + settings.honorific + '.');
+  }
+};
+
+/* ── chips & orb & text input ── */
+$('chip-wake').onclick = () => setWakeMode(!S.wakeOn);
+$('chip-clap').onclick = () => setClap(!S.clapOn);
+$('chip-cam').onclick = () => setCam(!S.camOn);
+$('reactor-wrap').onclick = orbListen;
+$('sendbtn').onclick = sendTyped;
+$('typebox').addEventListener('keydown', e => { if (e.key === 'Enter') sendTyped(); });
+function sendTyped() {
+  const v = $('typebox').value.trim();
+  if (!v) return;
+  $('typebox').value = '';
+  processCommand(v);
+}
+
+/* ═══════════════════════ BOOT ═══════════════════════ */
+$('boot-start').onclick = () => {
+  $('boot').classList.add('gone');
+  setTimeout(() => { const b = $('boot'); if (b) b.remove(); }, 900);
+  S.booted = true;
+
+  initSTT();
+  loadVoices();
+  drawReactor();
+  startBgfx();
+
+  lamp('lamp-brain', settings.apiKey ? 'on' : '');
+  syslog('JARVIS 시스템 온라인', 'ok');
+  syslog(settings.apiKey ? 'AI 두뇌: Claude 연결됨 (' + settings.model + ')' : 'AI 두뇌: 미연결 — 기본 모드', settings.apiKey ? 'ok' : 'warn');
+
+  const first = !localStorage.getItem('jarvis_seen');
+  localStorage.setItem('jarvis_seen', '1');
+
+  const greetH = new Date().getHours();
+  const timeGreet = greetH < 5 ? '늦은 밤까지 고생 많으십니다' : greetH < 12 ? '좋은 아침입니다' : greetH < 18 ? '좋은 오후입니다' : '좋은 저녁입니다';
+
+  if (first) {
+    addMsg('jarvis', `처음 뵙겠습니다, ${settings.honorific}. 저는 자비스입니다. 원을 클릭하거나 "자비스"라고 불러서 말을 걸 수 있고, 오른쪽 위 ⚙ 설정에서 Claude API 키를 연결하면 훨씬 똑똑해집니다.`);
+    speak(`처음 뵙겠습니다, ${settings.honorific}. 저는 자비스입니다. 무엇이든 편하게 말씀해주세요.`);
+  } else {
+    addMsg('jarvis', `${timeGreet}, ${settings.honorific}. 자비스 대기 중입니다.`);
+    speak(`${timeGreet}, ${settings.honorific}. 자비스 온라인입니다.`);
+  }
+
+  if (settings.autoWake && S.sttSupported) setWakeMode(true);
+  if (settings.autoClap) setClap(true);
+  if (settings.autoCam) setCam(true);
+};
+</script>
+</body>
+</html>
