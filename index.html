@@ -5,72 +5,63 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>J.A.R.V.I.S.</title>
 <style>
-  :root { --ink: #4fe6d2; }
+  :root { --g: #35e07a; --gd: #1d7a45; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { height: 100%; overflow: hidden; background: #000504; }
-  body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; color: var(--ink); cursor: none; }
+  html, body { height: 100%; overflow: hidden; background: #000403; }
+  body { font-family: 'Consolas','Cascadia Mono','D2Coding',monospace; color: var(--g); cursor: none; }
   body.showui { cursor: default; }
-
   #stage { position: fixed; inset: 0; display: block; }
 
   #cap {
-    position: fixed; left: 50%; bottom: 6.5vh; transform: translateX(-50%);
-    max-width: min(780px, 84vw); text-align: center;
-    font-size: clamp(13px, 1.5vw, 17px); font-weight: 300; line-height: 1.6;
-    color: #a8f5e8; opacity: 0; transition: opacity .7s ease;
-    text-shadow: 0 0 26px rgba(60,225,200,.6), 0 2px 12px rgba(0,0,0,.9);
+    position: fixed; left: 50%; bottom: 7vh; transform: translateX(-50%);
+    max-width: min(760px, 80vw); text-align: center;
+    font-size: clamp(12px,1.35vw,15px); font-weight: 400; line-height: 1.65; letter-spacing: .02em;
+    color: #9dffc4; opacity: 0; transition: opacity .6s ease;
+    text-shadow: 0 0 20px rgba(53,224,122,.65), 0 2px 10px #000;
     pointer-events: none; white-space: pre-wrap;
   }
-  #cap.on { opacity: .95; }
-  #cap.quiet { color: #46a99b; font-size: clamp(11px,1.1vw,13px); letter-spacing: .2em; text-transform: uppercase; }
+  #cap.on { opacity: .96; }
+  #cap.quiet { color: #2f9c5c; font-size: clamp(10px,1vw,12px); letter-spacing: .26em; text-transform: uppercase; }
 
-  #ctl { position: fixed; top: 18px; right: 20px; display: flex; gap: 10px; opacity: 0; transition: opacity .35s; pointer-events: none; }
+  #ctl { position: fixed; top: 16px; right: 18px; display: flex; gap: 9px; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 5; }
   body.showui #ctl { opacity: 1; pointer-events: auto; }
   .cbtn {
-    width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
-    background: rgba(8,40,38,.55); border: 1px solid rgba(90,230,210,.3);
-    color: #4fe6d2; font-size: 14px; display: grid; place-items: center;
-    backdrop-filter: blur(6px); transition: all .2s;
+    width: 32px; height: 32px; border-radius: 3px; cursor: pointer;
+    background: rgba(6,26,16,.7); border: 1px solid rgba(53,224,122,.35);
+    color: var(--g); font-size: 13px; display: grid; place-items: center; transition: all .15s;
   }
-  .cbtn:hover { background: rgba(16,80,74,.85); border-color: rgba(90,230,210,.65); }
-  .cbtn.off { color: #256b63; border-color: rgba(90,230,210,.13); }
+  .cbtn:hover { background: rgba(20,70,44,.9); border-color: var(--g); }
+  .cbtn.off { color: #1d5c37; border-color: rgba(53,224,122,.15); }
 
-  #badge { position: fixed; left: 20px; top: 18px; font-size: 10px; letter-spacing: .22em; opacity: 0; transition: opacity .35s; pointer-events: none; text-transform: uppercase; }
-  body.showui #badge { opacity: .85; }
-  #badge b { font-weight: 500; }
-  #badge.ok { color: #46a99b; }
-  #badge.no { color: #d98a5a; }
-
-  #sheet { position: fixed; inset: 0; background: rgba(0,6,6,.88); backdrop-filter: blur(10px); display: none; place-items: center; z-index: 20; }
+  #sheet { position: fixed; inset: 0; background: rgba(0,4,3,.9); display: none; place-items: center; z-index: 20; }
   #sheet.on { display: grid; }
-  #card { width: min(430px,88vw); max-height: 90vh; overflow-y: auto; padding: 28px 30px; background: rgba(5,26,25,.93); border: 1px solid rgba(90,230,210,.24); border-radius: 14px; }
-  #card h2 { font-size: 11px; letter-spacing: .4em; font-weight: 400; color: #4fe6d2; margin-bottom: 20px; }
-  .f { margin-bottom: 14px; }
-  .f label { display: block; font-size: 10.5px; letter-spacing: .14em; color: #46a99b; margin-bottom: 6px; }
-  .f input, .f select { width: 100%; background: rgba(0,12,12,.7); border: 1px solid rgba(90,230,210,.2); color: #d5fff8; padding: 9px 11px; border-radius: 7px; font-size: 13px; outline: none; font-family: inherit; }
-  .f input:focus, .f select:focus { border-color: rgba(90,230,210,.55); }
-  .row { display: flex; gap: 11px; } .row .f { flex: 1; }
-  .fin { display: flex; gap: 9px; justify-content: flex-end; margin-top: 20px; }
-  .fin button, #s-test { padding: 9px 18px; border-radius: 7px; font-size: 12.5px; cursor: pointer; font-family: inherit; background: none; border: 1px solid rgba(90,230,210,.28); color: #46a99b; }
-  .fin button.go { background: rgba(90,230,210,.15); color: #4fe6d2; border-color: rgba(90,230,210,.5); }
-  #s-test { width: 100%; background: rgba(90,230,210,.08); color: #4fe6d2; }
-  .note { font-size: 10.5px; color: #35827a; line-height: 1.7; margin-top: 5px; }
+  #card { width: min(430px,88vw); max-height: 90vh; overflow-y: auto; padding: 26px 28px; background: rgba(3,18,11,.96); border: 1px solid rgba(53,224,122,.3); }
+  #card h2 { font-size: 11px; letter-spacing: .42em; font-weight: 400; color: var(--g); margin-bottom: 20px; }
+  .f { margin-bottom: 13px; }
+  .f label { display: block; font-size: 10px; letter-spacing: .16em; color: #2f9c5c; margin-bottom: 5px; text-transform: uppercase; }
+  .f input, .f select { width: 100%; background: rgba(0,8,5,.8); border: 1px solid rgba(53,224,122,.25); color: #b9ffd6; padding: 8px 10px; border-radius: 2px; font-size: 12.5px; outline: none; font-family: inherit; }
+  .f input:focus, .f select:focus { border-color: var(--g); }
+  .row { display: flex; gap: 10px; } .row .f { flex: 1; }
+  .fin { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+  .fin button, #s-test { padding: 8px 16px; border-radius: 2px; font-size: 12px; cursor: pointer; font-family: inherit; background: none; border: 1px solid rgba(53,224,122,.3); color: #2f9c5c; letter-spacing: .08em; }
+  .fin button.go { background: rgba(53,224,122,.16); color: var(--g); border-color: var(--g); }
+  #s-test { width: 100%; background: rgba(53,224,122,.08); color: var(--g); }
+  .note { font-size: 10px; color: #226b40; line-height: 1.7; margin-top: 4px; }
 </style>
 </head>
 <body>
 
 <canvas id="stage"></canvas>
-<div id="badge"></div>
 <div id="cap"></div>
 
 <div id="ctl">
-  <button class="cbtn" id="b-mic" title="음성 대기">🎙</button>
-  <button class="cbtn" id="b-new" title="새 대화">↺</button>
-  <button class="cbtn" id="b-set" title="설정">⚙</button>
+  <button class="cbtn" id="b-mic" title="음성 대기">MIC</button>
+  <button class="cbtn" id="b-new" title="새 대화">NEW</button>
+  <button class="cbtn" id="b-set" title="설정">CFG</button>
 </div>
 
 <div id="sheet"><div id="card">
-  <h2>SETTINGS</h2>
+  <h2>SYSTEM CONFIG</h2>
   <div class="row">
     <div class="f"><label>호칭</label><input id="s-hon" placeholder="보스"></div>
     <div class="f"><label>웨이크워드</label><input id="s-wake" placeholder="자비스"></div>
@@ -88,598 +79,528 @@
   </div>
   <div class="f"><button id="s-test">목소리 미리듣기</button></div>
   <div class="f"><label>박수 두 번으로 호출</label><select id="s-clap"><option value="1">사용</option><option value="0">사용 안 함</option></select></div>
+  <div class="f"><label>웹캠 표시</label><select id="s-cam"><option value="1">표시</option><option value="0">숨김</option></select></div>
   <div class="f"><label>두뇌 서버 주소 (비워두면 자동)</label><input id="s-bridge" placeholder="자동 탐색">
-    <div class="note">비워두면 내 PC의 자비스가 게시한 공개 주소를 자동으로 찾습니다. 특정 주소를 강제하고 싶을 때만 입력하세요.</div>
+    <div class="note">비워두면 내 PC의 자비스가 게시한 공개 주소를 자동으로 찾습니다.</div>
   </div>
   <div class="fin"><button id="s-close">닫기</button><button class="go" id="s-save">저장</button></div>
 </div></div>
+
+<video id="cam" autoplay playsinline muted style="display:none"></video>
 
 <script>
 'use strict';
 const $ = id => document.getElementById(id);
 
 /* ─────────── config ─────────── */
-const DEF = { honorific:'보스', wake:'자비스', rate:1.05, pitch:1.0, voiceName:'', clap:true, bridge:'' };
+const DEF = { honorific:'보스', wake:'자비스', rate:1.05, pitch:1.0, voiceName:'', clap:true, cam:true, bridge:'' };
 let CFG = { ...DEF };
 try { Object.assign(CFG, JSON.parse(localStorage.getItem('jarvis_cfg') || '{}')); } catch(e) {}
 const saveCfg = () => localStorage.setItem('jarvis_cfg', JSON.stringify(CFG));
 
-/* 두뇌 주소 자동 탐색 —
-   내 PC의 자비스가 켜지면 공개 주소를 깃허브에 올린다.
-   페이지는 그 주소를 읽어와 스스로 연결하므로, 어느 기기에서든 설정이 필요 없다. */
 const BRIDGE_INDEX = 'https://raw.githubusercontent.com/SBJarvis0315/jarvis/main/bridge.json';
 let RESOLVED = null;
 function bridgeURL() { return RESOLVED || 'http://localhost:8787'; }
 
 async function alive(base) {
   try {
-    const c = new AbortController();
-    const to = setTimeout(() => c.abort(), 4000);
-    const r = await fetch(base + '/health', { cache: 'no-store', signal: c.signal });
+    const c = new AbortController(); const to = setTimeout(()=>c.abort(),4000);
+    const r = await fetch(base+'/health',{cache:'no-store',signal:c.signal});
     clearTimeout(to);
+    if (r.ok) { try { const j = await r.json(); if (j.model) HUD.model = String(j.model).toUpperCase(); } catch(e){} }
     return r.ok;
-  } catch (e) { return false; }
+  } catch(e) { return false; }
 }
-
 async function discoverBridge() {
   const tries = [];
-  if (CFG.bridge) tries.push(CFG.bridge.replace(/\/$/, ''));                  // 직접 지정이 최우선
-  if (location.protocol === 'http:' && location.port) tries.push(location.origin);
-  // 깃허브에 게시된 공개 주소
+  if (CFG.bridge) tries.push(CFG.bridge.replace(/\/$/,''));
+  if (location.protocol==='http:' && location.port) tries.push(location.origin);
   try {
-    const r = await fetch(BRIDGE_INDEX + '?t=' + Date.now(), { cache: 'no-store' });
-    if (r.ok) {
-      const j = await r.json();
-      if (j && j.url) tries.push(String(j.url).replace(/\/$/, ''));
-    }
-  } catch (e) {}
-  tries.push('http://localhost:8787');                                        // 같은 PC일 때
-
-  for (const base of tries) {
-    if (await alive(base)) { RESOLVED = base; return base; }
-  }
-  RESOLVED = null;
-  return null;
+    const r = await fetch(BRIDGE_INDEX+'?t='+Date.now(),{cache:'no-store'});
+    if (r.ok) { const j = await r.json(); if (j && j.url) tries.push(String(j.url).replace(/\/$/,'')); }
+  } catch(e){}
+  tries.push('http://localhost:8787');
+  for (const b of tries) { if (await alive(b)) { RESOLVED = b; return b; } }
+  RESOLVED = null; return null;
 }
 
 const S = { mode:'idle', bridge:false, micReady:false, wakeOn:false, busy:false, lastSpeakEnd:0 };
+const HUD = { model:'—', latency:0, t0:Date.now(), buffer:0, status:'STANDBY' };
 
-/* ─────────── caption / badge ─────────── */
-let capTimer = null;
+/* ─────────── caption ─────────── */
+let capTimer=null;
 function cap(text, quiet) {
-  const el = $('cap');
-  el.textContent = text || '';
-  el.classList.toggle('quiet', !!quiet);
-  el.classList.toggle('on', !!text);
+  const el=$('cap'); el.textContent=text||'';
+  el.classList.toggle('quiet',!!quiet); el.classList.toggle('on',!!text);
   clearTimeout(capTimer);
-  if (text) capTimer = setTimeout(() => el.classList.remove('on'), quiet ? 2600 : 8000);
-}
-function badge() {
-  const el = $('badge');
-  el.className = S.bridge ? 'ok' : 'no';
-  el.innerHTML = S.bridge
-    ? '● <b>두뇌 연결됨</b>'
-    : '○ <b>두뇌 대기 중</b> — 내 PC에서 JARVIS 실행 필요';
+  if (text) capTimer=setTimeout(()=>el.classList.remove('on'), quiet?2600:8000);
 }
 
-/* ─────────── audio in ─────────── */
+/* ─────────── audio ─────────── */
 let actx=null, analyser=null, freq=null, micStream=null;
-const BANDS = 64;
-const band = new Float32Array(BANDS), bandS = new Float32Array(BANDS);
-let level = 0, levelS = 0;
+const BANDS=64; const band=new Float32Array(BANDS), bandS=new Float32Array(BANDS);
+let level=0, levelS=0;
 
 async function initAudio() {
   if (S.micReady) return true;
-  try {
-    micStream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:false, noiseSuppression:false, autoGainControl:false } });
-  } catch(e) { return false; }
-  actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-  if (actx.state === 'suspended') await actx.resume();
-  const src = actx.createMediaStreamSource(micStream);
-  analyser = actx.createAnalyser();
-  analyser.fftSize = 2048; analyser.smoothingTimeConstant = 0.75;
-  src.connect(analyser);
-  freq = new Uint8Array(analyser.frequencyBinCount);
-  S.micReady = true; pollAudio(); return true;
+  try { micStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}}); }
+  catch(e){ return false; }
+  actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+  if (actx.state==='suspended') await actx.resume();
+  const src=actx.createMediaStreamSource(micStream);
+  analyser=actx.createAnalyser(); analyser.fftSize=2048; analyser.smoothingTimeConstant=0.72;
+  src.connect(analyser); freq=new Uint8Array(analyser.frequencyBinCount);
+  S.micReady=true; pollAudio(); return true;
 }
 function pollAudio() {
   if (!analyser) return;
   analyser.getByteFrequencyData(freq);
-  const lo=2, hi=340; let sum=0;
-  for (let i=0;i<BANDS;i++) {
+  const lo=2,hi=340; let sum=0;
+  for (let i=0;i<BANDS;i++){
     const t0=lo+Math.pow(i/BANDS,1.5)*(hi-lo), t1=lo+Math.pow((i+1)/BANDS,1.5)*(hi-lo);
     let m=0,n=0;
-    for (let k=Math.floor(t0);k<=Math.min(Math.floor(t1),freq.length-1);k++){m+=freq[k];n++;}
-    const v = n ? (m/n)/255 : 0;
-    band[i]=v; sum+=v;
+    for(let k=Math.floor(t0);k<=Math.min(Math.floor(t1),freq.length-1);k++){m+=freq[k];n++;}
+    const v=n?(m/n)/255:0; band[i]=v; sum+=v;
   }
-  level = Math.min(1,(sum/BANDS)*2.6);
+  level=Math.min(1,(sum/BANDS)*2.6);
   requestAnimationFrame(pollAudio);
 }
-
 let td=null, clapT=[], lastTrans=0;
 function clapWatch() {
   if (analyser && CFG.clap && !S.busy && S.mode!=='speak') {
-    td = td || new Uint8Array(analyser.fftSize);
+    td = td||new Uint8Array(analyser.fftSize);
     analyser.getByteTimeDomainData(td);
     let peak=0;
-    for (let i=0;i<td.length;i+=2){ const v=Math.abs(td[i]-128)/128; if(v>peak)peak=v; }
-    const now = performance.now();
+    for(let i=0;i<td.length;i+=2){const v=Math.abs(td[i]-128)/128; if(v>peak)peak=v;}
+    const now=performance.now();
     if (now-S.lastSpeakEnd>700 && peak>0.42 && now-lastTrans>150) {
       lastTrans=now; clapT.push(now);
-      while (clapT.length && now-clapT[0]>900) clapT.shift();
+      while(clapT.length && now-clapT[0]>900) clapT.shift();
       if (clapT.length>=2) {
-        const gap = clapT[clapT.length-1]-clapT[clapT.length-2];
-        if (gap>=150 && gap<=700) { clapT.length=0; wake(); }
+        const gap=clapT[clapT.length-1]-clapT[clapT.length-2];
+        if (gap>=150&&gap<=700){ clapT.length=0; wake(); }
       }
     }
   }
-  setTimeout(clapWatch, 40);
+  setTimeout(clapWatch,40);
 }
 
-/* ─────────── speech out ─────────── */
-let voices = [];
+/* ─────────── TTS ─────────── */
+let voices=[];
 function loadVoices() {
-  voices = speechSynthesis.getVoices();
-  const sel = $('s-voice'); if (!sel) return;
-  sel.innerHTML = '<option value="">자동 선택</option>';
-  const ko = voices.filter(v=>v.lang.startsWith('ko'));
-  const rest = voices.filter(v=>!v.lang.startsWith('ko')).sort((a,b)=>a.lang.localeCompare(b.lang)||a.name.localeCompare(b.name));
-  const add = (label,list) => {
-    if (!list.length) return;
-    const g = document.createElement('optgroup'); g.label = label;
-    list.forEach(v => {
-      const o = document.createElement('option');
-      o.value = v.name;
-      o.textContent = v.name.replace(/^Microsoft |^Google /,'') + '  (' + v.lang + ')';
-      if (v.name === CFG.voiceName) o.selected = true;
-      g.appendChild(o);
-    });
-    sel.appendChild(g);
-  };
-  add('한국어', ko); add('기타 언어', rest);
+  voices=speechSynthesis.getVoices();
+  const sel=$('s-voice'); if(!sel) return;
+  sel.innerHTML='<option value="">자동 선택</option>';
+  const ko=voices.filter(v=>v.lang.startsWith('ko'));
+  const rest=voices.filter(v=>!v.lang.startsWith('ko')).sort((a,b)=>a.lang.localeCompare(b.lang)||a.name.localeCompare(b.name));
+  const add=(label,list)=>{ if(!list.length)return;
+    const g=document.createElement('optgroup'); g.label=label;
+    list.forEach(v=>{ const o=document.createElement('option'); o.value=v.name;
+      o.textContent=v.name.replace(/^Microsoft |^Google /,'')+'  ('+v.lang+')';
+      if(v.name===CFG.voiceName)o.selected=true; g.appendChild(o); });
+    sel.appendChild(g); };
+  add('한국어',ko); add('기타 언어',rest);
 }
 speechSynthesis.onvoiceschanged = loadVoices;
-
-let wordPulse = 0, speakQueue = [], speaking = false;
 const pickVoice = () => voices.find(x=>x.name===CFG.voiceName)
-  || voices.find(x=>x.lang==='ko-KR' && /google/i.test(x.name))
+  || voices.find(x=>x.lang==='ko-KR'&&/google/i.test(x.name))
   || voices.find(x=>x.lang.startsWith('ko')) || voices[0];
 
-function enqueueSpeak(t, onDone) {
-  const s = (t||'').trim(); if (!s) { if (onDone) onDone(); return; }
-  speakQueue.push({ text:s, cb:onDone||null }); if (!speaking) drainQueue();
+let wordPulse=0, speakQueue=[], speaking=false;
+function enqueueSpeak(t,onDone){
+  const s=(t||'').trim(); if(!s){ if(onDone)onDone(); return; }
+  speakQueue.push({text:s,cb:onDone||null}); HUD.buffer=speakQueue.length;
+  if(!speaking) drainQueue();
 }
-function drainQueue() {
-  if (!speakQueue.length) {
-    speaking = false; S.lastSpeakEnd = performance.now();
-    // 명령을 받으려고 대기 중이면 그 상태를 덮어쓰지 않는다
-    S.mode = (capturing || S.wakeOn) ? 'listen' : 'idle';
-    setTimeout(resumeSTT, 260); return;
+function drainQueue(){
+  HUD.buffer=speakQueue.length;
+  if(!speakQueue.length){
+    speaking=false; S.lastSpeakEnd=performance.now();
+    S.mode=(capturing||S.wakeOn)?'listen':'idle';
+    setTimeout(resumeSTT,260); return;
   }
-  speaking = true; S.mode = 'speak'; pauseSTT();
-  const item = speakQueue.shift();
-  const u = new SpeechSynthesisUtterance(item.text);
-  const v = pickVoice();
-  if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'ko-KR';
-  u.rate = Number(CFG.rate)||1.05; u.pitch = Number(CFG.pitch)||1;
-  u.onboundary = () => { wordPulse = 1; };
-  u.onend = u.onerror = () => { if (item.cb) { try { item.cb(); } catch(e){} } drainQueue(); };
+  speaking=true; S.mode='speak'; pauseSTT();
+  const item=speakQueue.shift();
+  const u=new SpeechSynthesisUtterance(item.text);
+  const v=pickVoice();
+  if(v){u.voice=v;u.lang=v.lang;} else u.lang='ko-KR';
+  u.rate=Number(CFG.rate)||1.05; u.pitch=Number(CFG.pitch)||1;
+  u.onboundary=()=>{wordPulse=1;};
+  u.onend=u.onerror=()=>{ if(item.cb){try{item.cb();}catch(e){}} drainQueue(); };
   speechSynthesis.speak(u);
 }
-function stopSpeaking() {
-  speakQueue = []; speaking = false; speechSynthesis.cancel();
-  S.lastSpeakEnd = performance.now(); S.mode = S.wakeOn ? 'listen' : 'idle';
-}
-function speak(t, done) { stopSpeaking(); if (!t) { if (done) done(); return; } enqueueSpeak(t, done); }
-function takeSentences(buf) {
+function stopSpeaking(){ speakQueue=[]; speaking=false; HUD.buffer=0; speechSynthesis.cancel();
+  S.lastSpeakEnd=performance.now(); S.mode=S.wakeOn?'listen':'idle'; }
+function speak(t,done){ stopSpeaking(); if(!t){if(done)done();return;} enqueueSpeak(t,done); }
+function takeSentences(buf){
   const out=[]; const re=/[^.!?。？！\n]*[.!?。？！\n]+/g; let m,last=0;
-  while ((m=re.exec(buf))!==null){ const s=m[0].trim(); if(s.length>=2) out.push(s); last=re.lastIndex; }
-  return { sentences: out, rest: buf.slice(last) };
+  while((m=re.exec(buf))!==null){const s=m[0].trim(); if(s.length>=2)out.push(s); last=re.lastIndex;}
+  return {sentences:out, rest:buf.slice(last)};
 }
 
-/* ─────────── speech in ─────────── */
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let rec=null, recRun=false, recAlive=false, cmdTimer=null, capturing=false;
-function initSTT() {
-  if (!SR) { cap('이 브라우저는 음성 인식을 지원하지 않습니다. Chrome을 사용해주세요.'); return; }
-  rec = new SR(); rec.lang='ko-KR'; rec.continuous=true; rec.interimResults=true;
-  rec.onstart = () => { recAlive = true; };
-  rec.onend = () => { recAlive=false; if (recRun && S.mode!=='speak') setTimeout(()=>{try{rec.start()}catch(e){}},180); };
-  rec.onerror = e => {
-    if (e.error==='not-allowed'||e.error==='service-not-allowed') {
-      recRun=false; S.wakeOn=false; syncMicBtn();
-      cap('마이크 권한이 필요합니다. 주소창 자물쇠에서 허용해주세요.');
+/* ─────────── STT ─────────── */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null,recRun=false,recAlive=false,cmdTimer=null,capturing=false;
+function initSTT(){
+  if(!SR){cap('이 브라우저는 음성 인식을 지원하지 않습니다. Chrome을 사용해주세요.');return;}
+  rec=new SR(); rec.lang='ko-KR'; rec.continuous=true; rec.interimResults=true;
+  rec.onstart=()=>{recAlive=true;};
+  rec.onend=()=>{recAlive=false; if(recRun&&S.mode!=='speak')setTimeout(()=>{try{rec.start()}catch(e){}},180);};
+  rec.onerror=e=>{ if(e.error==='not-allowed'||e.error==='service-not-allowed'){
+    recRun=false;S.wakeOn=false;syncMicBtn(); cap('마이크 권한이 필요합니다.'); } };
+  rec.onresult=ev=>{
+    let interim='',final='';
+    for(let i=ev.resultIndex;i<ev.results.length;i++){
+      const r=ev.results[i]; if(r.isFinal)final+=r[0].transcript; else interim+=r[0].transcript;
     }
-  };
-  rec.onresult = ev => {
-    let interim='', final='';
-    for (let i=ev.resultIndex;i<ev.results.length;i++){
-      const r=ev.results[i]; if(r.isFinal) final+=r[0].transcript; else interim+=r[0].transcript;
-    }
-    if (interim && capturing) cap(interim.trim());
-    if (final) handleHeard(final.trim());
+    if(interim&&capturing)cap(interim.trim());
+    if(final)handleHeard(final.trim());
   };
 }
-function startSTT(){ if(rec){recRun=true; try{rec.start()}catch(e){}} }
-function stopSTT(){ recRun=false; if(rec){try{rec.abort()}catch(e){}} }
-function pauseSTT(){ if(rec&&recAlive){try{rec.abort()}catch(e){}} }
-function resumeSTT(){ if(recRun&&rec&&!recAlive&&S.mode!=='speak'){try{rec.start()}catch(e){}} }
+function startSTT(){if(rec){recRun=true;try{rec.start()}catch(e){}}}
+function stopSTT(){recRun=false;if(rec){try{rec.abort()}catch(e){}}}
+function pauseSTT(){if(rec&&recAlive){try{rec.abort()}catch(e){}}}
+function resumeSTT(){if(recRun&&rec&&!recAlive&&S.mode!=='speak'){try{rec.start()}catch(e){}}}
 
-function matchWake(t) {
-  const w = (CFG.wake||'자비스').replace(/\s/g,'');
-  const vars = [w]; if (w==='자비스') vars.push('자비수','차비스','쟈비스','jarvis');
-  for (const v of vars) {
-    const re = new RegExp(v.split('').map(c=>c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('\\s*'),'i');
-    const m = t.match(re);
-    if (m) return { hit:true, rest: t.slice(m.index+m[0].length).replace(/^[\s,.!?야씨~아]+/,'').trim() };
+function matchWake(t){
+  const w=(CFG.wake||'자비스').replace(/\s/g,'');
+  const vars=[w]; if(w==='자비스')vars.push('자비수','차비스','쟈비스','jarvis');
+  for(const v of vars){
+    const re=new RegExp(v.split('').map(c=>c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('\\s*'),'i');
+    const m=t.match(re);
+    if(m)return{hit:true,rest:t.slice(m.index+m[0].length).replace(/^[\s,.!?야씨~아]+/,'').trim()};
   }
-  return { hit:false, rest:'' };
+  return {hit:false,rest:''};
 }
-function handleHeard(text) {
-  if (!text || S.mode==='speak') return;
-  if (capturing) { clearTimeout(cmdTimer); capturing=false; return ask(text); }
-  const m = matchWake(text);
-  if (m.hit) { if (m.rest) ask(m.rest); else wake(); }
+function handleHeard(text){
+  if(!text||S.mode==='speak')return;
+  if(capturing){clearTimeout(cmdTimer);capturing=false;return ask(text);}
+  const m=matchWake(text);
+  if(m.hit){ if(m.rest)ask(m.rest); else wake(); }
 }
-const ACK = ['네, 보스.', '네, 말씀하세요.', '부르셨습니까?', '네, 듣고 있습니다.'];
-function wake() {
-  if (S.busy || capturing || S.mode==='speak') return;
-  if (!recRun) { S.wakeOn=true; startSTT(); syncMicBtn(); }
+const ACK=['네, 보스.','네, 말씀하세요.','부르셨습니까?','네, 듣고 있습니다.'];
+function wake(){
+  if(S.busy||capturing||S.mode==='speak')return;
+  if(!recRun){S.wakeOn=true;startSTT();syncMicBtn();}
   chime();
-  // 부르면 먼저 대답한다. 대답이 끝난 뒤에 명령을 듣기 시작한다.
-  const ack = ACK[Math.floor(Math.random()*ACK.length)].replace('보스', CFG.honorific);
-  cap(ack, true);
-  enqueueSpeak(ack, () => {
-    capturing = true;
-    S.mode = 'listen';
-    cap('듣고 있습니다', true);
+  const ack=ACK[Math.floor(Math.random()*ACK.length)].replace('보스',CFG.honorific);
+  cap(ack,true);
+  enqueueSpeak(ack,()=>{
+    capturing=true; S.mode='listen'; cap('듣고 있습니다',true);
     clearTimeout(cmdTimer);
-    cmdTimer = setTimeout(()=>{ capturing=false; S.mode=S.wakeOn?'listen':'idle'; cap(''); }, 9000);
+    cmdTimer=setTimeout(()=>{capturing=false;S.mode=S.wakeOn?'listen':'idle';cap('');},9000);
   });
 }
 
 /* ─────────── bridge ─────────── */
-async function checkBridge() {
-  // 이미 찾은 주소가 살아있으면 그대로 쓰고, 아니면 다시 탐색한다
-  if (RESOLVED && await alive(RESOLVED)) { S.bridge = true; badge(); return true; }
-  const found = await discoverBridge();
-  S.bridge = !!found;
-  badge();
-  return S.bridge;
+async function checkBridge(){
+  if(RESOLVED && await alive(RESOLVED)){S.bridge=true;return true;}
+  const f=await discoverBridge(); S.bridge=!!f; return S.bridge;
 }
-const TOOLNAME = { WebSearch:'웹 검색 중', WebFetch:'페이지 읽는 중', Read:'자료 읽는 중', Grep:'지식 검색 중',
-  Glob:'파일 찾는 중', Bash:'실행 중', Write:'작성 중', Edit:'수정 중', TodoWrite:'정리 중' };
+const TOOLNAME={WebSearch:'웹 검색 중',WebFetch:'페이지 읽는 중',Read:'자료 읽는 중',Grep:'지식 검색 중',
+  Glob:'파일 찾는 중',Bash:'실행 중',Write:'작성 중',Edit:'수정 중',TodoWrite:'정리 중'};
 
-async function ask(text) {
+async function ask(text){
   cap(text);
-  if (!S.bridge && !(await checkBridge())) {
+  if(!S.bridge && !(await checkBridge())){
     S.mode='idle';
     return speak('두뇌가 연결되지 않았습니다. 내 컴퓨터에서 자비스 실행 파일을 켜주세요.');
   }
   S.busy=true; S.mode='think';
-  let acc='', pend='';
-  try {
-    const res = await fetch(bridgeURL()+'/ask', {
-      method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ text })
-    });
-    const reader = res.body.getReader(), dec = new TextDecoder();
-    let buf='';
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buf += dec.decode(value, { stream:true });
+  const t0=performance.now(); let firstTok=false;
+  let acc='',pend='';
+  try{
+    const res=await fetch(bridgeURL()+'/ask',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text})});
+    const reader=res.body.getReader(),dec=new TextDecoder(); let buf='';
+    for(;;){
+      const {done,value}=await reader.read(); if(done)break;
+      buf+=dec.decode(value,{stream:true});
       let i;
-      while ((i = buf.indexOf('\n\n')) !== -1) {
-        const chunk = buf.slice(0,i).trim(); buf = buf.slice(i+2);
-        if (!chunk.startsWith('data:')) continue;
-        let ev; try { ev = JSON.parse(chunk.slice(5)); } catch(e) { continue; }
-        if (ev.kind==='tool') { if (!acc) cap(TOOLNAME[ev.name]||'작업 중', true); }
-        else if (ev.kind==='delta') {
-          acc += ev.text; pend += ev.text;
-          const r = takeSentences(pend); pend = r.rest;
-          if (r.sentences.length) { cap(acc.trim()); r.sentences.forEach(enqueueSpeak); }
-        } else if (ev.kind==='done') {
+      while((i=buf.indexOf('\n\n'))!==-1){
+        const ch=buf.slice(0,i).trim(); buf=buf.slice(i+2);
+        if(!ch.startsWith('data:'))continue;
+        let ev; try{ev=JSON.parse(ch.slice(5));}catch(e){continue;}
+        if(ev.kind==='tool'){ if(!acc)cap(TOOLNAME[ev.name]||'작업 중',true); }
+        else if(ev.kind==='delta'){
+          if(!firstTok){firstTok=true;HUD.latency=Math.round(performance.now()-t0);}
+          acc+=ev.text; pend+=ev.text;
+          const r=takeSentences(pend); pend=r.rest;
+          if(r.sentences.length){cap(acc.trim());r.sentences.forEach(s=>enqueueSpeak(s));}
+        }
+        else if(ev.kind==='done'){
           S.busy=false;
-          if (!ev.ok) { stopSpeaking(); cap(ev.error); speak(ev.error); return; }
-          const tail = pend.trim(); if (tail) enqueueSpeak(tail);
-          const full = (acc || ev.text || '').trim();
-          if (full) cap(full);
-          if (!speaking && !speakQueue.length && full) speak(full);
+          if(!ev.ok){stopSpeaking();cap(ev.error);speak(ev.error);return;}
+          const tail=pend.trim(); if(tail)enqueueSpeak(tail);
+          const full=(acc||ev.text||'').trim();
+          if(full)cap(full);
+          if(!speaking&&!speakQueue.length&&full)speak(full);
           return;
         }
       }
     }
     S.busy=false;
-    const tail = pend.trim(); if (tail) enqueueSpeak(tail);
-    if (!speaking && !speakQueue.length) S.mode='idle';
-  } catch(e) {
-    S.busy=false; S.mode='idle'; S.bridge=false; badge();
+    const tail=pend.trim(); if(tail)enqueueSpeak(tail);
+    if(!speaking&&!speakQueue.length)S.mode='idle';
+  }catch(e){
+    S.busy=false;S.mode='idle';S.bridge=false;
     speak('두뇌와의 연결이 끊어졌습니다.');
   }
 }
 
-function chime() {
-  try {
-    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
-    const t = actx.currentTime;
-    [1046,1568].forEach((f,i)=>{
-      const o=actx.createOscillator(), g=actx.createGain();
-      o.type='sine'; o.frequency.value=f;
-      g.gain.setValueAtTime(.0001,t+i*.08);
-      g.gain.exponentialRampToValueAtTime(.07,t+i*.08+.02);
-      g.gain.exponentialRampToValueAtTime(.0001,t+i*.08+.3);
-      o.connect(g); g.connect(actx.destination);
-      o.start(t+i*.08); o.stop(t+i*.08+.35);
+function chime(){
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const t=actx.currentTime;
+    [880,1320].forEach((f,i)=>{
+      const o=actx.createOscillator(),g=actx.createGain();
+      o.type='sine';o.frequency.value=f;
+      g.gain.setValueAtTime(.0001,t+i*.07);
+      g.gain.exponentialRampToValueAtTime(.06,t+i*.07+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,t+i*.07+.28);
+      o.connect(g);g.connect(actx.destination);
+      o.start(t+i*.07);o.stop(t+i*.07+.32);
     });
-  } catch(e) {}
+  }catch(e){}
 }
 
-/* ══════════════════════════════════════════════════════════
-   VISUAL — 3D 반투명 껍질(메시) + 내부 코어 디스크
-   실제 3D 정점을 매 프레임 계산해 원근 투영한다.
-   앞면/뒷면을 깊이에 따라 다른 밝기로 그려서 속이 비쳐 보인다.
-   ══════════════════════════════════════════════════════════ */
-const cv = $('stage');
-const ctx = cv.getContext('2d', { alpha:false });
-const shellC = document.createElement('canvas');        // 껍질 원본
-const shellX = shellC.getContext('2d');
-const blurC = document.createElement('canvas');         // 축소 후 확대 = 부드러운 발광
-const blurX = blurC.getContext('2d');
+/* ══════════════════════════════════════════════════════
+   VISUAL — 도트 네트워크 구체 + 초록 터미널 HUD
+   ══════════════════════════════════════════════════════ */
+const cv=$('stage');
+const ctx=cv.getContext('2d',{alpha:false});
 let W=0,H=0,DPR=1,CX=0,CY=0,R=0;
 
-const NU = 116;         // 경도 분할 (가로)
-const NV = 62;          // 위도 분할 (세로)
-const NPT = NU*NV;
-const SXa = new Float32Array(NPT);     // 화면 좌표
-const SYa = new Float32Array(NPT);
-const SD  = new Float32Array(NPT);     // 깊이 0..1 (1=앞)
-const FR  = new Float32Array(NPT);     // 프레넬 0..1 (1=실루엣 가장자리)
-// 격자 티가 나지 않도록 정점마다 고정 흔들림을 준다
-const JU = new Float32Array(NPT), JV = new Float32Array(NPT), JS = new Float32Array(NPT);
-for (let i=0;i<NPT;i++){ JU[i]=(Math.random()-0.5)*1.7; JV[i]=(Math.random()-0.5)*1.7; JS[i]=Math.random(); }
-
-/* 코어 반짝임 */
-const SPECK = [];
-for (let i=0;i<150;i++) {
-  const a = Math.random()*6.2832, rr = Math.pow(Math.random(),0.7);
-  SPECK.push({ a, r: rr, s: Math.random(), sp: 0.3+Math.random()*1.2 });
+/* 노드를 구면에 고르게 배치 (피보나치 구면) */
+const NN = 200;
+const NODE = [];
+for (let i=0;i<NN;i++){
+  const y = 1 - (i/(NN-1))*2;
+  const rad = Math.sqrt(Math.max(0,1-y*y));
+  const th = i * 2.399963;                       // 황금각
+  NODE.push({
+    bx: Math.cos(th)*rad, by: y, bz: Math.sin(th)*rad,
+    seed: Math.random(),
+    bandIdx: i % BANDS,
+    r: 0, x:0, y2:0, z:0, sx:0, sy:0, d:0, lit:0
+  });
 }
-
-function resize() {
-  DPR = Math.min(2, window.devicePixelRatio || 1);
-  const vw = Math.max(320, innerWidth||0), vh = Math.max(240, innerHeight||0);
-  W = cv.width = Math.floor(vw*DPR);
-  H = cv.height = Math.floor(vh*DPR);
-  shellC.width = W; shellC.height = H;
-  blurC.width = Math.max(1, Math.floor(W/5)); blurC.height = Math.max(1, Math.floor(H/5));
-  cv.style.width = vw+'px'; cv.style.height = vh+'px';
-  CX = W/2; CY = H/2; R = Math.min(W,H)*0.285;
-}
-addEventListener('resize', resize);
-resize();
-
-let energy=0, spin=0, yaw=0, tilt=0.30;
-
-function bandAt(u) {
-  const f = Math.min(BANDS-1, Math.max(0, u*(BANDS-1)));
-  const i = Math.floor(f), fr = f-i;
-  return (bandS[i]||0)*(1-fr) + (bandS[Math.min(i+1,BANDS-1)]||0)*fr;
-}
-
-/* 정점 계산 — 구를 변형해 물결치는 껍질을 만든다 */
-function buildMesh(t) {
-  const cy0 = Math.cos(yaw), sy0 = Math.sin(yaw);
-  const ct0 = Math.cos(tilt), st0 = Math.sin(tilt);
-  const FOC = R*4.2;
-  const amp = 0.5 + energy*1.35;
-
-  for (let v=0; v<NV; v++) {
-    for (let u=0; u<NU; u++) {
-      const idx = v*NU+u;
-      const phi = ((v + JV[idx])/(NV-1))*Math.PI;   // 흔들림 포함
-      const sp = Math.sin(phi), cp = Math.cos(phi);
-      const eq = sp;                                 // 적도에서 파형이 가장 크다
-      const th = ((u + JU[idx])/NU)*6.2832;
-      // 다중 파형 — 서로 다른 주기가 겹쳐 유기적으로 일렁인다
-      let w = 0.050*Math.sin(3*th + 0.62*t + 1.7*phi)
-            + 0.038*Math.sin(5*th - 0.47*t + 2.3*phi)
-            + 0.027*Math.sin(2*th + 0.93*t + 3.1*phi)
-            + 0.019*Math.sin(7*th + 0.78*t - 1.2*phi)
-            + 0.013*Math.sin(11*th - 1.15*t + 0.6*phi);
-      // 음파: 각도에 따라 다른 주파수 대역이 껍질을 밀어낸다
-      const uu = u/NU;
-      const aud = bandAt(uu < 0.5 ? uu*2 : (1-uu)*2);
-      w += aud*(0.085 + energy*0.20);
-
-      const rr = R * (1 + w*(0.45 + eq*0.95)*amp);
-
-      let x = rr*sp*Math.cos(th);
-      let y = rr*cp*0.88;                       // 살짝 눌린 구 → 돔 느낌
-      let z = rr*sp*Math.sin(th);
-
-      // yaw
-      const x1 = x*cy0 - z*sy0;
-      const z1 = x*sy0 + z*cy0;
-      // tilt
-      const y1 = y*ct0 - z1*st0;
-      const z2 = y*st0 + z1*ct0;
-
-      const persp = FOC/(FOC - z2);
-      SXa[idx] = CX + x1*persp;
-      SYa[idx] = CY + y1*persp;
-      SD[idx] = Math.max(0, Math.min(1, (z2/(R*1.15)+1)*0.5));
-      // 프레넬: 표면이 시선과 나란할수록(실루엣) 1에 가깝다.
-      // 이것이 껍질을 "철망"이 아니라 "빛나는 막"으로 보이게 만드는 핵심이다.
-      const len = Math.sqrt(x1*x1 + y1*y1 + z2*z2) || 1;
-      FR[idx] = 1 - Math.abs(z2/len);
-    }
+/* 가까운 노드끼리 간선 연결 → 그물망 */
+const EDGE = [];
+for (let i=0;i<NN;i++){
+  const a=NODE[i];
+  const near=[];
+  for (let j=0;j<NN;j++){
+    if(i===j)continue;
+    const b=NODE[j];
+    const d=(a.bx-b.bx)**2+(a.by-b.by)**2+(a.bz-b.bz)**2;
+    near.push({j,d});
+  }
+  near.sort((p,q)=>p.d-q.d);
+  for (let k=0;k<3;k++){
+    const j=near[k].j;
+    if (j>i) EDGE.push([i,j]);
+    else if (!EDGE.some(e=>e[0]===j&&e[1]===i)) EDGE.push([j,i]);
   }
 }
 
-/* 껍질 그리기 — 격자선 대신 미세 입자 + 드문 흐름선.
-   밝기를 프레넬로 결정해 가장자리만 빛나는 반투명 막처럼 보이게 한다. */
-const NBUCKET = 10;
-function drawShell(c, t) {
-  const e = energy;
-  c.globalCompositeOperation = 'lighter';
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1);
+  const vw=Math.max(320,innerWidth||0), vh=Math.max(240,innerHeight||0);
+  W=cv.width=Math.floor(vw*DPR); H=cv.height=Math.floor(vh*DPR);
+  cv.style.width=vw+'px'; cv.style.height=vh+'px';
+  CX=W/2; CY=H*0.47; R=Math.min(W,H)*0.155;
+}
+addEventListener('resize',resize); resize();
 
-  // ── 입자 막 ──
-  for (let i=0;i<NPT;i++) {
-    const f = FR[i];
-    if (f < 0.28) continue;                       // 안쪽 면은 거의 비운다 → 투명감
-    const d = SD[i];
-    const tw = 0.7 + 0.3*Math.sin(t*1.3 + JS[i]*10);
-    // 가장자리로 갈수록 밝아진다 (지수가 낮을수록 막이 부드럽게 퍼진다)
-    const a = Math.pow(f, 2.3) * (0.30 + e*0.80) * (0.55 + d*0.7) * tw;
-    if (a < 0.012) continue;
-    const sz = (0.55 + f*1.35 + d*0.55) * DPR;
-    const lig = 52 + f*34 + d*10;
-    c.fillStyle = 'hsla(' + (170 + f*12) + ',88%,' + lig + '%,' + Math.min(0.85,a) + ')';
-    c.fillRect(SXa[i]-sz*0.5, SYa[i]-sz*0.5, sz, sz);
-  }
+let energy=0, yaw=0, pitchA=0.24, spin=0;
 
-  // ── 흐름선: 위도 링을 드문드문 이어 유기적인 결을 만든다 ──
-  c.lineCap = 'round';
-  for (let b=0;b<NBUCKET;b++) {
-    let p = null;
-    for (let v=3; v<NV-3; v+=5) {
-      let started = false;
-      for (let u=0; u<=NU; u++) {
-        const i = v*NU + (u%NU);
-        const f = FR[i];
-        const bk = Math.min(NBUCKET-1, Math.floor(f*NBUCKET));
-        if (bk !== b || f < 0.3) { started = false; continue; }
-        if (!p) p = new Path2D();
-        if (!started) { p.moveTo(SXa[i], SYa[i]); started = true; }
-        else p.lineTo(SXa[i], SYa[i]);
-      }
-    }
-    if (!p) continue;
-    const f = (b+0.5)/NBUCKET;
-    const a = Math.pow(f,2.0) * (0.16 + e*0.42);
-    c.strokeStyle = 'hsla(' + (172 + f*10) + ',90%,' + (55+f*30) + '%,' + a + ')';
-    c.lineWidth = (0.4 + f*1.1)*DPR;
-    c.stroke(p);
-  }
-  c.lineCap = 'butt';
+/* ── HUD 패널 ── */
+function hudPanel(x, y, w, title, rows) {
+  const F = Math.max(9, Math.round(W*0.0072));
+  const lh = F*2.05;
+  const h = lh*(rows.length) + F*3.1;
+  ctx.strokeStyle='rgba(53,224,122,0.30)'; ctx.lineWidth=Math.max(1,DPR*0.9);
+  ctx.strokeRect(x,y,w,h);
+  // 코너 브래킷
+  ctx.strokeStyle='rgba(53,224,122,0.75)'; ctx.lineWidth=Math.max(1,DPR*1.6);
+  const b=F*1.3;
+  [[x,y,1,1],[x+w,y,-1,1],[x,y+h,1,-1],[x+w,y+h,-1,-1]].forEach(([px,py,sx,sy])=>{
+    ctx.beginPath(); ctx.moveTo(px+sx*b,py); ctx.lineTo(px,py); ctx.lineTo(px,py+sy*b); ctx.stroke();
+  });
+  ctx.font = '600 '+F+'px Consolas, monospace';
+  ctx.textBaseline='middle';
+  ctx.fillStyle='rgba(53,224,122,0.95)';
+  ctx.textAlign='left';
+  ctx.fillText(title, x+F*1.2, y+F*1.5);
+  ctx.strokeStyle='rgba(53,224,122,0.22)'; ctx.lineWidth=Math.max(1,DPR*0.8);
+  ctx.beginPath(); ctx.moveTo(x+F*1.2, y+F*2.5); ctx.lineTo(x+w-F*1.2, y+F*2.5); ctx.stroke();
+
+  ctx.font = F+'px Consolas, monospace';
+  rows.forEach((rw,i)=>{
+    const yy = y+F*3.5+i*lh;
+    ctx.textAlign='left';
+    ctx.fillStyle='rgba(53,224,122,0.45)';
+    ctx.fillText(rw[0], x+F*1.2, yy);
+    ctx.textAlign='right';
+    ctx.fillStyle = rw[2] || 'rgba(120,255,175,0.95)';
+    ctx.fillText(rw[1], x+w-F*1.2, yy);
+  });
+  ctx.textAlign='left';
+  return h;
 }
 
-/* 껍질 안쪽 코어 — 동심원 격자 디스크 + 반짝임 */
-function drawCore(t) {
-  const e = energy;
-  const cr = R*0.40;
+function pad(n,l){ return String(n).padStart(l,'0'); }
+
+function drawHUD(t) {
+  const F = Math.max(9, Math.round(W*0.0072));
+  const pw = Math.min(W*0.235, F*26);
+  const my = H*0.24;
+
+  const voice = (pickVoice()||{}).name || '—';
+  hudPanel(W*0.022, my, pw, 'SYSTEM', [
+    ['MODEL', HUD.model],
+    ['LANGUAGE', 'KOREAN'],
+    ['SAMPLE RATE', actx ? (Math.round(actx.sampleRate/1000)+',000 Hz') : '—'],
+    ['OUTPUT', 'VOICE'],
+    ['TTS ENGINE', voice.replace(/^Microsoft |^Google /,'').slice(0,12).toUpperCase()]
+  ]);
+
+  const el = Math.floor((Date.now()-HUD.t0)/1000);
+  hudPanel(W-W*0.022-pw, my, pw, 'SESSION', [
+    ['DURATION', pad(Math.floor(el/3600),2)+':'+pad(Math.floor(el/60)%60,2)+':'+pad(el%60,2), 'rgba(255,110,90,0.95)'],
+    ['AUDIO LEVEL', levelS.toFixed(2)],
+    ['STATUS', HUD.status, S.bridge?'rgba(120,255,175,0.95)':'rgba(255,180,80,0.95)'],
+    ['LINK', S.bridge?'ONLINE':'OFFLINE', S.bridge?'rgba(120,255,175,0.95)':'rgba(255,110,90,0.95)']
+  ]);
+
+  ctx.font = F+'px Consolas, monospace';
+  ctx.fillStyle='rgba(53,224,122,0.42)';
+  ctx.textAlign='right';
+  ctx.fillText('LATENCY  '+(HUD.latency?HUD.latency+'ms':'--ms'), W-W*0.022, H*0.055);
+  ctx.textAlign='left';
+  ctx.fillText('BUFFER  '+HUD.buffer, W*0.022, H-H*0.045);
+  ctx.textAlign='right';
+  ctx.fillText(new Date().toTimeString().slice(0,8), W-W*0.022, H-H*0.045);
+  ctx.textAlign='left';
+}
+
+/* ── 웹캠 미리보기 ── */
+let camOn=false;
+async function initCam(){
+  if(!CFG.cam||camOn) return;
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({video:{width:320,height:240}});
+    $('cam').srcObject=s; camOn=true;
+  }catch(e){ camOn=false; }
+}
+function drawCam(){
+  if(!camOn) return;
+  const v=$('cam'); if(!v.videoWidth) return;
+  const w=Math.min(W*0.235, 300*DPR), h=w*0.72;
+  const x=W-W*0.022-w, y=H-H*0.045-h-Math.round(W*0.0072)*2.2;
   ctx.save();
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.translate(CX, CY);
-  ctx.scale(1, Math.cos(tilt)*0.92 + 0.08);          // 기울어진 원판처럼
-
-  // 광휘
-  const g = ctx.createRadialGradient(0,0,0,0,0,cr*1.9);
-  g.addColorStop(0,'rgba(120,255,235,'+(0.05+e*0.08)+')');
-  g.addColorStop(0.45,'rgba(40,190,175,'+(0.022+e*0.032)+')');
-  g.addColorStop(1,'rgba(0,0,0,0)');
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(0,0,cr*1.9,0,6.2832); ctx.fill();
-
-  // 동심원
-  ctx.lineWidth = DPR;
-  for (let i=1;i<=7;i++) {
-    const rr = cr*(i/7);
-    ctx.strokeStyle = 'rgba(110,240,220,'+(0.05+e*0.10)*(1-i*0.07)+')';
-    ctx.beginPath(); ctx.arc(0,0,rr,0,6.2832); ctx.stroke();
-  }
-  // 방사 격자
-  const rot = t*0.10;
-  ctx.strokeStyle = 'rgba(110,240,220,'+(0.045+e*0.085)+')';
-  for (let k=0;k<24;k++) {
-    const a = k*0.2618 + rot;
-    ctx.beginPath();
-    ctx.moveTo(Math.cos(a)*cr*0.14, Math.sin(a)*cr*0.14);
-    ctx.lineTo(Math.cos(a)*cr, Math.sin(a)*cr);
-    ctx.stroke();
-  }
-  // 겹치는 원 (생명의 꽃 패턴)
-  ctx.strokeStyle = 'rgba(130,250,230,'+(0.04+e*0.08)+')';
-  for (let k=0;k<6;k++) {
-    const a = k*1.0472 - rot*0.6;
-    ctx.beginPath();
-    ctx.arc(Math.cos(a)*cr*0.33, Math.sin(a)*cr*0.33, cr*0.33, 0, 6.2832);
-    ctx.stroke();
-  }
-
-  // 중심 반짝임
-  for (const s of SPECK) {
-    const tw = 0.35 + 0.65*Math.abs(Math.sin(t*s.sp + s.s*9));
-    const aud = bandAt(s.r);
-    const rr = cr*s.r*(0.55 + aud*0.5);
-    const a = (0.06 + e*0.30) * tw * (1 - s.r*0.55);
-    if (a < 0.02) continue;
-    const x = Math.cos(s.a + t*0.05)*rr, y = Math.sin(s.a + t*0.05)*rr;
-    const sz = (0.6 + tw*1.5 + aud*1.6)*DPR;
-    ctx.fillStyle = 'rgba('+Math.round(160+70*tw)+',255,'+Math.round(225+25*tw)+','+Math.min(0.9,a)+')';
-    ctx.fillRect(x-sz*0.5, y-sz*0.5, sz, sz);
-  }
+  ctx.globalAlpha=0.9;
+  ctx.translate(x+w,y); ctx.scale(-1,1);
+  ctx.drawImage(v,0,0,w,h);
   ctx.restore();
+  ctx.strokeStyle='rgba(53,224,122,0.5)'; ctx.lineWidth=Math.max(1,DPR);
+  ctx.strokeRect(x,y,w,h);
 }
 
-function frame(ts) {
-  const t = ts/1000;
-  const wantW = Math.floor(Math.max(320, innerWidth||0)*DPR);
-  if (wantW !== W) resize();
+function frame(ts){
+  const t=ts/1000;
+  const wantW=Math.floor(Math.max(320,innerWidth||0)*DPR);
+  if(wantW!==W) resize();
 
-  for (let i=0;i<BANDS;i++) {
-    const tg = band[i]||0;
-    bandS[i] += (tg-bandS[i]) * (tg>bandS[i] ? 0.45 : 0.10);
+  for(let i=0;i<BANDS;i++){
+    const tg=band[i]||0;
+    bandS[i]+=(tg-bandS[i])*(tg>bandS[i]?0.5:0.11);
   }
-  levelS += (level-levelS)*(level>levelS?0.35:0.07);
-  wordPulse *= 0.90;
+  levelS+=(level-levelS)*(level>levelS?0.4:0.07);
+  wordPulse*=0.9;
 
-  let tE, tS;
-  if (S.mode==='speak')       { tE = 0.60 + levelS*0.80 + wordPulse*0.32; tS = 0.30; }
-  else if (S.mode==='think')  { tE = 0.44 + 0.15*Math.sin(t*3.0);          tS = 0.72; }
-  else if (S.mode==='listen') { tE = 0.28 + levelS*0.70;                   tS = 0.16; }
-  else                        { tE = 0.15 + levelS*0.26;                   tS = 0.07; }
-  energy += (Math.min(1.1,tE)-energy)*0.10;
-  spin += (tS-spin)*0.05;
-  yaw += 0.0011 + spin*0.0055;
-  tilt = 0.30 + 0.045*Math.sin(t*0.17);
+  let tE,tS;
+  if(S.mode==='speak'){tE=0.70+levelS*0.95+wordPulse*0.35;tS=0.42;HUD.status='SPEAKING';}
+  else if(S.mode==='think'){tE=0.50+0.18*Math.sin(t*3.2);tS=0.95;HUD.status='PROCESSING';}
+  else if(S.mode==='listen'){tE=0.34+levelS*0.90;tS=0.20;HUD.status=capturing?'LISTENING':'READY';}
+  else{tE=0.17+levelS*0.30;tS=0.08;HUD.status=S.bridge?'STANDBY':'NO LINK';}
+  energy+=(Math.min(1.3,tE)-energy)*0.12;
+  spin+=(tS-spin)*0.06;
+  yaw+=0.0018+spin*0.011;
+  pitchA=0.24+0.07*Math.sin(t*0.19);
 
   // 배경
-  const bg = ctx.createRadialGradient(CX,CY,0,CX,CY,Math.max(W,H)*0.72);
-  bg.addColorStop(0,'#02100f');
-  bg.addColorStop(0.55,'#010a0a');
-  bg.addColorStop(1,'#000403');
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+  ctx.globalCompositeOperation='source-over';
+  ctx.fillStyle='#000403'; ctx.fillRect(0,0,W,H);
+  // 미세 그리드
+  ctx.strokeStyle='rgba(53,224,122,0.030)'; ctx.lineWidth=1;
+  const gs=Math.round(W*0.026);
+  ctx.beginPath();
+  for(let x=0;x<W;x+=gs){ctx.moveTo(x,0);ctx.lineTo(x,H);}
+  for(let y=0;y<H;y+=gs){ctx.moveTo(0,y);ctx.lineTo(W,y);}
+  ctx.stroke();
 
-  buildMesh(t);
+  // 중앙 수평선
+  const hl=ctx.createLinearGradient(0,0,W,0);
+  hl.addColorStop(0,'rgba(53,224,122,0)');
+  hl.addColorStop(0.5,'rgba(53,224,122,'+(0.30+energy*0.30)+')');
+  hl.addColorStop(1,'rgba(53,224,122,0)');
+  ctx.strokeStyle=hl; ctx.lineWidth=Math.max(1,DPR*0.9);
+  ctx.beginPath(); ctx.moveTo(0,CY); ctx.lineTo(W,CY); ctx.stroke();
 
-  // 껍질을 따로 그린 뒤, 축소→확대로 만든 부드러운 발광과 겹친다.
-  // 선이 그대로 드러나지 않고 빛나는 막처럼 번진다.
-  shellX.clearRect(0,0,W,H);
-  drawShell(shellX, t);
+  // ── 노드 위치 계산 ──
+  const cy0=Math.cos(yaw), sy0=Math.sin(yaw);
+  const cp0=Math.cos(pitchA), sp0=Math.sin(pitchA);
+  const FOC=R*5.2;
+  for(let i=0;i<NN;i++){
+    const n=NODE[i];
+    const aud=bandS[n.bandIdx]||0;
+    const wob=0.10*Math.sin(t*0.9+n.seed*12) + 0.07*Math.sin(t*1.7+n.seed*23);
+    // 음파가 노드를 바깥으로 밀어낸다 → 도트가 대화에 반응
+    const rr=R*(1 + wob*(0.4+energy*0.5) + aud*(0.40+energy*0.55) + energy*0.10);
+    n.lit=aud;
+    let x=n.bx*rr, y=n.by*rr, z=n.bz*rr;
+    const x1=x*cy0-z*sy0, z1=x*sy0+z*cy0;
+    const y1=y*cp0-z1*sp0, z2=y*sp0+z1*cp0;
+    const p=FOC/(FOC-z2);
+    n.sx=CX+x1*p; n.sy=CY+y1*p; n.z=z2;
+    n.d=Math.max(0,Math.min(1,(z2/(R*1.5)+1)*0.5));
+  }
 
-  blurX.globalCompositeOperation = 'copy';
-  blurX.imageSmoothingEnabled = true;
-  blurX.drawImage(shellC, 0, 0, blurC.width, blurC.height);
+  ctx.globalCompositeOperation='lighter';
 
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.imageSmoothingEnabled = true;
-  ctx.globalAlpha = 0.95;
-  ctx.drawImage(blurC, 0, 0, W, H);          // 번짐
-  ctx.globalAlpha = 0.62;
-  ctx.drawImage(shellC, 0, 0);               // 디테일
-  ctx.globalAlpha = 1;
+  // 중심부 은은한 코어
+  const cg=ctx.createRadialGradient(CX,CY,0,CX,CY,R*1.15);
+  cg.addColorStop(0,'rgba(30,140,80,'+(0.30+energy*0.22)+')');
+  cg.addColorStop(0.55,'rgba(20,90,55,'+(0.12+energy*0.10)+')');
+  cg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(CX,CY,R*1.15,0,6.2832); ctx.fill();
 
-  drawCore(t);
+  // ── 간선 (그물망) ──
+  ctx.lineWidth=Math.max(1,DPR*0.75);
+  for(const [i,j] of EDGE){
+    const a=NODE[i], b=NODE[j];
+    const d=(a.d+b.d)*0.5;
+    const lit=(a.lit+b.lit)*0.5;
+    const al=(0.05+d*0.22)*(0.35+energy*0.95)+lit*0.30;
+    if(al<0.02) continue;
+    ctx.strokeStyle='rgba('+Math.round(40+lit*120)+','+Math.round(200+lit*55)+','+Math.round(110+lit*80)+','+Math.min(0.8,al)+')';
+    ctx.beginPath(); ctx.moveTo(a.sx,a.sy); ctx.lineTo(b.sx,b.sy); ctx.stroke();
+  }
 
-  // 비네트
-  ctx.globalCompositeOperation = 'source-over';
-  const vg = ctx.createRadialGradient(CX,CY,R*1.05,CX,CY,Math.max(W,H)*0.75);
-  vg.addColorStop(0,'rgba(0,0,0,0)');
-  vg.addColorStop(1,'rgba(0,4,4,0.80)');
-  ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
+  // ── 노드 (도트) ──
+  for(let i=0;i<NN;i++){
+    const n=NODE[i];
+    const al=(0.20+n.d*0.55)*(0.45+energy*1.0)+n.lit*0.5;
+    const sz=(0.9+n.d*1.5+n.lit*2.6)*DPR;
+    ctx.fillStyle='rgba('+Math.round(90+n.lit*160)+',255,'+Math.round(150+n.lit*90)+','+Math.min(0.95,al)+')';
+    ctx.beginPath(); ctx.arc(n.sx,n.sy,sz,0,6.2832); ctx.fill();
+  }
+
+  // HUD
+  ctx.globalCompositeOperation='source-over';
+  drawHUD(t);
+  drawCam();
 
   requestAnimationFrame(frame);
 }
@@ -687,66 +608,69 @@ requestAnimationFrame(frame);
 
 /* ─────────── interactions ─────────── */
 let uiTimer=null;
-function showUI(){ document.body.classList.add('showui'); clearTimeout(uiTimer); uiTimer=setTimeout(()=>document.body.classList.remove('showui'),2600); }
-addEventListener('mousemove', showUI);
-
-cv.addEventListener('click', () => {
-  if ($('sheet').classList.contains('on')) return;
-  if (S.mode==='speak') { stopSpeaking(); return; }
+function showUI(){document.body.classList.add('showui');clearTimeout(uiTimer);
+  uiTimer=setTimeout(()=>document.body.classList.remove('showui'),2600);}
+addEventListener('mousemove',showUI);
+cv.addEventListener('click',()=>{
+  if($('sheet').classList.contains('on'))return;
+  if(S.mode==='speak'){stopSpeaking();return;}
   wake();
 });
-function syncMicBtn(){ $('b-mic').classList.toggle('off', !S.wakeOn); }
-$('b-mic').onclick = e => { e.stopPropagation(); S.wakeOn=!S.wakeOn;
-  if (S.wakeOn){ startSTT(); cap('웨이크워드 대기 중',true);} else { stopSTT(); cap('대기 해제',true);} syncMicBtn(); };
-$('b-new').onclick = async e => { e.stopPropagation();
-  try { await fetch(bridgeURL()+'/reset',{method:'POST'}); cap('새 대화를 시작합니다',true); }
-  catch(err){ cap('두뇌가 연결되지 않았습니다',true); } };
-$('b-set').onclick = e => { e.stopPropagation(); openSheet(); };
+function syncMicBtn(){$('b-mic').classList.toggle('off',!S.wakeOn);}
+$('b-mic').onclick=e=>{e.stopPropagation();S.wakeOn=!S.wakeOn;
+  if(S.wakeOn){startSTT();cap('웨이크워드 대기 중',true);}else{stopSTT();cap('대기 해제',true);}syncMicBtn();};
+$('b-new').onclick=async e=>{e.stopPropagation();
+  try{await fetch(bridgeURL()+'/reset',{method:'POST'});HUD.t0=Date.now();cap('새 대화를 시작합니다',true);}
+  catch(err){cap('두뇌가 연결되지 않았습니다',true);}};
+$('b-set').onclick=e=>{e.stopPropagation();openSheet();};
 
-function openSheet() {
-  $('s-hon').value=CFG.honorific; $('s-wake').value=CFG.wake;
-  $('s-rate').value=String(CFG.rate); $('s-pitch').value=String(CFG.pitch);
-  $('s-clap').value=CFG.clap?'1':'0'; $('s-bridge').value=CFG.bridge||'';
-  loadVoices(); $('sheet').classList.add('on');
+function openSheet(){
+  $('s-hon').value=CFG.honorific;$('s-wake').value=CFG.wake;
+  $('s-rate').value=String(CFG.rate);$('s-pitch').value=String(CFG.pitch);
+  $('s-clap').value=CFG.clap?'1':'0';$('s-cam').value=CFG.cam?'1':'0';
+  $('s-bridge').value=CFG.bridge||'';
+  loadVoices();$('sheet').classList.add('on');
 }
-$('s-test').onclick = () => {
+$('s-test').onclick=()=>{
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance('안녕하십니까. 자비스입니다. 무엇을 도와드릴까요.');
-  const v = voices.find(x=>x.name===$('s-voice').value);
-  if (v) { u.voice=v; u.lang=v.lang; } else u.lang='ko-KR';
-  u.rate=parseFloat($('s-rate').value); u.pitch=parseFloat($('s-pitch').value);
+  const u=new SpeechSynthesisUtterance('안녕하십니까. 자비스입니다. 무엇을 도와드릴까요.');
+  const v=voices.find(x=>x.name===$('s-voice').value);
+  if(v){u.voice=v;u.lang=v.lang;}else u.lang='ko-KR';
+  u.rate=parseFloat($('s-rate').value);u.pitch=parseFloat($('s-pitch').value);
   speechSynthesis.speak(u);
 };
-$('s-close').onclick = () => $('sheet').classList.remove('on');
-$('sheet').onclick = e => { if (e.target===$('sheet')) $('sheet').classList.remove('on'); };
-$('s-save').onclick = async () => {
-  CFG.honorific = $('s-hon').value.trim()||'보스';
-  CFG.wake = $('s-wake').value.trim()||'자비스';
-  CFG.rate = parseFloat($('s-rate').value);
-  CFG.pitch = parseFloat($('s-pitch').value);
-  CFG.voiceName = $('s-voice').value;
-  CFG.clap = $('s-clap').value==='1';
-  CFG.bridge = $('s-bridge').value.trim();
-  saveCfg(); $('sheet').classList.remove('on');
-  cap('설정을 저장했습니다', true);
+$('s-close').onclick=()=>$('sheet').classList.remove('on');
+$('sheet').onclick=e=>{if(e.target===$('sheet'))$('sheet').classList.remove('on');};
+$('s-save').onclick=async()=>{
+  CFG.honorific=$('s-hon').value.trim()||'보스';
+  CFG.wake=$('s-wake').value.trim()||'자비스';
+  CFG.rate=parseFloat($('s-rate').value);
+  CFG.pitch=parseFloat($('s-pitch').value);
+  CFG.voiceName=$('s-voice').value;
+  CFG.clap=$('s-clap').value==='1';
+  CFG.cam=$('s-cam').value==='1';
+  CFG.bridge=$('s-bridge').value.trim();
+  saveCfg();$('sheet').classList.remove('on');
+  cap('설정을 저장했습니다',true);
+  if(CFG.cam)initCam();
   await checkBridge();
 };
 
 /* ─────────── boot ─────────── */
-(async function boot() {
-  loadVoices(); initSTT(); syncMicBtn(); showUI(); badge();
-  const ok = await checkBridge();
-  await initAudio(); clapWatch();
-  const h = new Date().getHours();
-  const greet = h<5?'늦은 밤까지 고생 많으십니다':h<12?'좋은 아침입니다':h<18?'좋은 오후입니다':'좋은 저녁입니다';
-  if (ok) {
-    S.wakeOn=true; startSTT(); syncMicBtn();
-    cap(greet+', '+CFG.honorific, true);
+(async function boot(){
+  loadVoices();initSTT();syncMicBtn();showUI();
+  const ok=await checkBridge();
+  await initAudio();clapWatch();initCam();
+  const h=new Date().getHours();
+  const greet=h<5?'늦은 밤까지 고생 많으십니다':h<12?'좋은 아침입니다':h<18?'좋은 오후입니다':'좋은 저녁입니다';
+  if(ok){
+    S.wakeOn=true;startSTT();syncMicBtn();
+    cap(greet+', '+CFG.honorific,true);
     speak(greet+', '+CFG.honorific+'. 자비스 대기 중입니다.');
-  } else {
+  }else{
     cap('내 컴퓨터에서 JARVIS 실행 파일을 켜면 두뇌가 연결됩니다.');
   }
-  setInterval(() => { if (!S.busy) checkBridge(); }, 15000);
+  setInterval(()=>{if(!S.busy)checkBridge();},15000);
 })();
 </script>
 </body>
