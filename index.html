@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>J.A.R.V.I.S.</title>
 <style>
-  :root { --ink: #8fd8ff; }
+  :root { --ink: #4fe6d2; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { height: 100%; overflow: hidden; background: #01060f; }
+  html, body { height: 100%; overflow: hidden; background: #000504; }
   body { font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; color: var(--ink); cursor: none; }
   body.showui { cursor: default; }
 
@@ -17,47 +17,44 @@
     position: fixed; left: 50%; bottom: 6.5vh; transform: translateX(-50%);
     max-width: min(780px, 84vw); text-align: center;
     font-size: clamp(13px, 1.5vw, 17px); font-weight: 300; line-height: 1.6;
-    color: #bfe9ff; opacity: 0; transition: opacity .7s ease;
-    text-shadow: 0 0 26px rgba(90,190,255,.6), 0 2px 12px rgba(0,0,0,.9);
+    color: #a8f5e8; opacity: 0; transition: opacity .7s ease;
+    text-shadow: 0 0 26px rgba(60,225,200,.6), 0 2px 12px rgba(0,0,0,.9);
     pointer-events: none; white-space: pre-wrap;
   }
   #cap.on { opacity: .95; }
-  #cap.quiet { color: #5f9fc4; font-size: clamp(11px,1.1vw,13px); letter-spacing: .2em; text-transform: uppercase; }
+  #cap.quiet { color: #46a99b; font-size: clamp(11px,1.1vw,13px); letter-spacing: .2em; text-transform: uppercase; }
 
   #ctl { position: fixed; top: 18px; right: 20px; display: flex; gap: 10px; opacity: 0; transition: opacity .35s; pointer-events: none; }
   body.showui #ctl { opacity: 1; pointer-events: auto; }
   .cbtn {
     width: 34px; height: 34px; border-radius: 50%; cursor: pointer;
-    background: rgba(10,34,56,.55); border: 1px solid rgba(140,215,255,.3);
-    color: #8fd8ff; font-size: 14px; display: grid; place-items: center;
+    background: rgba(8,40,38,.55); border: 1px solid rgba(90,230,210,.3);
+    color: #4fe6d2; font-size: 14px; display: grid; place-items: center;
     backdrop-filter: blur(6px); transition: all .2s;
   }
-  .cbtn:hover { background: rgba(24,70,104,.85); border-color: rgba(140,215,255,.65); }
-  .cbtn.off { color: #2d5a75; border-color: rgba(140,215,255,.13); }
+  .cbtn:hover { background: rgba(16,80,74,.85); border-color: rgba(90,230,210,.65); }
+  .cbtn.off { color: #256b63; border-color: rgba(90,230,210,.13); }
 
-  #badge {
-    position: fixed; left: 20px; top: 18px; font-size: 10px; letter-spacing: .22em;
-    opacity: 0; transition: opacity .35s; pointer-events: none; text-transform: uppercase;
-  }
+  #badge { position: fixed; left: 20px; top: 18px; font-size: 10px; letter-spacing: .22em; opacity: 0; transition: opacity .35s; pointer-events: none; text-transform: uppercase; }
   body.showui #badge { opacity: .85; }
   #badge b { font-weight: 500; }
-  #badge.ok { color: #5f9fc4; }
+  #badge.ok { color: #46a99b; }
   #badge.no { color: #d98a5a; }
 
-  #sheet { position: fixed; inset: 0; background: rgba(1,6,15,.88); backdrop-filter: blur(10px); display: none; place-items: center; z-index: 20; }
+  #sheet { position: fixed; inset: 0; background: rgba(0,6,6,.88); backdrop-filter: blur(10px); display: none; place-items: center; z-index: 20; }
   #sheet.on { display: grid; }
-  #card { width: min(430px,88vw); max-height: 90vh; overflow-y: auto; padding: 28px 30px; background: rgba(7,24,40,.92); border: 1px solid rgba(140,215,255,.24); border-radius: 14px; }
-  #card h2 { font-size: 11px; letter-spacing: .4em; font-weight: 400; color: #8fd8ff; margin-bottom: 20px; }
+  #card { width: min(430px,88vw); max-height: 90vh; overflow-y: auto; padding: 28px 30px; background: rgba(5,26,25,.93); border: 1px solid rgba(90,230,210,.24); border-radius: 14px; }
+  #card h2 { font-size: 11px; letter-spacing: .4em; font-weight: 400; color: #4fe6d2; margin-bottom: 20px; }
   .f { margin-bottom: 14px; }
-  .f label { display: block; font-size: 10.5px; letter-spacing: .14em; color: #5f9fc4; margin-bottom: 6px; }
-  .f input, .f select { width: 100%; background: rgba(0,10,20,.7); border: 1px solid rgba(140,215,255,.2); color: #d5f0ff; padding: 9px 11px; border-radius: 7px; font-size: 13px; outline: none; font-family: inherit; }
-  .f input:focus, .f select:focus { border-color: rgba(140,215,255,.55); }
+  .f label { display: block; font-size: 10.5px; letter-spacing: .14em; color: #46a99b; margin-bottom: 6px; }
+  .f input, .f select { width: 100%; background: rgba(0,12,12,.7); border: 1px solid rgba(90,230,210,.2); color: #d5fff8; padding: 9px 11px; border-radius: 7px; font-size: 13px; outline: none; font-family: inherit; }
+  .f input:focus, .f select:focus { border-color: rgba(90,230,210,.55); }
   .row { display: flex; gap: 11px; } .row .f { flex: 1; }
   .fin { display: flex; gap: 9px; justify-content: flex-end; margin-top: 20px; }
-  .fin button, #s-test { padding: 9px 18px; border-radius: 7px; font-size: 12.5px; cursor: pointer; font-family: inherit; background: none; border: 1px solid rgba(140,215,255,.28); color: #5f9fc4; }
-  .fin button.go { background: rgba(140,215,255,.15); color: #8fd8ff; border-color: rgba(140,215,255,.5); }
-  #s-test { width: 100%; background: rgba(140,215,255,.08); color: #8fd8ff; }
-  .note { font-size: 10.5px; color: #3f7492; line-height: 1.7; margin-top: 5px; }
+  .fin button, #s-test { padding: 9px 18px; border-radius: 7px; font-size: 12.5px; cursor: pointer; font-family: inherit; background: none; border: 1px solid rgba(90,230,210,.28); color: #46a99b; }
+  .fin button.go { background: rgba(90,230,210,.15); color: #4fe6d2; border-color: rgba(90,230,210,.5); }
+  #s-test { width: 100%; background: rgba(90,230,210,.08); color: #4fe6d2; }
+  .note { font-size: 10.5px; color: #35827a; line-height: 1.7; margin-top: 5px; }
 </style>
 </head>
 <body>
@@ -91,8 +88,8 @@
   </div>
   <div class="f"><button id="s-test">목소리 미리듣기</button></div>
   <div class="f"><label>박수 두 번으로 호출</label><select id="s-clap"><option value="1">사용</option><option value="0">사용 안 함</option></select></div>
-  <div class="f"><label>두뇌 서버 주소</label><input id="s-bridge" placeholder="http://localhost:8787">
-    <div class="note">이 페이지는 어디서든 열리지만, 두뇌는 내 PC에서 JARVIS 실행 파일이 켜져 있어야 작동합니다.</div>
+  <div class="f"><label>두뇌 서버 주소 (비워두면 자동)</label><input id="s-bridge" placeholder="자동 탐색">
+    <div class="note">비워두면 내 PC의 자비스가 게시한 공개 주소를 자동으로 찾습니다. 특정 주소를 강제하고 싶을 때만 입력하세요.</div>
   </div>
   <div class="fin"><button id="s-close">닫기</button><button class="go" id="s-save">저장</button></div>
 </div></div>
@@ -106,10 +103,43 @@ const DEF = { honorific:'보스', wake:'자비스', rate:1.05, pitch:1.0, voiceN
 let CFG = { ...DEF };
 try { Object.assign(CFG, JSON.parse(localStorage.getItem('jarvis_cfg') || '{}')); } catch(e) {}
 const saveCfg = () => localStorage.setItem('jarvis_cfg', JSON.stringify(CFG));
-function bridgeURL() {
-  if (CFG.bridge) return CFG.bridge.replace(/\/$/, '');
-  if (location.protocol === 'http:' && location.port) return location.origin;
-  return 'http://localhost:8787';
+
+/* 두뇌 주소 자동 탐색 —
+   내 PC의 자비스가 켜지면 공개 주소를 깃허브에 올린다.
+   페이지는 그 주소를 읽어와 스스로 연결하므로, 어느 기기에서든 설정이 필요 없다. */
+const BRIDGE_INDEX = 'https://raw.githubusercontent.com/SBJarvis0315/jarvis/main/bridge.json';
+let RESOLVED = null;
+function bridgeURL() { return RESOLVED || 'http://localhost:8787'; }
+
+async function alive(base) {
+  try {
+    const c = new AbortController();
+    const to = setTimeout(() => c.abort(), 4000);
+    const r = await fetch(base + '/health', { cache: 'no-store', signal: c.signal });
+    clearTimeout(to);
+    return r.ok;
+  } catch (e) { return false; }
+}
+
+async function discoverBridge() {
+  const tries = [];
+  if (CFG.bridge) tries.push(CFG.bridge.replace(/\/$/, ''));                  // 직접 지정이 최우선
+  if (location.protocol === 'http:' && location.port) tries.push(location.origin);
+  // 깃허브에 게시된 공개 주소
+  try {
+    const r = await fetch(BRIDGE_INDEX + '?t=' + Date.now(), { cache: 'no-store' });
+    if (r.ok) {
+      const j = await r.json();
+      if (j && j.url) tries.push(String(j.url).replace(/\/$/, ''));
+    }
+  } catch (e) {}
+  tries.push('http://localhost:8787');                                        // 같은 PC일 때
+
+  for (const base of tries) {
+    if (await alive(base)) { RESOLVED = base; return base; }
+  }
+  RESOLVED = null;
+  return null;
 }
 
 const S = { mode:'idle', bridge:false, micReady:false, wakeOn:false, busy:false, lastSpeakEnd:0 };
@@ -127,7 +157,9 @@ function cap(text, quiet) {
 function badge() {
   const el = $('badge');
   el.className = S.bridge ? 'ok' : 'no';
-  el.innerHTML = S.bridge ? '● <b>두뇌 연결됨</b>' : '○ <b>두뇌 없음</b> — 내 PC에서 JARVIS 실행';
+  el.innerHTML = S.bridge
+    ? '● <b>두뇌 연결됨</b>'
+    : '○ <b>두뇌 대기 중</b> — 내 PC에서 JARVIS 실행 필요';
 }
 
 /* ─────────── audio in ─────────── */
@@ -298,13 +330,12 @@ function wake() {
 
 /* ─────────── bridge ─────────── */
 async function checkBridge() {
-  try {
-    const c = new AbortController();
-    const to = setTimeout(()=>c.abort(), 2500);
-    const r = await fetch(bridgeURL()+'/health', { cache:'no-store', signal:c.signal });
-    clearTimeout(to); S.bridge = r.ok;
-  } catch(e) { S.bridge = false; }
-  badge(); return S.bridge;
+  // 이미 찾은 주소가 살아있으면 그대로 쓰고, 아니면 다시 탐색한다
+  if (RESOLVED && await alive(RESOLVED)) { S.bridge = true; badge(); return true; }
+  const found = await discoverBridge();
+  S.bridge = !!found;
+  badge();
+  return S.bridge;
 }
 const TOOLNAME = { WebSearch:'웹 검색 중', WebFetch:'페이지 읽는 중', Read:'자료 읽는 중', Grep:'지식 검색 중',
   Glob:'파일 찾는 중', Bash:'실행 중', Write:'작성 중', Edit:'수정 중', TodoWrite:'정리 중' };
@@ -352,8 +383,7 @@ async function ask(text) {
     const tail = pend.trim(); if (tail) enqueueSpeak(tail);
     if (!speaking && !speakQueue.length) S.mode='idle';
   } catch(e) {
-    S.busy=false; S.mode='idle';
-    S.bridge=false; badge();
+    S.busy=false; S.mode='idle'; S.bridge=false; badge();
     speak('두뇌와의 연결이 끊어졌습니다.');
   }
 }
@@ -375,236 +405,200 @@ function chime() {
 }
 
 /* ══════════════════════════════════════════════════════════
-   VISUAL — 유리질 동심원 포털 + 내부 홀로그램 도시 + 수면 반사
+   VISUAL — 3D 반투명 껍질(메시) + 내부 코어 디스크
+   실제 3D 정점을 매 프레임 계산해 원근 투영한다.
+   앞면/뒷면을 깊이에 따라 다른 밝기로 그려서 속이 비쳐 보인다.
    ══════════════════════════════════════════════════════════ */
 const cv = $('stage');
 const ctx = cv.getContext('2d', { alpha:false });
-const off = document.createElement('canvas');           // 포털을 따로 그려 반사에 재사용
-const octx = off.getContext('2d');
+let W=0,H=0,DPR=1,CX=0,CY=0,R=0;
 
-let W=0,H=0,DPR=1,CX=0,CY=0,R=0,WATER=0;
+const NU = 76;          // 경도 분할 (가로)
+const NV = 40;          // 위도 분할 (세로)
+const VX = new Float32Array(NU*NV);
+const VY = new Float32Array(NU*NV);
+const VZ = new Float32Array(NU*NV);
+const SXa = new Float32Array(NU*NV);   // 화면 좌표
+const SYa = new Float32Array(NU*NV);
+const SD = new Float32Array(NU*NV);    // 깊이 0..1 (1=앞)
 
-/* 도시 스카이라인 — 건물마다 고정된 폭/기본높이/창문 시드 */
-const NB = 46;
-const BLD = [];
-for (let i=0;i<NB;i++) {
-  BLD.push({
-    base: 0.22 + Math.pow(Math.abs(Math.sin(i*2.7)),1.4)*0.55 + (i%7===0?0.18:0),
-    w: 0.55 + (i%3)*0.22,
-    seed: Math.random(),
-    win: Math.floor(3 + Math.random()*5)
-  });
+/* 코어 반짝임 */
+const SPECK = [];
+for (let i=0;i<150;i++) {
+  const a = Math.random()*6.2832, rr = Math.pow(Math.random(),0.7);
+  SPECK.push({ a, r: rr, s: Math.random(), sp: 0.3+Math.random()*1.2 });
 }
-/* 배경 보케 */
-const BOKEH = [];
-for (let i=0;i<46;i++) BOKEH.push({ x:Math.random(), y:Math.random(), r:0.01+Math.random()*0.055, a:0.02+Math.random()*0.09, s:Math.random() });
-/* 광선 */
-const STREAK = [];
-for (let i=0;i<7;i++) STREAK.push({ a:Math.random()*6.283, sp:0.05+Math.random()*0.14, len:0.5+Math.random()*0.9, w:Math.random(), off:Math.random()*6.283 });
 
 function resize() {
   DPR = Math.min(2, window.devicePixelRatio || 1);
   const vw = Math.max(320, innerWidth||0), vh = Math.max(240, innerHeight||0);
-  W = cv.width = off.width = Math.floor(vw*DPR);
-  H = cv.height = off.height = Math.floor(vh*DPR);
+  W = cv.width = Math.floor(vw*DPR);
+  H = cv.height = Math.floor(vh*DPR);
   cv.style.width = vw+'px'; cv.style.height = vh+'px';
-  CX = W/2; CY = H*0.435; R = Math.min(W,H)*0.285; WATER = H*0.735;
+  CX = W/2; CY = H/2; R = Math.min(W,H)*0.285;
 }
 addEventListener('resize', resize);
 resize();
 
-let energy=0, spin=0, hue=0, rot=0;
+let energy=0, spin=0, yaw=0, tilt=0.30;
 
-function bandAt(u) {                       // u: 0..1
+function bandAt(u) {
   const f = Math.min(BANDS-1, Math.max(0, u*(BANDS-1)));
   const i = Math.floor(f), fr = f-i;
   return (bandS[i]||0)*(1-fr) + (bandS[Math.min(i+1,BANDS-1)]||0)*fr;
 }
 
-/* ── 배경: 깊은 남색 그라디언트 + 보케 + 수면 ── */
-function drawBackground(t) {
-  const g = ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,   '#01060f');
-  g.addColorStop(0.42,'#04182f');
-  g.addColorStop(0.72,'#062340');
-  g.addColorStop(1,   '#010912');
-  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+/* 정점 계산 — 구를 변형해 물결치는 껍질을 만든다 */
+function buildMesh(t) {
+  const cy0 = Math.cos(yaw), sy0 = Math.sin(yaw);
+  const ct0 = Math.cos(tilt), st0 = Math.sin(tilt);
+  const FOC = R*4.2;
+  const amp = 0.5 + energy*1.35;
 
-  // 보케 (초점 밖 도시 불빛)
-  ctx.globalCompositeOperation = 'lighter';
-  for (const b of BOKEH) {
-    const bx = b.x*W, by = b.y*H*0.85;
-    const br = b.r*Math.min(W,H)*(1+0.12*Math.sin(t*0.3+b.s*9));
-    const a = b.a*(0.5+0.5*Math.sin(t*0.22+b.s*11))*(0.55+energy*0.6);
-    const rg = ctx.createRadialGradient(bx,by,0,bx,by,br);
-    rg.addColorStop(0,'rgba(90,180,255,'+a+')');
-    rg.addColorStop(0.55,'rgba(40,110,200,'+(a*0.35)+')');
-    rg.addColorStop(1,'rgba(0,0,0,0)');
-    ctx.fillStyle = rg;
-    ctx.beginPath(); ctx.arc(bx,by,br,0,6.2832); ctx.fill();
+  for (let v=0; v<NV; v++) {
+    const phi = (v/(NV-1))*Math.PI;            // 0..π
+    const sp = Math.sin(phi), cp = Math.cos(phi);
+    const eq = sp;                              // 적도에서 파형이 가장 크다
+    for (let u=0; u<NU; u++) {
+      const th = (u/NU)*6.2832;
+      // 다중 파형 — 서로 다른 주기가 겹쳐 유기적으로 일렁인다
+      let w = 0.050*Math.sin(3*th + 0.62*t + 1.7*phi)
+            + 0.038*Math.sin(5*th - 0.47*t + 2.3*phi)
+            + 0.027*Math.sin(2*th + 0.93*t + 3.1*phi)
+            + 0.019*Math.sin(7*th + 0.78*t - 1.2*phi)
+            + 0.013*Math.sin(11*th - 1.15*t + 0.6*phi);
+      // 음파: 각도에 따라 다른 주파수 대역이 껍질을 밀어낸다
+      const uu = u/NU;
+      const aud = bandAt(uu < 0.5 ? uu*2 : (1-uu)*2);
+      w += aud*(0.085 + energy*0.20);
+
+      const rr = R * (1 + w*(0.45 + eq*0.95)*amp);
+
+      let x = rr*sp*Math.cos(th);
+      let y = rr*cp*0.88;                       // 살짝 눌린 구 → 돔 느낌
+      let z = rr*sp*Math.sin(th);
+
+      // yaw
+      const x1 = x*cy0 - z*sy0;
+      const z1 = x*sy0 + z*cy0;
+      // tilt
+      const y1 = y*ct0 - z1*st0;
+      const z2 = y*st0 + z1*ct0;
+
+      const persp = FOC/(FOC - z2);
+      const i = v*NU+u;
+      VX[i]=x1; VY[i]=y1; VZ[i]=z2;
+      SXa[i] = CX + x1*persp;
+      SYa[i] = CY + y1*persp;
+      SD[i] = Math.max(0, Math.min(1, (z2/(R*1.15)+1)*0.5));
+    }
   }
-  ctx.globalCompositeOperation = 'source-over';
 }
 
-/* ── 홀로그램 도시 (포털 내부) ── */
-function drawCity(c, t) {
-  c.save();
-  c.beginPath(); c.arc(CX,CY,R*0.965,0,6.2832); c.clip();
+/* 깊이별 알파를 버킷으로 묶어 한 번에 그린다 (상태 변경 최소화) */
+const NBUCKET = 12;
+const bucketPath = [];
+function strokeMesh(t) {
+  for (let b=0;b<NBUCKET;b++) bucketPath[b] = null;
 
-  const ground = CY + R*0.62;
-  const span = R*1.95;
-  const bw = span/NB;
+  const push = (b, x0,y0,x1,y1) => {
+    let p = bucketPath[b];
+    if (!p) { p = bucketPath[b] = new Path2D(); }
+    p.moveTo(x0,y0); p.lineTo(x1,y1);
+  };
 
-  // 원근 격자 바닥
-  c.strokeStyle = 'rgba(70,160,235,0.16)'; c.lineWidth = DPR;
-  for (let i=0;i<=12;i++) {
-    const x = CX - span/2 + (span/12)*i;
-    c.beginPath(); c.moveTo(x, ground); c.lineTo(CX + (x-CX)*2.1, ground + R*0.42); c.stroke();
+  // 위도 링 (가로 방향)
+  for (let v=0; v<NV; v++) {
+    for (let u=0; u<NU; u++) {
+      const i = v*NU+u, j = v*NU+((u+1)%NU);
+      const d = (SD[i]+SD[j])*0.5;
+      const b = Math.min(NBUCKET-1, Math.floor(d*NBUCKET));
+      push(b, SXa[i],SYa[i], SXa[j],SYa[j]);
+    }
   }
-  for (let i=1;i<=5;i++) {
-    const y = ground + Math.pow(i/5,1.9)*R*0.42;
-    c.strokeStyle = 'rgba(70,160,235,'+(0.16-i*0.022)+')';
-    c.beginPath(); c.moveTo(CX-span*0.9, y); c.lineTo(CX+span*0.9, y); c.stroke();
-  }
-
-  // 건물 — 높이가 음파에 반응한다
-  for (let i=0;i<NB;i++) {
-    const b = BLD[i];
-    const u = i/(NB-1);
-    const aud = bandAt(u < 0.5 ? u*2 : (1-u)*2);
-    const h = R*(b.base*0.62 + aud*(0.30+energy*0.55) + energy*0.06);
-    const x = CX - span/2 + bw*i + bw*0.12;
-    const w = bw*b.w*0.9;
-    const top = ground - h;
-
-    const gg = c.createLinearGradient(0, top, 0, ground);
-    const lit = 0.30 + aud*0.55 + energy*0.25;
-    gg.addColorStop(0,   'rgba(180,235,255,'+Math.min(0.92,lit)+')');
-    gg.addColorStop(0.25,'rgba(70,175,250,'+(lit*0.55)+')');
-    gg.addColorStop(1,   'rgba(20,80,150,0.05)');
-    c.fillStyle = gg;
-    c.fillRect(x, top, w, h);
-
-    // 상단 하이라이트
-    c.fillStyle = 'rgba(215,245,255,'+Math.min(0.95, 0.35+aud*0.6)+')';
-    c.fillRect(x, top, w, Math.max(DPR, DPR*1.4));
-
-    // 창문
-    c.fillStyle = 'rgba(150,220,255,'+(0.12+aud*0.3)+')';
-    const rows = b.win;
-    for (let r0=0;r0<rows;r0++) {
-      const wy = top + h*(0.12 + r0*(0.8/rows));
-      if (((r0*7 + i*3 + Math.floor(t*1.4+b.seed*10)) % 5) === 0) continue;
-      c.fillRect(x+w*0.18, wy, w*0.64, Math.max(1, DPR*0.9));
+  // 경선 (세로 방향) — 일부만 그려 격자가 답답해지지 않게
+  for (let u=0; u<NU; u+=2) {
+    for (let v=0; v<NV-1; v++) {
+      const i = v*NU+u, j = (v+1)*NU+u;
+      const d = (SD[i]+SD[j])*0.5;
+      const b = Math.min(NBUCKET-1, Math.floor(d*NBUCKET));
+      push(b, SXa[i],SYa[i], SXa[j],SYa[j]);
     }
   }
 
-  // 도시 위 은은한 광휘
-  const glow = c.createRadialGradient(CX, ground-R*0.25, 0, CX, ground-R*0.25, R*1.1);
-  glow.addColorStop(0,'rgba(70,180,255,'+(0.10+energy*0.14)+')');
-  glow.addColorStop(1,'rgba(0,0,0,0)');
-  c.fillStyle = glow; c.fillRect(CX-R, CY-R, R*2, R*2);
-
-  c.restore();
-}
-
-/* ── 유리질 동심원 링 ── */
-function glassBand(c, r, width, alpha, gapStart, gapLen) {
-  const steps = 16;
-  for (let i=0;i<steps;i++) {
-    const p = i/(steps-1);
-    const rr = r - width/2 + width*p;
-    // 가장자리가 밝고 가운데가 어두운 유리 단면
-    const edge = Math.pow(Math.abs(p-0.5)*2, 2.1);
-    const a = alpha*(0.10 + edge*0.95);
-    c.strokeStyle = 'rgba(175,230,255,'+a+')';
-    c.lineWidth = Math.max(1, (width/steps)*1.35);
-    c.beginPath();
-    if (gapLen) c.arc(CX,CY,rr, gapStart+gapLen, gapStart+6.2832);
-    else c.arc(CX,CY,rr,0,6.2832);
-    c.stroke();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineCap = 'round';
+  for (let b=0;b<NBUCKET;b++) {
+    const p = bucketPath[b]; if (!p) continue;
+    const d = (b+0.5)/NBUCKET;                       // 0=뒤, 1=앞
+    // 뒷면은 어둡고 얇게, 앞면은 밝고 굵게 → 속이 비치는 입체감
+    const a = (0.014 + Math.pow(d,2.3)*0.30) * (0.45 + energy*1.25);
+    const lw = (0.35 + d*1.5) * DPR;
+    const hue = 168 + d*14;
+    const lig = 45 + d*35;
+    ctx.strokeStyle = 'hsla('+hue+',85%,'+lig+'%,'+a+')';
+    ctx.lineWidth = lw;
+    ctx.stroke(p);
   }
+  ctx.lineCap = 'butt';
 }
 
-function drawPortal(c, t) {
+/* 껍질 안쪽 코어 — 동심원 격자 디스크 + 반짝임 */
+function drawCore(t) {
   const e = energy;
-  c.save();
-  c.globalCompositeOperation = 'lighter';
+  const cr = R*0.40;
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.translate(CX, CY);
+  ctx.scale(1, Math.cos(tilt)*0.92 + 0.08);          // 기울어진 원판처럼
 
-  // 뒤쪽 광휘
-  const bg = c.createRadialGradient(CX,CY,R*0.1,CX,CY,R*1.55);
-  bg.addColorStop(0,'rgba(40,130,220,'+(0.10+e*0.13)+')');
-  bg.addColorStop(0.6,'rgba(20,80,160,'+(0.05+e*0.06)+')');
-  bg.addColorStop(1,'rgba(0,0,0,0)');
-  c.fillStyle = bg; c.beginPath(); c.arc(CX,CY,R*1.55,0,6.2832); c.fill();
+  // 광휘
+  const g = ctx.createRadialGradient(0,0,0,0,0,cr*1.9);
+  g.addColorStop(0,'rgba(120,255,235,'+(0.11+e*0.17)+')');
+  g.addColorStop(0.45,'rgba(40,190,175,'+(0.05+e*0.07)+')');
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(0,0,cr*1.9,0,6.2832); ctx.fill();
 
-  drawCity(c, t);
-
-  // 주 림 (포털 테두리) — 가장 밝다
-  c.strokeStyle = 'rgba(215,245,255,'+(0.55+e*0.4)+')';
-  c.lineWidth = 2.4*DPR;
-  c.beginPath(); c.arc(CX,CY,R,0,6.2832); c.stroke();
-  c.strokeStyle = 'rgba(120,205,255,'+(0.22+e*0.25)+')';
-  c.lineWidth = 7*DPR;
-  c.beginPath(); c.arc(CX,CY,R,0,6.2832); c.stroke();
-
-  // 유리 밴드들
-  glassBand(c, R*1.115, R*0.085, 0.30+e*0.22);
-  glassBand(c, R*1.235, R*0.045, 0.22+e*0.18, rot*0.6, 1.05);
-  glassBand(c, R*0.885, R*0.055, 0.26+e*0.20, -rot*0.9, 0.8);
-
-  // 회전하는 얇은 아크 (기계식 디테일)
-  c.lineCap = 'round';
-  for (let k=0;k<5;k++) {
-    const rr = R*(1.30 + k*0.055);
-    const a0 = rot*(0.5 + k*0.22)*(k%2?-1:1) + k*1.4;
-    const len = 0.5 + 0.55*Math.sin(t*0.4+k);
-    c.strokeStyle = 'rgba(150,220,255,'+(0.13+e*0.20)*(1-k*0.13)+')';
-    c.lineWidth = (k%2 ? 1.4 : 2.6)*DPR;
-    c.beginPath(); c.arc(CX,CY,rr,a0,a0+len); c.stroke();
+  // 동심원
+  ctx.lineWidth = DPR;
+  for (let i=1;i<=7;i++) {
+    const rr = cr*(i/7);
+    ctx.strokeStyle = 'rgba(110,240,220,'+(0.05+e*0.10)*(1-i*0.07)+')';
+    ctx.beginPath(); ctx.arc(0,0,rr,0,6.2832); ctx.stroke();
   }
-  c.lineCap = 'butt';
-
-  // 외곽 눈금
-  c.strokeStyle = 'rgba(140,215,255,'+(0.16+e*0.2)+')';
-  c.lineWidth = DPR;
-  const rTick = R*1.42;
-  for (let i=0;i<96;i++) {
-    const a = (i/96)*6.2832 + rot*0.12;
-    const long = i%8===0;
-    const l = (long?11:5)*DPR;
-    const c0=Math.cos(a), s0=Math.sin(a);
-    c.beginPath(); c.moveTo(CX+c0*rTick, CY+s0*rTick); c.lineTo(CX+c0*(rTick+l), CY+s0*(rTick+l)); c.stroke();
+  // 방사 격자
+  const rot = t*0.10;
+  ctx.strokeStyle = 'rgba(110,240,220,'+(0.045+e*0.085)+')';
+  for (let k=0;k<24;k++) {
+    const a = k*0.2618 + rot;
+    ctx.beginPath();
+    ctx.moveTo(Math.cos(a)*cr*0.14, Math.sin(a)*cr*0.14);
+    ctx.lineTo(Math.cos(a)*cr, Math.sin(a)*cr);
+    ctx.stroke();
+  }
+  // 겹치는 원 (생명의 꽃 패턴)
+  ctx.strokeStyle = 'rgba(130,250,230,'+(0.04+e*0.08)+')';
+  for (let k=0;k<6;k++) {
+    const a = k*1.0472 - rot*0.6;
+    ctx.beginPath();
+    ctx.arc(Math.cos(a)*cr*0.33, Math.sin(a)*cr*0.33, cr*0.33, 0, 6.2832);
+    ctx.stroke();
   }
 
-  // 타겟팅 브래킷
-  c.strokeStyle = 'rgba(200,240,255,'+(0.30+e*0.35)+')';
-  c.lineWidth = 2*DPR;
-  const rB = R*(1.52+e*0.05);
-  for (let k=0;k<4;k++) {
-    const a = k*1.5708 + 0.7854 + rot*0.05;
-    c.beginPath(); c.arc(CX,CY,rB,a-0.13,a+0.13); c.stroke();
-    [-0.13,0.13].forEach(d=>{
-      const c0=Math.cos(a+d), s0=Math.sin(a+d);
-      c.beginPath(); c.moveTo(CX+c0*rB, CY+s0*rB); c.lineTo(CX+c0*(rB-10*DPR), CY+s0*(rB-10*DPR)); c.stroke();
-    });
+  // 중심 반짝임
+  for (const s of SPECK) {
+    const tw = 0.35 + 0.65*Math.abs(Math.sin(t*s.sp + s.s*9));
+    const aud = bandAt(s.r);
+    const rr = cr*s.r*(0.55 + aud*0.5);
+    const a = (0.10 + e*0.5) * tw * (1 - s.r*0.55);
+    if (a < 0.02) continue;
+    const x = Math.cos(s.a + t*0.05)*rr, y = Math.sin(s.a + t*0.05)*rr;
+    const sz = (0.6 + tw*1.5 + aud*1.6)*DPR;
+    ctx.fillStyle = 'rgba('+Math.round(160+70*tw)+',255,'+Math.round(225+25*tw)+','+Math.min(0.9,a)+')';
+    ctx.fillRect(x-sz*0.5, y-sz*0.5, sz, sz);
   }
-
-  // 광선
-  for (const st of STREAK) {
-    const a = st.off + t*st.sp;
-    const r0 = R*0.2, r1 = R*(1.05+st.len*0.55);
-    const c0=Math.cos(a), s0=Math.sin(a);
-    const gx = c.createLinearGradient(CX+c0*r0, CY+s0*r0, CX+c0*r1, CY+s0*r1);
-    const aa = (0.05+e*0.13)*(0.35+0.65*Math.abs(Math.sin(t*0.5+st.off)));
-    gx.addColorStop(0,'rgba(160,225,255,0)');
-    gx.addColorStop(0.5,'rgba(190,235,255,'+aa+')');
-    gx.addColorStop(1,'rgba(160,225,255,0)');
-    c.strokeStyle = gx; c.lineWidth = (0.7+st.w*1.6)*DPR;
-    c.beginPath(); c.moveTo(CX+c0*r0, CY+s0*r0); c.lineTo(CX+c0*r1, CY+s0*r1); c.stroke();
-  }
-
-  c.restore();
+  ctx.restore();
 }
 
 function frame(ts) {
@@ -620,52 +614,34 @@ function frame(ts) {
   wordPulse *= 0.90;
 
   let tE, tS;
-  if (S.mode==='speak')       { tE = 0.62 + levelS*0.85 + wordPulse*0.35; tS = 0.34; }
-  else if (S.mode==='think')  { tE = 0.46 + 0.16*Math.sin(t*3.0);          tS = 0.85; }
-  else if (S.mode==='listen') { tE = 0.30 + levelS*0.75;                   tS = 0.18; }
-  else                        { tE = 0.16 + levelS*0.28;                   tS = 0.08; }
-  energy += (Math.min(1.15,tE)-energy)*0.10;
+  if (S.mode==='speak')       { tE = 0.60 + levelS*0.80 + wordPulse*0.32; tS = 0.30; }
+  else if (S.mode==='think')  { tE = 0.44 + 0.15*Math.sin(t*3.0);          tS = 0.72; }
+  else if (S.mode==='listen') { tE = 0.28 + levelS*0.70;                   tS = 0.16; }
+  else                        { tE = 0.15 + levelS*0.26;                   tS = 0.07; }
+  energy += (Math.min(1.1,tE)-energy)*0.10;
   spin += (tS-spin)*0.05;
-  rot += 0.0016 + spin*0.009;
+  yaw += 0.0011 + spin*0.0055;
+  tilt = 0.30 + 0.045*Math.sin(t*0.17);
 
-  drawBackground(t);
-
-  // 포털을 오프스크린에 그린 뒤, 본체 + 수면 반사로 두 번 사용
-  octx.clearRect(0,0,W,H);
-  drawPortal(octx, t);
-
-  ctx.drawImage(off, 0, 0);
-
-  // 수면 반사
-  ctx.save();
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.globalAlpha = 0.30 + energy*0.12;
-  ctx.translate(0, WATER*2);
-  ctx.scale(1,-1);
-  ctx.drawImage(off, 0, 0);
-  ctx.restore();
-
-  // 수면 위 잔물결 — 반사를 잘라 물처럼 보이게
-  ctx.save();
+  // 배경
+  const bg = ctx.createRadialGradient(CX,CY,0,CX,CY,Math.max(W,H)*0.72);
+  bg.addColorStop(0,'#02100f');
+  bg.addColorStop(0.55,'#010a0a');
+  bg.addColorStop(1,'#000403');
   ctx.globalCompositeOperation = 'source-over';
-  for (let y=WATER; y<H; y+=Math.max(2, 3*DPR)) {
-    const d = (y-WATER)/(H-WATER);
-    const a = 0.16 + d*0.55 + 0.09*Math.sin(y*0.09 + performance.now()/700);
-    ctx.fillStyle = 'rgba(1,8,18,'+Math.min(0.95,a)+')';
-    ctx.fillRect(0, y, W, Math.max(1, DPR));
-  }
-  // 수평선
-  const hl = ctx.createLinearGradient(0,WATER-2*DPR,0,WATER+2*DPR);
-  hl.addColorStop(0,'rgba(120,205,255,0)');
-  hl.addColorStop(0.5,'rgba(150,220,255,'+(0.12+energy*0.16)+')');
-  hl.addColorStop(1,'rgba(120,205,255,0)');
-  ctx.fillStyle = hl; ctx.fillRect(0, WATER-2*DPR, W, 4*DPR);
-  ctx.restore();
+  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+
+  buildMesh(t);
+
+  // 뒷면 → 코어 → 앞면 순서로 겹쳐 속이 비치게 한다
+  strokeMesh(t);
+  drawCore(t);
 
   // 비네트
-  const vg = ctx.createRadialGradient(CX,CY,R*0.9,CX,CY,Math.max(W,H)*0.78);
+  ctx.globalCompositeOperation = 'source-over';
+  const vg = ctx.createRadialGradient(CX,CY,R*1.05,CX,CY,Math.max(W,H)*0.75);
   vg.addColorStop(0,'rgba(0,0,0,0)');
-  vg.addColorStop(1,'rgba(0,2,8,0.72)');
+  vg.addColorStop(1,'rgba(0,4,4,0.80)');
   ctx.fillStyle = vg; ctx.fillRect(0,0,W,H);
 
   requestAnimationFrame(frame);
