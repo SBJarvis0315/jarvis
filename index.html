@@ -246,30 +246,32 @@ const pickVoice = () => voices.find(x=>x.name===CFG.voiceName)
   || voices.find(x=>x.lang==='ko-KR' && /google/i.test(x.name))
   || voices.find(x=>x.lang.startsWith('ko')) || voices[0];
 
-function enqueueSpeak(t) {
-  const s = (t||'').trim(); if (!s) return;
-  speakQueue.push(s); if (!speaking) drainQueue();
+function enqueueSpeak(t, onDone) {
+  const s = (t||'').trim(); if (!s) { if (onDone) onDone(); return; }
+  speakQueue.push({ text:s, cb:onDone||null }); if (!speaking) drainQueue();
 }
 function drainQueue() {
   if (!speakQueue.length) {
     speaking = false; S.lastSpeakEnd = performance.now();
-    S.mode = S.wakeOn ? 'listen' : 'idle';
+    // 명령을 받으려고 대기 중이면 그 상태를 덮어쓰지 않는다
+    S.mode = (capturing || S.wakeOn) ? 'listen' : 'idle';
     setTimeout(resumeSTT, 260); return;
   }
   speaking = true; S.mode = 'speak'; pauseSTT();
-  const u = new SpeechSynthesisUtterance(speakQueue.shift());
+  const item = speakQueue.shift();
+  const u = new SpeechSynthesisUtterance(item.text);
   const v = pickVoice();
   if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'ko-KR';
   u.rate = Number(CFG.rate)||1.05; u.pitch = Number(CFG.pitch)||1;
   u.onboundary = () => { wordPulse = 1; };
-  u.onend = u.onerror = () => drainQueue();
+  u.onend = u.onerror = () => { if (item.cb) { try { item.cb(); } catch(e){} } drainQueue(); };
   speechSynthesis.speak(u);
 }
 function stopSpeaking() {
   speakQueue = []; speaking = false; speechSynthesis.cancel();
   S.lastSpeakEnd = performance.now(); S.mode = S.wakeOn ? 'listen' : 'idle';
 }
-function speak(t, done) { stopSpeaking(); if (!t) { if (done) done(); return; } enqueueSpeak(t); }
+function speak(t, done) { stopSpeaking(); if (!t) { if (done) done(); return; } enqueueSpeak(t, done); }
 function takeSentences(buf) {
   const out=[]; const re=/[^.!?。？！\n]*[.!?。？！\n]+/g; let m,last=0;
   while ((m=re.exec(buf))!==null){ const s=m[0].trim(); if(s.length>=2) out.push(s); last=re.lastIndex; }
@@ -320,12 +322,21 @@ function handleHeard(text) {
   const m = matchWake(text);
   if (m.hit) { if (m.rest) ask(m.rest); else wake(); }
 }
+const ACK = ['네, 보스.', '네, 말씀하세요.', '부르셨습니까?', '네, 듣고 있습니다.'];
 function wake() {
   if (S.busy || capturing || S.mode==='speak') return;
   if (!recRun) { S.wakeOn=true; startSTT(); syncMicBtn(); }
-  capturing=true; S.mode='listen'; chime(); cap('듣고 있습니다', true);
-  clearTimeout(cmdTimer);
-  cmdTimer = setTimeout(()=>{ capturing=false; S.mode=S.wakeOn?'listen':'idle'; cap(''); }, 9000);
+  chime();
+  // 부르면 먼저 대답한다. 대답이 끝난 뒤에 명령을 듣기 시작한다.
+  const ack = ACK[Math.floor(Math.random()*ACK.length)].replace('보스', CFG.honorific);
+  cap(ack, true);
+  enqueueSpeak(ack, () => {
+    capturing = true;
+    S.mode = 'listen';
+    cap('듣고 있습니다', true);
+    clearTimeout(cmdTimer);
+    cmdTimer = setTimeout(()=>{ capturing=false; S.mode=S.wakeOn?'listen':'idle'; cap(''); }, 9000);
+  });
 }
 
 /* ─────────── bridge ─────────── */
@@ -411,16 +422,22 @@ function chime() {
    ══════════════════════════════════════════════════════════ */
 const cv = $('stage');
 const ctx = cv.getContext('2d', { alpha:false });
+const shellC = document.createElement('canvas');        // 껍질 원본
+const shellX = shellC.getContext('2d');
+const blurC = document.createElement('canvas');         // 축소 후 확대 = 부드러운 발광
+const blurX = blurC.getContext('2d');
 let W=0,H=0,DPR=1,CX=0,CY=0,R=0;
 
-const NU = 76;          // 경도 분할 (가로)
-const NV = 40;          // 위도 분할 (세로)
-const VX = new Float32Array(NU*NV);
-const VY = new Float32Array(NU*NV);
-const VZ = new Float32Array(NU*NV);
-const SXa = new Float32Array(NU*NV);   // 화면 좌표
-const SYa = new Float32Array(NU*NV);
-const SD = new Float32Array(NU*NV);    // 깊이 0..1 (1=앞)
+const NU = 116;         // 경도 분할 (가로)
+const NV = 62;          // 위도 분할 (세로)
+const NPT = NU*NV;
+const SXa = new Float32Array(NPT);     // 화면 좌표
+const SYa = new Float32Array(NPT);
+const SD  = new Float32Array(NPT);     // 깊이 0..1 (1=앞)
+const FR  = new Float32Array(NPT);     // 프레넬 0..1 (1=실루엣 가장자리)
+// 격자 티가 나지 않도록 정점마다 고정 흔들림을 준다
+const JU = new Float32Array(NPT), JV = new Float32Array(NPT), JS = new Float32Array(NPT);
+for (let i=0;i<NPT;i++){ JU[i]=(Math.random()-0.5)*1.7; JV[i]=(Math.random()-0.5)*1.7; JS[i]=Math.random(); }
 
 /* 코어 반짝임 */
 const SPECK = [];
@@ -434,6 +451,8 @@ function resize() {
   const vw = Math.max(320, innerWidth||0), vh = Math.max(240, innerHeight||0);
   W = cv.width = Math.floor(vw*DPR);
   H = cv.height = Math.floor(vh*DPR);
+  shellC.width = W; shellC.height = H;
+  blurC.width = Math.max(1, Math.floor(W/5)); blurC.height = Math.max(1, Math.floor(H/5));
   cv.style.width = vw+'px'; cv.style.height = vh+'px';
   CX = W/2; CY = H/2; R = Math.min(W,H)*0.285;
 }
@@ -456,11 +475,12 @@ function buildMesh(t) {
   const amp = 0.5 + energy*1.35;
 
   for (let v=0; v<NV; v++) {
-    const phi = (v/(NV-1))*Math.PI;            // 0..π
-    const sp = Math.sin(phi), cp = Math.cos(phi);
-    const eq = sp;                              // 적도에서 파형이 가장 크다
     for (let u=0; u<NU; u++) {
-      const th = (u/NU)*6.2832;
+      const idx = v*NU+u;
+      const phi = ((v + JV[idx])/(NV-1))*Math.PI;   // 흔들림 포함
+      const sp = Math.sin(phi), cp = Math.cos(phi);
+      const eq = sp;                                 // 적도에서 파형이 가장 크다
+      const th = ((u + JU[idx])/NU)*6.2832;
       // 다중 파형 — 서로 다른 주기가 겹쳐 유기적으로 일렁인다
       let w = 0.050*Math.sin(3*th + 0.62*t + 1.7*phi)
             + 0.038*Math.sin(5*th - 0.47*t + 2.3*phi)
@@ -486,61 +506,63 @@ function buildMesh(t) {
       const z2 = y*st0 + z1*ct0;
 
       const persp = FOC/(FOC - z2);
-      const i = v*NU+u;
-      VX[i]=x1; VY[i]=y1; VZ[i]=z2;
-      SXa[i] = CX + x1*persp;
-      SYa[i] = CY + y1*persp;
-      SD[i] = Math.max(0, Math.min(1, (z2/(R*1.15)+1)*0.5));
+      SXa[idx] = CX + x1*persp;
+      SYa[idx] = CY + y1*persp;
+      SD[idx] = Math.max(0, Math.min(1, (z2/(R*1.15)+1)*0.5));
+      // 프레넬: 표면이 시선과 나란할수록(실루엣) 1에 가깝다.
+      // 이것이 껍질을 "철망"이 아니라 "빛나는 막"으로 보이게 만드는 핵심이다.
+      const len = Math.sqrt(x1*x1 + y1*y1 + z2*z2) || 1;
+      FR[idx] = 1 - Math.abs(z2/len);
     }
   }
 }
 
-/* 깊이별 알파를 버킷으로 묶어 한 번에 그린다 (상태 변경 최소화) */
-const NBUCKET = 12;
-const bucketPath = [];
-function strokeMesh(t) {
-  for (let b=0;b<NBUCKET;b++) bucketPath[b] = null;
+/* 껍질 그리기 — 격자선 대신 미세 입자 + 드문 흐름선.
+   밝기를 프레넬로 결정해 가장자리만 빛나는 반투명 막처럼 보이게 한다. */
+const NBUCKET = 10;
+function drawShell(c, t) {
+  const e = energy;
+  c.globalCompositeOperation = 'lighter';
 
-  const push = (b, x0,y0,x1,y1) => {
-    let p = bucketPath[b];
-    if (!p) { p = bucketPath[b] = new Path2D(); }
-    p.moveTo(x0,y0); p.lineTo(x1,y1);
-  };
-
-  // 위도 링 (가로 방향)
-  for (let v=0; v<NV; v++) {
-    for (let u=0; u<NU; u++) {
-      const i = v*NU+u, j = v*NU+((u+1)%NU);
-      const d = (SD[i]+SD[j])*0.5;
-      const b = Math.min(NBUCKET-1, Math.floor(d*NBUCKET));
-      push(b, SXa[i],SYa[i], SXa[j],SYa[j]);
-    }
-  }
-  // 경선 (세로 방향) — 일부만 그려 격자가 답답해지지 않게
-  for (let u=0; u<NU; u+=2) {
-    for (let v=0; v<NV-1; v++) {
-      const i = v*NU+u, j = (v+1)*NU+u;
-      const d = (SD[i]+SD[j])*0.5;
-      const b = Math.min(NBUCKET-1, Math.floor(d*NBUCKET));
-      push(b, SXa[i],SYa[i], SXa[j],SYa[j]);
-    }
+  // ── 입자 막 ──
+  for (let i=0;i<NPT;i++) {
+    const f = FR[i];
+    if (f < 0.28) continue;                       // 안쪽 면은 거의 비운다 → 투명감
+    const d = SD[i];
+    const tw = 0.7 + 0.3*Math.sin(t*1.3 + JS[i]*10);
+    // 가장자리로 갈수록 밝아진다 (지수가 낮을수록 막이 부드럽게 퍼진다)
+    const a = Math.pow(f, 2.3) * (0.30 + e*0.80) * (0.55 + d*0.7) * tw;
+    if (a < 0.012) continue;
+    const sz = (0.55 + f*1.35 + d*0.55) * DPR;
+    const lig = 52 + f*34 + d*10;
+    c.fillStyle = 'hsla(' + (170 + f*12) + ',88%,' + lig + '%,' + Math.min(0.85,a) + ')';
+    c.fillRect(SXa[i]-sz*0.5, SYa[i]-sz*0.5, sz, sz);
   }
 
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.lineCap = 'round';
+  // ── 흐름선: 위도 링을 드문드문 이어 유기적인 결을 만든다 ──
+  c.lineCap = 'round';
   for (let b=0;b<NBUCKET;b++) {
-    const p = bucketPath[b]; if (!p) continue;
-    const d = (b+0.5)/NBUCKET;                       // 0=뒤, 1=앞
-    // 뒷면은 어둡고 얇게, 앞면은 밝고 굵게 → 속이 비치는 입체감
-    const a = (0.014 + Math.pow(d,2.3)*0.30) * (0.45 + energy*1.25);
-    const lw = (0.35 + d*1.5) * DPR;
-    const hue = 168 + d*14;
-    const lig = 45 + d*35;
-    ctx.strokeStyle = 'hsla('+hue+',85%,'+lig+'%,'+a+')';
-    ctx.lineWidth = lw;
-    ctx.stroke(p);
+    let p = null;
+    for (let v=3; v<NV-3; v+=5) {
+      let started = false;
+      for (let u=0; u<=NU; u++) {
+        const i = v*NU + (u%NU);
+        const f = FR[i];
+        const bk = Math.min(NBUCKET-1, Math.floor(f*NBUCKET));
+        if (bk !== b || f < 0.3) { started = false; continue; }
+        if (!p) p = new Path2D();
+        if (!started) { p.moveTo(SXa[i], SYa[i]); started = true; }
+        else p.lineTo(SXa[i], SYa[i]);
+      }
+    }
+    if (!p) continue;
+    const f = (b+0.5)/NBUCKET;
+    const a = Math.pow(f,2.0) * (0.16 + e*0.42);
+    c.strokeStyle = 'hsla(' + (172 + f*10) + ',90%,' + (55+f*30) + '%,' + a + ')';
+    c.lineWidth = (0.4 + f*1.1)*DPR;
+    c.stroke(p);
   }
-  ctx.lineCap = 'butt';
+  c.lineCap = 'butt';
 }
 
 /* 껍질 안쪽 코어 — 동심원 격자 디스크 + 반짝임 */
@@ -554,8 +576,8 @@ function drawCore(t) {
 
   // 광휘
   const g = ctx.createRadialGradient(0,0,0,0,0,cr*1.9);
-  g.addColorStop(0,'rgba(120,255,235,'+(0.11+e*0.17)+')');
-  g.addColorStop(0.45,'rgba(40,190,175,'+(0.05+e*0.07)+')');
+  g.addColorStop(0,'rgba(120,255,235,'+(0.05+e*0.08)+')');
+  g.addColorStop(0.45,'rgba(40,190,175,'+(0.022+e*0.032)+')');
   g.addColorStop(1,'rgba(0,0,0,0)');
   ctx.fillStyle = g;
   ctx.beginPath(); ctx.arc(0,0,cr*1.9,0,6.2832); ctx.fill();
@@ -591,7 +613,7 @@ function drawCore(t) {
     const tw = 0.35 + 0.65*Math.abs(Math.sin(t*s.sp + s.s*9));
     const aud = bandAt(s.r);
     const rr = cr*s.r*(0.55 + aud*0.5);
-    const a = (0.10 + e*0.5) * tw * (1 - s.r*0.55);
+    const a = (0.06 + e*0.30) * tw * (1 - s.r*0.55);
     if (a < 0.02) continue;
     const x = Math.cos(s.a + t*0.05)*rr, y = Math.sin(s.a + t*0.05)*rr;
     const sz = (0.6 + tw*1.5 + aud*1.6)*DPR;
@@ -633,8 +655,23 @@ function frame(ts) {
 
   buildMesh(t);
 
-  // 뒷면 → 코어 → 앞면 순서로 겹쳐 속이 비치게 한다
-  strokeMesh(t);
+  // 껍질을 따로 그린 뒤, 축소→확대로 만든 부드러운 발광과 겹친다.
+  // 선이 그대로 드러나지 않고 빛나는 막처럼 번진다.
+  shellX.clearRect(0,0,W,H);
+  drawShell(shellX, t);
+
+  blurX.globalCompositeOperation = 'copy';
+  blurX.imageSmoothingEnabled = true;
+  blurX.drawImage(shellC, 0, 0, blurC.width, blurC.height);
+
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.imageSmoothingEnabled = true;
+  ctx.globalAlpha = 0.95;
+  ctx.drawImage(blurC, 0, 0, W, H);          // 번짐
+  ctx.globalAlpha = 0.62;
+  ctx.drawImage(shellC, 0, 0);               // 디테일
+  ctx.globalAlpha = 1;
+
   drawCore(t);
 
   // 비네트
