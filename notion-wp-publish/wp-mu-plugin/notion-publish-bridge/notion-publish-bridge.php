@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Notion Publish Bridge
  * Description: 노션 콘텐츠 플래너 자동 발행을 위한 Rank Math 메타·스키마 기입 엔드포인트.
- * Version:     1.0.0
+ * Version:     1.0.1
  * Author:      리드젠랩
  *
  * 설치: 이 파일을 wp-content/mu-plugins/ 에 업로드하면 끝입니다.
@@ -117,7 +117,7 @@ final class Notion_Publish_Bridge {
 	public static function handle_ping() {
 		return array(
 			'ok'             => true,
-			'version'        => '1.0.0',
+			'version'        => '1.0.1',
 			'rank_math'      => defined( 'RANK_MATH_VERSION' ) ? RANK_MATH_VERSION : null,
 			'rank_math_active' => class_exists( 'RankMath' ),
 		);
@@ -213,17 +213,24 @@ final class Notion_Publish_Bridge {
 			$written[] = 'rank_math_seo_score';
 		}
 
-		$schema_mode = isset( $body['schema_mode'] ) ? $body['schema_mode'] : 'rankmath';
-		$schemas     = isset( $body['schemas'] ) && is_array( $body['schemas'] ) ? $body['schemas'] : array();
+		// 스키마는 'schemas' 키가 실제로 실려 왔을 때만 손댑니다.
+		// 이 키가 없다고 기존 스키마를 지워버리면, 메타 한 줄만 고치려는 호출이
+		// 애써 만든 스키마를 통째로 날리게 됩니다.
+		$schema_mode   = isset( $body['schema_mode'] ) ? $body['schema_mode'] : 'rankmath';
+		$schema_result = null;
 
-		$schema_result = self::apply_schemas( $post_id, $schemas, $schema_mode );
+		if ( array_key_exists( 'schemas', $body ) ) {
+			$schemas       = is_array( $body['schemas'] ) ? $body['schemas'] : array();
+			$schema_result = self::apply_schemas( $post_id, $schemas, $schema_mode );
+		}
 
 		return array(
 			'ok'          => true,
 			'post_id'     => $post_id,
 			'written'     => $written,
 			'schema_mode' => $schema_mode,
-			'schemas'     => $schema_result,
+			'schemas'     => $schema_result,          // null = 이번 호출에서 손대지 않음
+			'schemas_kept' => null === $schema_result,
 			'link'        => get_permalink( $post_id ),
 		);
 	}
