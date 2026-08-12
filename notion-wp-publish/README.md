@@ -88,11 +88,13 @@ cd notion-wp-publish
 # ① 확인만 — 워드프레스·노션 어느 쪽도 건드리지 않습니다
 PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --dry-run
 
-# ② 임시저장 — 워드프레스에 초안까지 만들되 공개하지 않습니다
-PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --draft
+# ② 준비 + 임시저장 (4·5장 참고)
+PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --prepare work/
+# (이미지를 보고 plan.json 의 alt 를 채운 뒤)
+PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --plan work/ --draft
 
 # ③ 실제 발행
-PYTHONPATH=src python3 -m notionwp --config config/cleartone.json
+PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --plan work/
 ```
 
 **처음이라면 ① → ② → ③ 순서로 가세요.**
@@ -166,24 +168,49 @@ PYTHONPATH=src python3 -m notionwp --config config/cleartone.json
 
 ---
 
-## 5. 이미지는 어디에 들어가는가
-
-배치 근거는 원고 안에 이미 있습니다. `🔧 구조화 제안 > 이미지 alt 텍스트 가이드`가
-위치와 ALT 문구를 짝지어 알려줍니다.
-
-```
-- 이미지 alt 텍스트 가이드
-  - 도입부:          기미 레이저 치료 회차를 상담하는 진료 장면
-  - 병변 비교표 상단: 기미 흑자 검버섯 색소 깊이 비교
-  - 회차 설명 섹션:   색소 레이저 회차별 경과 확인 과정
-  - 클로징:          클리어톤의원 색소 레이저 장비
-```
+## 5. 이미지는 어디에 들어가고 ALT는 어떻게 정해지는가
 
 - `썸네일` 속성 → 워드프레스 **대표 이미지**
-- `본문 이미지` 속성 → 위 가이드 순서대로 해당 섹션에 삽입, ALT도 함께 기입
-- 가이드보다 이미지가 많으면 남는 H2 구간에 고르게 배분하고,
-  ALT는 바로 위 헤딩 문구에서 만듭니다
-- 가이드가 아예 없으면 H2 구간에 고르게 나눠 넣습니다
+- `본문 이미지` 속성 → 글 전체 H2/H3 구간에 **고르게 나눠서** 삽입
+
+ALT는 **이미지를 실제로 보고** 씁니다. 스크립트는 이미지를 볼 수 없으므로
+발행을 세 단계로 나눕니다.
+
+```bash
+# 1단계 — 이미지를 내려받고 plan.json 생성 (아무것도 발행하지 않음)
+PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --prepare work/
+
+# 2단계 — 이미지를 보고 plan.json 의 alt 를 채웁니다
+#          (루틴에서는 Claude가, 손으로 할 때는 사람이)
+
+# 3단계 — 검수된 ALT로 발행
+PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --plan work/ --draft
+```
+
+`plan.json` 에는 본문 헤딩 구조와 각 구간의 발췌가 함께 들어갑니다.
+같은 장비 사진이라도 어느 섹션에 놓이느냐에 따라 ALT가 달라져야 하기 때문입니다.
+
+```jsonc
+{
+  "sections": [
+    { "anchor": 31, "level": 2, "heading": "삼성역 피부과 선택 기준 4가지…",
+      "excerpt": "장비 목록보다 먼저 확인할 것은…" }
+  ],
+  "images": [
+    { "n": 2, "preview": "images/2-preview.jpg", "anchor": 31, "alt": "" }
+  ]
+}
+```
+
+- `alt` 를 채웁니다. 하나라도 비어 있으면 3단계가 거부합니다.
+- `anchor` 를 바꾸면 배치를 옮길 수 있습니다 (`sections[].anchor` 값 사용).
+- `preview` 는 긴 변 1024px로 줄인 사본입니다. 원본은 `original` 이 가리킵니다.
+
+> `--plan` 없이 그냥 돌리면 예전 방식(원고의 `🔧 구조화 제안 > 이미지 alt 텍스트 가이드`)
+> 으로 폴백합니다. 준비 단계를 건너뛰어야 할 때를 위한 안전장치입니다.
+
+**1단계에서 이미지를 이미 받아두므로, 3단계는 노션 첨부 주소(1시간 만료)를
+다시 부르지 않습니다.** 2단계에 시간이 걸려도 안전합니다.
 
 **파일명은 슬러그 기반 영문으로 바꿔서 올립니다.**
 (`기미레이저횟수1.jpg` → `melasma-laser-sessions-1.jpg`)
@@ -290,5 +317,6 @@ notion-wp-publish/
 │   ├── images.py                   이미지 배치·ALT
 │   ├── schema.py                   BlogPosting / FAQPage 생성
 │   └── publish.py                  게이트 + 오케스트레이터
-└── tests/                          65개 테스트
+├── work/                           준비 단계 산출물 (커밋하지 않음)
+└── tests/                          76개 테스트
 ```

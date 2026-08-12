@@ -14,19 +14,49 @@
 from __future__ import annotations
 
 import logging
+import posixpath
+import re
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from pathlib import Path
 from typing import Any
+from urllib.parse import unquote, urlparse
 from zoneinfo import ZoneInfo
 
 from . import notion_api as napi
 from .config import Config, Secrets
 from .extract import Extracted, extract
 from .gutenberg import RenderOptions, image_block, render
-from .images import Placement, iter_files, plan_placements, target_filename
+from .images import (
+    Placement,
+    iter_files,
+    plan_placements,
+    spread_evenly,
+    target_filename,
+)
 from .notion_api import NotionClient
+from .plan import (
+    PLAN_FILENAME,
+    PagePlan,
+    PlannedImage,
+    make_preview,
+    outline,
+    plan_dir_for,
+)
 from .schema import build_schemas
 from .wordpress import WordPressClient, WordPressError, download
+
+
+def _suffix(url: str, name: str = "") -> str:
+    """원본 파일의 확장자를 그대로 살립니다 (없으면 .jpg)."""
+    for value in (url, name):
+        if not value:
+            continue
+        path = urlparse(value).path if "://" in value else value
+        ext = posixpath.splitext(unquote(path))[1].lower()
+        if re.fullmatch(r"\.[a-z0-9]{2,5}", ext or ""):
+            return ext
+    return ".jpg"
 
 log = logging.getLogger(__name__)
 
@@ -59,6 +89,9 @@ class Outcome:
     #: --draft 로 돌려 임시저장까지만 한 경우. 공개되지 않았고 노션도 건드리지 않았습니다.
     drafted: bool = False
     edit_link: str = ""
+    #: --prepare 로 이미지 내려받기와 plan.json 생성까지만 한 경우.
+    prepared: bool = False
+    plan_path: str = ""
 
 
 def today_kst() -> date:
@@ -138,6 +171,7 @@ class Publisher:
         *,
         dry_run: bool = False,
         draft: bool = False,
+        plan_root: Path | None = None,
         notion: NotionClient | None = None,
         wp: WordPressClient | None = None,
     ):
@@ -149,6 +183,8 @@ class Publisher:
         # 임시저장 모드: 워드프레스에 초안까지 만들고 Rank Math 까지 채우되
         # 공개하지 않고, 노션 상태도 건드리지 않습니다.
         self.draft = draft
+        # plan.json 이 있는 작업 폴더. 있으면 검수된 ALT·배치를 그대로 씁니다.
+        self.plan_root = plan_root
         self.notion = notion or NotionClient(secrets.notion_token, cfg.notion)  # type: ignore[union-attr]
         self.wp = wp or WordPressClient(
             cfg.wordpress,
@@ -199,6 +235,102 @@ class Publisher:
 
         return outcomes
 
+    # -------------------------------------------------------------------- 준비
+
+    def prepare(self, root: Path) -> list[Outcome]:
+        """발행 대상 원고의 이미지를 내려받고 plan.json 을 만듭니다.
+
+        스크립트는 이미지를 볼 수 없으므로, 여기까지만 하고 ALT 는 비워 둡니다.
+        이어서 사람이나 루틴 안의 Claude 가 이미지를 보고 채웁니다.
+        """
+        on = today_kst()
+        log.info("준비 · 기준 날짜 %s (Asia/Seoul) · %s", on, self.cfg.client)
+
+        outcomes: list[Outcome] = []
+        for page in self.notion.query_planner():
+            cand = check_properties(self.cfg, page, on=on)
+            if not cand.ok:
+                outcomes.append(
+                    Outcome(page_id=cand.page_id, title=cand.title, skipped=True, reasons=cand.reasons)
+                )
+                continue
+
+            cand = check_body(cand, self.notion.fetch_blocks(cand.page_id))
+            if not cand.ok:
+                outcomes.append(
+                    Outcome(page_id=cand.page_id, title=cand.title, skipped=True, reasons=cand.reasons)
+                )
+                continue
+
+            try:
+                outcomes.append(self._prepare_one(cand, root))
+            except Exception as exc:
+                log.error("준비 실패 [%s] %s", cand.title[:40], exc)
+                outcomes.append(
+                    Outcome(page_id=cand.page_id, title=cand.title, error=str(exc))
+                )
+
+        return outcomes
+
+    def _prepare_one(self, cand: Candidate, root: Path) -> Outcome:
+        nc = self.cfg.notion
+        assert cand.extracted is not None
+
+        def prop(key: str) -> dict[str, Any] | None:
+            return cand.props.get(nc.prop(key))
+
+        slug = napi.read_text(prop("slug")).strip()
+        directory = plan_dir_for(root, cand.page_id)
+        (directory / "images").mkdir(parents=True, exist_ok=True)
+
+        body_files = iter_files(prop("body_images"))
+        thumb_files = iter_files(prop("thumbnail"))
+        anchors = spread_evenly(cand.extracted.body, len(body_files))
+
+        page_plan = PagePlan(
+            page_id=cand.page_id,
+            title=cand.title,
+            slug=slug,
+            sections=outline(cand.extracted.body),
+        )
+
+        # 썸네일
+        thumb_path = Path("images") / f"thumbnail{_suffix(thumb_files[0].url, thumb_files[0].name)}"
+        (directory / thumb_path).write_bytes(download(thumb_files[0].url))
+        page_plan.thumbnail = str(thumb_path)
+        preview = Path("images") / "thumbnail-preview.jpg"
+        if make_preview(directory / thumb_path, directory / preview):
+            page_plan.thumbnail_preview = str(preview)
+
+        # 본문 이미지
+        for n, file in enumerate(body_files, start=1):
+            original = Path("images") / f"{n}{_suffix(file.url, file.name)}"
+            (directory / original).write_bytes(download(file.url))
+
+            preview = Path("images") / f"{n}-preview.jpg"
+            has_preview = make_preview(directory / original, directory / preview)
+
+            page_plan.images.append(
+                PlannedImage(
+                    n=n,
+                    original=str(original),
+                    preview=str(preview) if has_preview else str(original),
+                    anchor=anchors[n - 1] if n - 1 < len(anchors) else len(cand.extracted.body),
+                    alt="",
+                    source_name=file.name,
+                )
+            )
+
+        path = page_plan.save(directory)
+        log.info("준비 완료: %s → %s (이미지 %d장)", cand.title[:40], path, len(body_files))
+
+        return Outcome(
+            page_id=cand.page_id,
+            title=cand.title,
+            prepared=True,
+            plan_path=str(path),
+        )
+
     # ------------------------------------------------------------------ 단건 발행
 
     def _publish(self, cand: Candidate) -> Outcome:
@@ -240,35 +372,26 @@ class Publisher:
                 out.skipped = True
                 return out
 
-            # 2) 이미지 업로드. 노션 URL은 1시간 뒤 만료되므로 지금 내려받아 재업로드합니다.
-            thumb_files = iter_files(prop("thumbnail"))
-            body_files = iter_files(prop("body_images"))
+            # 2) 이미지 업로드.
+            #    plan.json 이 있으면 미리 내려받아둔 파일과 사람이 검수한 ALT를 씁니다.
+            #    없으면 지금 노션에서 내려받고 원고의 ALT 가이드를 폴백으로 씁니다.
             assert cand.extracted is not None
+            page_plan = self._load_plan(cand.page_id)
 
-            placements = plan_placements(
-                cand.extracted.body,
-                cand.extracted.image_hints,
-                image_count=len(body_files),
-                fallback_alt_prefix=cand.title,
+            thumb_name, thumb_bytes, thumb_alt = self._thumbnail_source(
+                prop("thumbnail"), page_plan, slug, meta_title or cand.title
             )
-
-            thumb = self.wp.upload_media(
-                target_filename(slug, None, thumb_files[0].url, thumb_files[0].name),
-                download(thumb_files[0].url),
-                alt=meta_title or cand.title,
-            )
+            thumb = self.wp.upload_media(thumb_name, thumb_bytes, alt=thumb_alt)
 
             body = list(cand.extracted.body)
             uploaded: list[tuple[Placement, int, str]] = []
-            for n, (file, placement) in enumerate(
-                zip(body_files, placements, strict=True), start=1
+
+            for n, (name, data, placement) in enumerate(
+                self._body_image_sources(prop("body_images"), page_plan, cand, slug), start=1
             ):
-                media = self.wp.upload_media(
-                    target_filename(slug, n, file.url, file.name),
-                    download(file.url),
-                    alt=placement.alt,
-                )
+                media = self.wp.upload_media(name, data, alt=placement.alt)
                 uploaded.append((placement, media.id, media.url))
+                log.debug("이미지 %d → %s (%s)", n, media.url, placement.alt[:30])
 
             for offset, (placement, media_id, media_url) in enumerate(uploaded):
                 body.insert(
@@ -397,6 +520,81 @@ class Publisher:
             self._mark_error(cand.page_id)
             return out
 
+    # ------------------------------------------------------- 이미지 출처 결정
+
+    def _load_plan(self, page_id: str) -> PagePlan | None:
+        if not self.plan_root:
+            return None
+        directory = plan_dir_for(self.plan_root, page_id)
+        if not (directory / PLAN_FILENAME).exists():
+            log.warning("plan.json 이 없어 원고의 ALT 가이드로 진행합니다: %s", directory)
+            return None
+
+        plan = PagePlan.load(directory)
+        if plan.missing_alts:
+            raise WordPressError(
+                f"plan.json 의 ALT가 비어 있습니다 (이미지 {plan.missing_alts}). "
+                "이미지를 확인하고 alt 를 채운 뒤 다시 실행해 주세요."
+            )
+        return plan
+
+    def _thumbnail_source(
+        self,
+        prop_value: dict[str, Any] | None,
+        plan: PagePlan | None,
+        slug: str,
+        default_alt: str,
+    ) -> tuple[str, bytes, str]:
+        if plan and plan.thumbnail:
+            path = plan_dir_for(self.plan_root, plan.page_id) / plan.thumbnail  # type: ignore[arg-type]
+            return (
+                target_filename(slug, None, path.name),
+                path.read_bytes(),
+                plan.thumbnail_alt or default_alt,
+            )
+
+        files = iter_files(prop_value)
+        return (
+            target_filename(slug, None, files[0].url, files[0].name),
+            download(files[0].url),
+            default_alt,
+        )
+
+    def _body_image_sources(
+        self,
+        prop_value: dict[str, Any] | None,
+        plan: PagePlan | None,
+        cand: Candidate,
+        slug: str,
+    ) -> list[tuple[str, bytes, Placement]]:
+        assert cand.extracted is not None
+        root = self.plan_root
+
+        if plan and plan.images:
+            out = []
+            for img in sorted(plan.images, key=lambda i: (i.anchor, i.n)):
+                path = plan_dir_for(root, plan.page_id) / img.original  # type: ignore[arg-type]
+                out.append(
+                    (
+                        target_filename(slug, img.n, path.name),
+                        path.read_bytes(),
+                        Placement(index=img.anchor, alt=img.alt),
+                    )
+                )
+            return out
+
+        files = iter_files(prop_value)
+        placements = plan_placements(
+            cand.extracted.body,
+            cand.extracted.image_hints,
+            image_count=len(files),
+            fallback_alt_prefix=cand.title,
+        )
+        return [
+            (target_filename(slug, n, f.url, f.name), download(f.url), p)
+            for n, (f, p) in enumerate(zip(files, placements, strict=True), start=1)
+        ]
+
     def _mark_error(self, page_id: str) -> None:
         """실패한 행을 '발행 오류'로 표시합니다. 상태 옵션이 없으면 조용히 넘어갑니다."""
         # 임시저장 테스트는 노션을 일절 건드리지 않습니다.
@@ -418,19 +616,23 @@ class Publisher:
 def summarize(outcomes: list[Outcome]) -> str:
     published = [o for o in outcomes if o.published]
     drafted = [o for o in outcomes if o.drafted]
+    prepared = [o for o in outcomes if o.prepared]
     failed = [o for o in outcomes if o.error]
     skipped = [o for o in outcomes if o.skipped]
 
-    headline = (
-        f"임시저장 {len(drafted)}건"
-        if drafted and not published
-        else f"발행 {len(published)}건"
-    )
+    if prepared:
+        headline = f"준비 {len(prepared)}건"
+    elif drafted and not published:
+        headline = f"임시저장 {len(drafted)}건"
+    else:
+        headline = f"발행 {len(published)}건"
     lines = [
         f"{headline} · 실패 {len(failed)}건 · 대기/제외 {len(skipped)}건",
         "",
     ]
 
+    for o in prepared:
+        lines.append(f"  📥 {o.title[:50]}\n     {o.plan_path}")
     for o in published:
         lines.append(f"  ✅ {o.title[:50]}\n     {o.link}")
     for o in drafted:
@@ -450,6 +652,13 @@ def summarize(outcomes: list[Outcome]) -> str:
     ]
     for o in near_miss:
         lines.append(f"  ⏸ {o.title[:50]}\n     {'; '.join(o.reasons)}")
+
+    if prepared:
+        lines += [
+            "",
+            "이미지를 내려받고 plan.json 을 만들었습니다. 아직 아무것도 발행하지 않았습니다.",
+            "각 plan.json 의 images[].alt 를 채운 뒤 --plan 으로 다시 실행하세요.",
+        ]
 
     if drafted:
         lines += [

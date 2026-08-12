@@ -17,20 +17,64 @@ cd notion-wp-publish
 PYTHONPATH=src python3 -m notionwp --config config/cleartone.json
 ```
 
-모드가 셋 있습니다. 확신이 없으면 안전한 쪽을 고르세요.
+모드가 넷 있습니다. 확신이 없으면 안전한 쪽을 고르세요.
 
 | 플래그 | 동작 |
 |---|---|
 | `--dry-run` | 조건 판정만. 워드프레스·노션 아무것도 건드리지 않음 |
-| `--draft` | 초안 생성 + 이미지 + Rank Math 까지 하되 **공개하지 않음**. 노션도 그대로 |
-| (없음) | 공개 발행 + 노션 게재완료·URL 기록 |
-
-```bash
-PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --dry-run
-PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --draft
-```
+| `--prepare DIR` | 이미지를 내려받고 `plan.json` 생성. 아무것도 발행하지 않음 |
+| `--plan DIR --draft` | 검수한 ALT로 초안 생성. **공개하지 않음**, 노션도 그대로 |
+| `--plan DIR` | 공개 발행 + 노션 게재완료·URL 기록 |
 
 고객사가 여러 곳이면 `config/` 안의 설정 파일마다 한 번씩 돌립니다.
+
+## 표준 절차 — ALT는 이미지를 직접 보고 씁니다
+
+**발행 요청을 받으면 아래 세 단계를 순서대로 진행하세요.** 곧바로 발행하지 마세요.
+
+### 1단계 — 준비
+
+```bash
+cd notion-wp-publish
+PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --prepare work/
+```
+
+발행 조건을 통과한 원고의 이미지를 `work/<페이지ID>/images/` 에 내려받고
+`work/<페이지ID>/plan.json` 을 만듭니다. `images[].alt` 는 비어 있습니다.
+
+### 2단계 — 이미지를 보고 ALT 작성 (당신이 할 일)
+
+각 `plan.json` 을 열고, `images[]` 의 **`preview` 경로를 Read 도구로 하나씩 열어
+실제로 보세요.** 그런 다음 `alt` 를 채우고 파일을 저장합니다.
+
+ALT를 쓸 때:
+
+- **이미지에 실제로 보이는 것**을 쓰세요. 추측하거나 지어내지 마세요.
+- `sections` 의 `heading` 과 `excerpt` 를 읽고, **그 이미지가 놓일 구간의 내용과
+  맞물리게** 쓰세요. 같은 장비 사진이라도 어느 섹션에 놓이느냐에 따라 달라집니다.
+- 한국어로 **20~50자 내외**. `이미지`, `사진`, `~하는 모습입니다` 같은 군더더기는 뺍니다.
+- 키워드를 억지로 넣지 마세요. 검색엔진이 이미지를 이해하도록 돕는 설명문입니다.
+- **의료 광고 규정**: 치료 전후 비교나 효과를 단정하는 표현은 쓰지 마세요.
+  ("기미가 옅어진 피부" ❌ → "색소 레이저 시술 장비" ⭕)
+- 이미지가 명백히 특정 섹션에 속하면 `anchor` 를 그 섹션의 값으로 바꿔도 됩니다.
+  (`sections[].anchor` 참고) 특별한 이유가 없으면 기본값을 그대로 두세요 —
+  이미 글 전체에 고르게 배분돼 있습니다.
+- `thumbnail_preview` 도 열어보고 `thumbnail_alt` 를 채우세요. 비워두면 메타타이틀이 들어갑니다.
+
+ALT가 하나라도 비어 있으면 3단계가 거부합니다.
+
+### 3단계 — 발행
+
+```bash
+PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --plan work/ --draft
+```
+
+**처음 돌리는 원고는 반드시 `--draft` 를 붙이세요.** 사용자가 초안을 확인하고
+"발행해도 좋다"고 한 뒤에 `--draft` 를 빼고 다시 돌립니다. 그러면 새 글이 생기지 않고
+그 초안이 그대로 공개됩니다.
+
+> `--prepare` 로 이미지를 이미 받아뒀기 때문에, 3단계는 노션 첨부 주소(1시간 만료)를
+> 다시 부르지 않습니다. 2단계에 시간이 걸려도 안전합니다.
 
 ## 인자 해석
 
@@ -38,13 +82,14 @@ PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --draft
 (예: "클리어톤" → `config/cleartone.json`). 지정이 없으면 `config/` 의
 모든 설정을 순서대로 실행합니다.
 
-- "확인만", "미리보기" → `--dry-run`
-- "임시저장", "초안으로", "발행하지 말고", "테스트" → `--draft`
+- "확인만", "미리보기" → `--dry-run` 만 돌리고 끝냅니다
+- "임시저장", "초안으로", "발행하지 말고", "테스트" → 3단계 절차 + `--draft`
+- "발행해줘" → 3단계 절차 + `--draft` 로 먼저 보여주고 **승인을 받은 뒤** 공개
 
 **애매하면 실발행하지 말고 물어보세요.** 공개는 되돌리기 어렵습니다.
 
-`--draft` 로 돌린 뒤에는 편집 링크를 그대로 전하고, 확인이 끝나면
-`--draft` 없이 다시 돌리면 그 초안이 공개된다는 점을 함께 알려주세요.
+`--draft` 로 돌린 뒤에는 편집 링크를 그대로 전하고, 작성한 ALT 목록도 함께 보여주세요.
+확인이 끝나면 `--draft` 없이 다시 돌리면 그 초안이 공개된다는 점을 알려주세요.
 
 ## 결과 보고
 

@@ -114,6 +114,32 @@ def _heading_anchors(body: list[Block]) -> list[tuple[int, str, bool]]:
     return anchors
 
 
+def spread_evenly(body: list[Block], image_count: int) -> list[int]:
+    """H2/H3 구간에 이미지를 띄엄띄엄 나눠 넣을 위치를 계산합니다.
+
+    기본 배치 방식입니다. 원고의 ALT 가이드 위치를 따르지 않고,
+    글 전체에 고르게 퍼뜨립니다.
+    """
+    if image_count <= 0 or not body:
+        return []
+
+    anchors = [idx for idx, _, _ in _heading_anchors(body)]
+    if not anchors:
+        # 헤딩이 없으면 문단 수로 나눕니다.
+        step = max(1, len(body) // (image_count + 1))
+        return [min(len(body), step * (i + 1)) for i in range(image_count)]
+
+    if image_count >= len(anchors):
+        picked = list(anchors)
+        while len(picked) < image_count:
+            picked.append(len(body))
+        return sorted(picked[:image_count])
+
+    # 구간을 image_count 등분해 각 몫의 첫 헤딩을 고릅니다.
+    step = len(anchors) / image_count
+    return sorted({anchors[min(len(anchors) - 1, int(i * step))] for i in range(image_count)})
+
+
 def plan_placements(
     body: list[Block],
     hints: list[ImageHint],
@@ -121,7 +147,11 @@ def plan_placements(
     *,
     fallback_alt_prefix: str = "",
 ) -> list[Placement]:
-    """이미지 개수만큼 (삽입 위치, ALT) 를 만들어 돌려줍니다."""
+    """이미지 개수만큼 (삽입 위치, ALT) 를 만들어 돌려줍니다.
+
+    원고의 ALT 가이드를 따르는 예전 방식입니다. plan.json 이 없을 때의
+    폴백으로 남겨 둡니다.
+    """
     if image_count <= 0 or not body:
         return []
 

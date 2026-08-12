@@ -34,6 +34,22 @@ def main(argv: list[str] | None = None) -> int:
             "채우되 공개하지 않고, 노션 상태도 바꾸지 않습니다."
         ),
     )
+    parser.add_argument(
+        "--prepare",
+        metavar="DIR",
+        help=(
+            "발행하지 않고, 발행 대상 원고의 이미지를 DIR 에 내려받고 plan.json 을 만듭니다. "
+            "이미지를 보고 ALT를 채우기 위한 준비 단계입니다."
+        ),
+    )
+    parser.add_argument(
+        "--plan",
+        metavar="DIR",
+        help=(
+            "--prepare 로 만든 DIR 의 plan.json 을 써서 발행합니다. "
+            "검수된 ALT와 배치가 그대로 적용됩니다."
+        ),
+    )
     parser.add_argument("--verbose", "-v", action="store_true", help="자세한 로그")
     args = parser.parse_args(argv)
 
@@ -53,11 +69,22 @@ def main(argv: list[str] | None = None) -> int:
     if args.dry_run and args.draft:
         print("--dry-run 과 --draft 는 함께 쓸 수 없습니다.", file=sys.stderr)
         return 2
+    if args.prepare and (args.plan or args.draft or args.dry_run):
+        print("--prepare 는 단독으로 실행하세요.", file=sys.stderr)
+        return 2
 
-    publisher = Publisher(cfg, secrets, dry_run=args.dry_run, draft=args.draft)
+    publisher = Publisher(
+        cfg,
+        secrets,
+        dry_run=args.dry_run,
+        draft=args.draft,
+        plan_root=Path(args.plan) if args.plan else None,
+    )
 
     try:
-        outcomes = publisher.run()
+        outcomes = (
+            publisher.prepare(Path(args.prepare)) if args.prepare else publisher.run()
+        )
     except Exception as exc:
         print(f"실행 중단: {exc}", file=sys.stderr)
         return 1
