@@ -56,6 +56,9 @@ class Outcome:
     post_id: int | None = None
     reasons: list[str] = field(default_factory=list)
     error: str = ""
+    #: --draft 로 돌려 임시저장까지만 한 경우. 공개되지 않았고 노션도 건드리지 않았습니다.
+    drafted: bool = False
+    edit_link: str = ""
 
 
 def today_kst() -> date:
@@ -134,6 +137,7 @@ class Publisher:
         secrets: Secrets | None = None,
         *,
         dry_run: bool = False,
+        draft: bool = False,
         notion: NotionClient | None = None,
         wp: WordPressClient | None = None,
     ):
@@ -142,6 +146,9 @@ class Publisher:
 
         self.cfg = cfg
         self.dry_run = dry_run
+        # 임시저장 모드: 워드프레스에 초안까지 만들고 Rank Math 까지 채우되
+        # 공개하지 않고, 노션 상태도 건드리지 않습니다.
+        self.draft = draft
         self.notion = notion or NotionClient(secrets.notion_token, cfg.notion)  # type: ignore[union-attr]
         self.wp = wp or WordPressClient(
             cfg.wordpress,
@@ -222,7 +229,11 @@ class Publisher:
                     return out
                 # 지난 회차에 초안까지만 만들어졌다면 이어서 진행합니다.
                 post_id = int(existing["post_id"])
-                log.info("남아 있는 초안을 이어서 발행합니다 (post %s)", post_id)
+                log.info(
+                    "남아 있는 초안을 %s (post %s)",
+                    "다시 씁니다" if self.draft else "이어서 발행합니다",
+                    post_id,
+                )
 
             if self.dry_run:
                 out.reasons = ["dry-run — 실제 발행하지 않음"]
@@ -343,6 +354,19 @@ class Publisher:
             # 5) Rank Math — 가이드 ⑤ 에 해당하는 부분. 공개 전에 채워둡니다.
             self.wp.apply_seo(post_id, seo_payload(guessed_permalink))
 
+            out.edit_link = (
+                f"{self.cfg.wordpress.base_url.rstrip('/')}"
+                f"/wp-admin/post.php?post={post_id}&action=edit"
+            )
+
+            # 임시저장 모드는 여기서 멈춥니다.
+            # 글은 초안으로 남고, 노션 상태도 '컨펌 진행 중' 그대로 둡니다.
+            if self.draft:
+                out.drafted = True
+                out.link = guessed_permalink
+                log.info("임시저장 완료(비공개): %s → %s", cand.title[:40], out.edit_link)
+                return out
+
             # 6) 공개.
             published = self.wp.update_post(post_id, {"status": "publish"})
             out.link = published.link or guessed_permalink
@@ -375,7 +399,8 @@ class Publisher:
 
     def _mark_error(self, page_id: str) -> None:
         """실패한 행을 '발행 오류'로 표시합니다. 상태 옵션이 없으면 조용히 넘어갑니다."""
-        if self.dry_run or not self.cfg.notion.status_error:
+        # 임시저장 테스트는 노션을 일절 건드리지 않습니다.
+        if self.dry_run or self.draft or not self.cfg.notion.status_error:
             return
         try:
             self.notion.update_page(
@@ -392,16 +417,27 @@ class Publisher:
 
 def summarize(outcomes: list[Outcome]) -> str:
     published = [o for o in outcomes if o.published]
+    drafted = [o for o in outcomes if o.drafted]
     failed = [o for o in outcomes if o.error]
     skipped = [o for o in outcomes if o.skipped]
 
+    headline = (
+        f"임시저장 {len(drafted)}건"
+        if drafted and not published
+        else f"발행 {len(published)}건"
+    )
     lines = [
-        f"발행 {len(published)}건 · 실패 {len(failed)}건 · 대기/제외 {len(skipped)}건",
+        f"{headline} · 실패 {len(failed)}건 · 대기/제외 {len(skipped)}건",
         "",
     ]
 
     for o in published:
         lines.append(f"  ✅ {o.title[:50]}\n     {o.link}")
+    for o in drafted:
+        lines.append(
+            f"  📝 {o.title[:50]}  (임시저장, 비공개)\n"
+            f"     편집: {o.edit_link}"
+        )
     for o in failed:
         lines.append(f"  ❌ {o.title[:50]}\n     {o.error}")
 
@@ -414,5 +450,13 @@ def summarize(outcomes: list[Outcome]) -> str:
     ]
     for o in near_miss:
         lines.append(f"  ⏸ {o.title[:50]}\n     {'; '.join(o.reasons)}")
+
+    if drafted:
+        lines += [
+            "",
+            "임시저장한 글은 공개되지 않았고 노션도 그대로입니다.",
+            "확인 후 --draft 없이 다시 돌리면 이 초안이 그대로 공개됩니다.",
+            "버리려면 워드프레스에서 초안을 삭제하세요.",
+        ]
 
     return "\n".join(lines)

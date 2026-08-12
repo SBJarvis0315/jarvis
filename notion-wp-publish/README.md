@@ -85,12 +85,30 @@ Claude Code 루틴에서 돌리는 경우, 세션 환경(Environment)의 환경�
 ```bash
 cd notion-wp-publish
 
-# 먼저 확인만 (아무것도 건드리지 않습니다)
+# ① 확인만 — 워드프레스·노션 어느 쪽도 건드리지 않습니다
 PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --dry-run
 
-# 실제 발행
+# ② 임시저장 — 워드프레스에 초안까지 만들되 공개하지 않습니다
+PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --draft
+
+# ③ 실제 발행
 PYTHONPATH=src python3 -m notionwp --config config/cleartone.json
 ```
+
+**처음이라면 ① → ② → ③ 순서로 가세요.**
+
+| | 워드프레스 | 노션 |
+|---|---|---|
+| `--dry-run` | 건드리지 않음 | 건드리지 않음 |
+| `--draft` | 초안 생성 + 이미지 업로드 + Rank Math 기입 (**비공개**) | 건드리지 않음 |
+| (없음) | 위 전부 + **공개** | 게재완료 + URL 기록 |
+
+`--draft` 는 실제 발행 경로를 전부 태워보되 공개만 하지 않습니다. 그래서
+본문 변환·이미지 배치·Rank Math 설정을 워드프레스 편집 화면에서 눈으로 검수할 수 있습니다.
+실행이 끝나면 편집 링크를 출력합니다.
+
+확인이 끝나면 `--draft` 없이 다시 돌리세요. **그 초안이 그대로 공개됩니다**
+(새 글이 또 생기지 않습니다). 버리려면 워드프레스에서 초안을 삭제하면 됩니다.
 
 의존성은 `requests` 하나입니다. (`pip install -r requirements.txt`)
 

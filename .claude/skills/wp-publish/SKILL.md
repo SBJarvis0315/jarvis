@@ -17,11 +17,17 @@ cd notion-wp-publish
 PYTHONPATH=src python3 -m notionwp --config config/cleartone.json
 ```
 
-**먼저 `--dry-run` 을 붙여 한 번 확인하세요.** 어떤 원고가 조건을 통과하는지만
-보여주고 실제로는 아무것도 건드리지 않습니다.
+모드가 셋 있습니다. 확신이 없으면 안전한 쪽을 고르세요.
+
+| 플래그 | 동작 |
+|---|---|
+| `--dry-run` | 조건 판정만. 워드프레스·노션 아무것도 건드리지 않음 |
+| `--draft` | 초안 생성 + 이미지 + Rank Math 까지 하되 **공개하지 않음**. 노션도 그대로 |
+| (없음) | 공개 발행 + 노션 게재완료·URL 기록 |
 
 ```bash
 PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --dry-run
+PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --draft
 ```
 
 고객사가 여러 곳이면 `config/` 안의 설정 파일마다 한 번씩 돌립니다.
@@ -32,7 +38,13 @@ PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --dry-run
 (예: "클리어톤" → `config/cleartone.json`). 지정이 없으면 `config/` 의
 모든 설정을 순서대로 실행합니다.
 
-"확인만", "미리보기", "테스트" 같은 말이 있으면 `--dry-run` 을 붙입니다.
+- "확인만", "미리보기" → `--dry-run`
+- "임시저장", "초안으로", "발행하지 말고", "테스트" → `--draft`
+
+**애매하면 실발행하지 말고 물어보세요.** 공개는 되돌리기 어렵습니다.
+
+`--draft` 로 돌린 뒤에는 편집 링크를 그대로 전하고, 확인이 끝나면
+`--draft` 없이 다시 돌리면 그 초안이 공개된다는 점을 함께 알려주세요.
 
 ## 결과 보고
 

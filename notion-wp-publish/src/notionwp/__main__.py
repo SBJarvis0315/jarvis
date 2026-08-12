@@ -24,7 +24,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="실제로 발행하지 않고 어떤 원고가 통과하는지만 확인합니다.",
+        help="워드프레스·노션을 건드리지 않고 어떤 원고가 조건을 통과하는지만 확인합니다.",
+    )
+    parser.add_argument(
+        "--draft",
+        action="store_true",
+        help=(
+            "임시저장까지만 합니다. 워드프레스에 초안을 만들고 이미지·Rank Math 까지 "
+            "채우되 공개하지 않고, 노션 상태도 바꾸지 않습니다."
+        ),
     )
     parser.add_argument("--verbose", "-v", action="store_true", help="자세한 로그")
     args = parser.parse_args(argv)
@@ -42,7 +50,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"설정 오류\n{exc}", file=sys.stderr)
         return 2
 
-    publisher = Publisher(cfg, secrets, dry_run=args.dry_run)
+    if args.dry_run and args.draft:
+        print("--dry-run 과 --draft 는 함께 쓸 수 없습니다.", file=sys.stderr)
+        return 2
+
+    publisher = Publisher(cfg, secrets, dry_run=args.dry_run, draft=args.draft)
 
     try:
         outcomes = publisher.run()
