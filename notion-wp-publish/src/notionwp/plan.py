@@ -47,6 +47,9 @@ class PlannedImage:
     anchor: int
     alt: str = ""
     source_name: str = ""
+    #: 원고 마커가 남긴 참고 문구. 이미지를 보기 전 글쓴이의 의도를 알려줍니다.
+    #: 최종 ALT 는 이미지를 직접 보고 쓰되, 이 문구를 참고할 수 있습니다.
+    hint: str = ""
 
 
 @dataclass
@@ -59,6 +62,7 @@ class PagePlan:
     thumbnail: str = ""
     thumbnail_preview: str = ""
     thumbnail_alt: str = ""
+    thumbnail_hint: str = ""
 
     # ------------------------------------------------------------------ 입출력
 
@@ -83,6 +87,7 @@ class PagePlan:
             thumbnail=raw.get("thumbnail", ""),
             thumbnail_preview=raw.get("thumbnail_preview", ""),
             thumbnail_alt=raw.get("thumbnail_alt", ""),
+            thumbnail_hint=raw.get("thumbnail_hint", ""),
         )
 
     @property

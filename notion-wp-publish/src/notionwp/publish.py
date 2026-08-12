@@ -285,7 +285,18 @@ class Publisher:
 
         body_files = iter_files(prop("body_images"))
         thumb_files = iter_files(prop("thumbnail"))
-        anchors = spread_evenly(cand.extracted.body, len(body_files))
+
+        # 원고에 `::IMG-01::` 마커가 있으면 글쓴이가 정한 그 자리를 씁니다.
+        # 없으면 H2/H3 구간에 고르게 배분합니다.
+        body_markers = [m for m in cand.extracted.markers if not m.is_thumbnail]
+        if body_markers:
+            ordered = sorted(body_markers, key=lambda m: (m.number or 0, m.index))
+            anchors = [m.index for m in ordered]
+            hints = [m.alt_hint or m.note for m in ordered]
+            log.info("본문 마커 %d개를 배치 기준으로 씁니다", len(anchors))
+        else:
+            anchors = spread_evenly(cand.extracted.body, len(body_files))
+            hints = []
 
         page_plan = PagePlan(
             page_id=cand.page_id,
@@ -298,6 +309,9 @@ class Publisher:
         thumb_path = Path("images") / f"thumbnail{_suffix(thumb_files[0].url, thumb_files[0].name)}"
         (directory / thumb_path).write_bytes(download(thumb_files[0].url))
         page_plan.thumbnail = str(thumb_path)
+        thumb_marker = next((m for m in cand.extracted.markers if m.is_thumbnail), None)
+        if thumb_marker:
+            page_plan.thumbnail_hint = thumb_marker.alt_hint or thumb_marker.note
         preview = Path("images") / "thumbnail-preview.jpg"
         if make_preview(directory / thumb_path, directory / preview):
             page_plan.thumbnail_preview = str(preview)
@@ -318,6 +332,7 @@ class Publisher:
                     anchor=anchors[n - 1] if n - 1 < len(anchors) else len(cand.extracted.body),
                     alt="",
                     source_name=file.name,
+                    hint=hints[n - 1] if n - 1 < len(hints) else "",
                 )
             )
 

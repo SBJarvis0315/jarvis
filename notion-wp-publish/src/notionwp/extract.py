@@ -24,7 +24,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from .richtext import block_text, plain_text, strip_markers
+from .richtext import block_text, plain_text, strip_markers, unescape
 
 Block = dict[str, Any]
 
@@ -61,12 +61,48 @@ class ImageHint:
 
 
 @dataclass
+class ImageMarker:
+    """원고 본문에 박힌 이미지 자리표시자.
+
+    원고 자동화 에이전트가 이런 형태로 남깁니다.
+
+        ::IMG-01:: alt="진료 상담 장면" 설명="도입부에 배치"
+        ::THUMB:: alt="..." 설명="..."
+
+    마커는 발행 본문에서 반드시 제거하고, 위치만 가져다 씁니다.
+    alt 는 참고용입니다 — 마커를 쓸 시점에는 실제 이미지가 아직 업로드되지
+    않았으므로, 최종 ALT 는 이미지를 보고 다시 씁니다.
+    """
+
+    #: 본문에서 이 마커가 있던 자리 (마커를 걷어낸 뒤 기준)
+    index: int
+    #: IMG 번호. 썸네일 마커는 None
+    number: int | None
+    alt_hint: str = ""
+    note: str = ""
+
+    @property
+    def is_thumbnail(self) -> bool:
+        return self.number is None
+
+
+#: `::IMG-01:: alt="..." 설명="..."` / `::THUMB:: ...`
+_MARKER = re.compile(
+    r"^\s*::\s*(?:(IMG)\s*-?\s*(\d+)|(THUMB))\s*::\s*(.*)$",
+    re.IGNORECASE,
+)
+_MARKER_FIELD = re.compile(r'(alt|설명)\s*=\s*"([^"]*)"', re.IGNORECASE)
+
+
+@dataclass
 class Extracted:
     body: list[Block] = field(default_factory=list)
     h1: str = ""
     review_sections: dict[str, list[Block]] = field(default_factory=dict)
     image_hints: list[ImageHint] = field(default_factory=list)
     schema_hint: str = ""
+    #: 본문에서 걷어낸 `::IMG-01::` 마커들. 이미지 배치 위치로 씁니다.
+    markers: list[ImageMarker] = field(default_factory=list)
 
     @property
     def is_empty(self) -> bool:
@@ -166,15 +202,62 @@ def extract(blocks: list[Block]) -> Extracted:
 
         body.append(block)
 
+    # 4) 이미지 마커를 걷어내고 위치만 기록합니다.
+    #    발행 본문에 마커 문자열이 그대로 나가면 안 됩니다.
+    #    마커 위치는 최종 본문 기준이어야 하므로 앞뒤 정리를 먼저 합니다.
+    body, result.markers = _pull_markers(_trim_edges(body))
     result.body = _trim_edges(body)
 
-    # 4) 검수용 섹션은 버리지 않고 헤딩별로 모아둡니다 — ALT·스키마 지침이 여기 있습니다.
+    # 썸네일 마커는 보통 H1 앞(메타 디스크립션 아래)에 있어 본문에서 이미 빠집니다.
+    # 문구는 ALT 작성 참고용으로 살려 둡니다.
+    for block in blocks[:start]:
+        if block.get("type") != "paragraph":
+            continue
+        parsed = parse_marker(block_text(block))
+        if parsed and parsed[0] is None:
+            result.markers.append(
+                ImageMarker(index=0, number=None, alt_hint=parsed[1], note=parsed[2])
+            )
+            break
+
+    # 5) 검수용 섹션은 버리지 않고 헤딩별로 모아둡니다 — ALT·스키마 지침이 여기 있습니다.
     result.review_sections = _split_review_sections(blocks[end:])
     hints, schema_hint = parse_structure_hints(result.review_sections)
     result.image_hints = hints
     result.schema_hint = schema_hint
 
     return result
+
+
+def parse_marker(text: str) -> tuple[int | None, str, str] | None:
+    """마커 한 줄을 (번호, alt 힌트, 설명) 으로 풉니다. 마커가 아니면 None."""
+    match = _MARKER.match(unescape(text or ""))
+    if not match:
+        return None
+
+    number = int(match.group(2)) if match.group(1) else None
+    fields = {k.lower(): v.strip() for k, v in _MARKER_FIELD.findall(match.group(4) or "")}
+    return number, fields.get("alt", ""), fields.get("설명", "")
+
+
+def _pull_markers(body: list[Block]) -> tuple[list[Block], list[ImageMarker]]:
+    """마커 블록을 본문에서 제거하고, 남은 본문 기준 위치를 기록합니다."""
+    kept: list[Block] = []
+    markers: list[ImageMarker] = []
+
+    for block in body:
+        # 마커는 단독 문단으로 들어옵니다.
+        parsed = parse_marker(block_text(block)) if block.get("type") == "paragraph" else None
+        if parsed is None:
+            kept.append(block)
+            continue
+
+        number, alt_hint, note = parsed
+        markers.append(
+            ImageMarker(index=len(kept), number=number, alt_hint=alt_hint, note=note)
+        )
+
+    return kept, markers
 
 
 def _trim_edges(body: list[Block]) -> list[Block]:
