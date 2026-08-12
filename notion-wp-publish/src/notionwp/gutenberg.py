@@ -100,19 +100,19 @@ def _render_block(block: Block, opts: RenderOptions) -> str:
         )
 
     if btype == "quote":
-        inner = to_html(payload.get("rich_text"))
-        body = f'<blockquote class="wp-block-quote"><p>{inner}</p>'
-        body += _render_children(children, opts)
-        body += "</blockquote>"
-        return _wrap("quote", body)
+        # core/quote 는 내부에 '블록'이 들어갑니다. 생 <p> 를 넣으면
+        # 에디터에서 "예기치 않거나 잘못된 콘텐츠" 경고가 뜹니다.
+        inner = _paragraph(to_html(payload.get("rich_text")))
+        inner += _render_children(children, opts)
+        return _wrap("quote", f'<blockquote class="wp-block-quote">{inner}</blockquote>')
 
     if btype == "callout":
         # 본문에 남은 callout은 인용 박스로 옮깁니다.
-        inner = to_html(payload.get("rich_text"))
         icon = (payload.get("icon") or {}).get("emoji", "")
         prefix = f"{html.escape(icon)} " if icon else ""
-        body = f'<blockquote class="wp-block-quote"><p>{prefix}{inner}</p></blockquote>'
-        return _wrap("quote", body)
+        inner = _paragraph(f"{prefix}{to_html(payload.get('rich_text'))}")
+        inner += _render_children(children, opts)
+        return _wrap("quote", f'<blockquote class="wp-block-quote">{inner}</blockquote>')
 
     if btype == "code":
         text = "".join(n.get("plain_text", "") for n in payload.get("rich_text") or [])
@@ -131,10 +131,11 @@ def _render_block(block: Block, opts: RenderOptions) -> str:
 
     if btype == "toggle":
         summary = to_html(payload.get("rich_text"))
-        body = f"<details class=\"wp-block-details\"><summary>{summary}</summary>"
-        body += _render_children(children, opts)
-        body += "</details>"
-        return _wrap("details", body)
+        inner = _render_children(children, opts)
+        return _wrap(
+            "details",
+            f'<details class="wp-block-details"><summary>{summary}</summary>{inner}</details>',
+        )
 
     if btype in ("column_list", "column", "synced_block"):
         # 레이아웃 블록은 펼쳐서 내용만 살립니다.
@@ -148,6 +149,11 @@ def _render_block(block: Block, opts: RenderOptions) -> str:
     # 알 수 없는 블록은 평문이라도 살립니다.
     inner = to_html(payload.get("rich_text")) if isinstance(payload, dict) else ""
     return _wrap("paragraph", f"<p>{inner}</p>") if inner.strip() else ""
+
+
+def _paragraph(inner: str) -> str:
+    """구텐베르크 문단 '블록'. quote·details 안에는 이 형태로 넣어야 합니다."""
+    return f"<!-- wp:paragraph -->\n<p>{inner}</p>\n<!-- /wp:paragraph -->"
 
 
 def _render_children(children: list[Block], opts: RenderOptions) -> str:
@@ -240,18 +246,32 @@ def _render_list(group: list[Block], opts: RenderOptions) -> str:
 
 
 def _render_table(block: Block, opts: RenderOptions) -> str:
+    """core/table 이 스스로 저장하는 형태를 그대로 흉내 냅니다.
+
+    구텐베르크의 블록 검증은 매우 엄격해서, 같은 모양이어도 마크업이 조금만
+    달라지면 에디터에서 "예기치 않거나 잘못된 콘텐츠" 경고가 뜹니다.
+    아래 두 가지가 코어 규칙입니다.
+
+      · 가운데 정렬은 인라인 style 이 아니라
+        class="has-text-align-center" + data-align="center" 로 저장됩니다.
+      · hasFixedLayout 의 기본값이 true 라서, 지정하지 않으면 코어는
+        <table class="has-fixed-layout"> 을 기대합니다. 열 너비를 내용에
+        맞추려면 false 를 명시해야 합니다.
+    """
     payload = block.get("table") or {}
     rows = [c for c in (block.get("_children") or []) if c.get("type") == "table_row"]
     if not rows:
         return ""
 
     has_header = bool(payload.get("has_column_header"))
-    style = ' style="text-align:center"' if opts.center_tables else ""
+    align = ' class="has-text-align-center" data-align="center"' if opts.center_tables else ""
 
     def cells(row: Block, tag: str) -> str:
-        out = []
-        for cell in (row.get("table_row") or {}).get("cells") or []:
-            out.append(f"<{tag}{style}>{to_html(cell)}</{tag}>")
+        scope = ' scope="col"' if tag == "th" else ""
+        out = [
+            f"<{tag}{align}{scope}>{to_html(cell)}</{tag}>"
+            for cell in (row.get("table_row") or {}).get("cells") or []
+        ]
         return "<tr>" + "".join(out) + "</tr>"
 
     parts = []
@@ -264,7 +284,8 @@ def _render_table(block: Block, opts: RenderOptions) -> str:
     if body_rows:
         parts.append("<tbody>" + "".join(cells(r, "td") for r in body_rows) + "</tbody>")
 
-    return _wrap(
-        "table",
-        f'<figure class="wp-block-table"><table>{"".join(parts)}</table></figure>',
+    return (
+        '<!-- wp:table {"hasFixedLayout":false} -->\n'
+        f'<figure class="wp-block-table"><table>{"".join(parts)}</table></figure>\n'
+        "<!-- /wp:table -->"
     )

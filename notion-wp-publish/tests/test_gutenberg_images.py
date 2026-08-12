@@ -50,11 +50,35 @@ def test_todo_items_become_plain_bullets():
     assert "type=\"checkbox\"" not in out
 
 
-def test_table_renders_with_header_and_center_alignment():
+def test_table_matches_core_block_markup():
+    """구텐베르크 블록 검증을 통과하려면 코어가 저장하는 형태와 정확히 같아야 합니다."""
     out = rendered()
-    assert "<!-- wp:table -->" in out
-    assert "<thead>" in out and "<th style=\"text-align:center\">" in out
+    assert '<!-- wp:table {"hasFixedLayout":false} -->' in out
+    assert '<figure class="wp-block-table"><table><thead>' in out
+    assert '<th class="has-text-align-center" data-align="center" scope="col">' in out
+    assert '<td class="has-text-align-center" data-align="center">' in out
     assert "색소 병변" in out
+    # 인라인 style 은 코어가 쓰지 않는 형태라 검증이 깨집니다.
+    assert "text-align:center" not in out
+
+
+def test_table_alignment_can_be_turned_off():
+    out = render(extract(sample_page()).body, RenderOptions(center_tables=False))
+    assert "<th scope=\"col\">" in out
+    assert "has-text-align-center" not in out
+
+
+def test_quote_and_details_use_inner_blocks():
+    from fixtures import block, para, rt
+
+    out = render([
+        block("callout", rt("안내 문구"), children=[para("추가 설명")]),
+        block("toggle", rt("접힌 제목"), children=[para("접힌 내용")]),
+    ])
+    # blockquote / details 안에는 생 <p> 가 아니라 문단 '블록' 이 들어가야 합니다.
+    assert '<blockquote class="wp-block-quote"><!-- wp:paragraph -->' in out
+    assert "<summary>접힌 제목</summary>\n<!-- wp:paragraph -->" in out
+    assert "<blockquote class=\"wp-block-quote\"><p>" not in out
 
 
 def test_links_and_bold_are_preserved():
