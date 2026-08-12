@@ -52,7 +52,7 @@ PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --dry-run
 
 | 메시지 | 원인 | 대처 |
 |---|---|---|
-| `mu-plugin 을 찾을 수 없습니다` | 워드프레스에 브리지 플러그인 미설치 | `wp-mu-plugin/notion-publish-bridge.php` 를 `wp-content/mu-plugins/` 에 업로드 |
+| `mu-plugin 을 찾을 수 없습니다` | 워드프레스에 브리지 플러그인 미설치 | `wp-mu-plugin/` 의 플러그인을 설치 (README 1-① 참고) |
 | `환경변수가 비어 있습니다` | 토큰 미설정 | README의 '환경변수' 항목 참고 |
 | `슬러그 … 가 이미 사용 중입니다` | 같은 슬러그의 글이 이미 있음 | 플래너에서 슬러그를 바꾼 뒤 상태를 '컨펌 진행 중'으로 되돌리기 |
 | `이미지를 내려받지 못했습니다` | 노션 첨부 주소 만료(1시간) | 그대로 재실행하면 새 주소를 받아옵니다 |

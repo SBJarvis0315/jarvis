@@ -12,14 +12,34 @@ Rank Math 설정까지 채운 뒤 플래너를 '게재완료'로 되돌려 씁�
 
 ### ① 워드프레스에 브리지 플러그인 올리기
 
-`wp-mu-plugin/notion-publish-bridge.php` 파일을 워드프레스의
-**`wp-content/mu-plugins/`** 폴더에 업로드합니다. 폴더가 없으면 새로 만드세요.
-`mu-plugins` 는 활성화 과정이 없어서, 올려두기만 하면 바로 동작합니다.
-
 > **왜 필요한가**
 > 워드프레스 REST API는 등록되지 않은 커스텀 메타를 **에러 없이 조용히 버립니다.**
 > Rank Math는 모든 SEO 값을 커스텀 메타에 저장하기 때문에, 이 파일이 없으면
 > 글은 정상적으로 올라가는데 Rank Math 항목만 전부 비어 있게 됩니다.
+
+#### 방법 A — 관리자 화면에서 ZIP 업로드 (권장, FTP 불필요)
+
+```bash
+# ZIP 만들기
+cd notion-wp-publish/wp-mu-plugin
+zip -r notion-publish-bridge.zip notion-publish-bridge/
+```
+
+워드프레스 관리자 → **플러그인 → 새로 추가 → 플러그인 업로드** → ZIP 선택 →
+**지금 설치하기** → **플러그인 활성화**.
+
+#### 방법 B — mu-plugins 폴더에 직접 넣기
+
+파일 시스템에 접근할 수 있다면 `notion-publish-bridge/notion-publish-bridge.php` 를
+**`wp-content/mu-plugins/`** 에 두는 방법도 있습니다. 폴더가 없으면 새로 만드세요.
+`mu-plugins` 는 활성화 과정이 없고 실수로 비활성화될 일도 없습니다.
+
+접근 경로는 호스팅에 따라 다릅니다.
+- 호스팅사 관리 콘솔의 **파일 관리자**(cPanel 파일 관리자, 카페24·가비아 웹FTP 등)
+- **FTP/SFTP 클라이언트** (FileZilla 등) — 호스팅사에서 발급한 FTP 계정 사용
+- 서버에 **SSH** 접속이 되면 `scp` 로 바로 복사
+
+두 방법의 동작은 같습니다. 어느 쪽이든 아래 확인이 통과하면 됩니다.
 
 설치 확인:
 
