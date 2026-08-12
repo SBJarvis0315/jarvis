@@ -45,7 +45,7 @@ zip -r notion-publish-bridge.zip notion-publish-bridge/
 
 ```bash
 curl -u "아이디:응용프로그램비밀번호" \
-  https://cleartone.co.kr/wp-json/notion-bridge/v1/ping
+  https://blog.cleartone.co.kr/wp-json/notion-bridge/v1/ping
 ```
 
 `{"ok":true, ...}` 가 나오면 성공입니다.
@@ -290,5 +290,5 @@ notion-wp-publish/
 │   ├── images.py                   이미지 배치·ALT
 │   ├── schema.py                   BlogPosting / FAQPage 생성
 │   └── publish.py                  게이트 + 오케스트레이터
-└── tests/                          54개 테스트
+└── tests/                          65개 테스트
 ```

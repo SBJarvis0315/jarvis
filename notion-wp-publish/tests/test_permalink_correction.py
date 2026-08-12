@@ -7,13 +7,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from notionwp.wordpress import Post
-from test_publish_flow import FakeWordPress, _no_network, build  # noqa: F401
+from test_publish_flow import BASE, FakeWordPress, _no_network, build  # noqa: F401
 
 
 def test_schema_url_matches_the_real_permalink():
     """고유주소가 /카테고리/슬러그/ 형태여도 스키마 @id 가 실제 주소를 가리켜야 합니다."""
     wp = FakeWordPress()
-    real = "https://cleartone.co.kr/color/melasma-laser-sessions/"
+    real = f"{BASE}/color/melasma-laser-sessions/"
 
     original = wp.update_post
 

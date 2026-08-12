@@ -25,7 +25,7 @@
     }
   },
   "wordpress": {
-    "base_url": "https://cleartone.co.kr",
+    "base_url": "https://blog.cleartone.co.kr",
     "schema_mode": "rankmath",
     "default_category": "",
     "category_map": {

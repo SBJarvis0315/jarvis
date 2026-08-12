@@ -17,7 +17,7 @@ from notionwp.config import Config
 from notionwp.publish import Publisher, summarize
 from notionwp.wordpress import WordPressError
 from test_gate_schema import CONFIG, complete_page
-from test_publish_flow import FakeNotion, FakeWordPress, _no_network  # noqa: F401
+from test_publish_flow import BASE, FakeNotion, FakeWordPress, _no_network  # noqa: F401
 
 
 def build_draft(wp, pages=None):
@@ -74,7 +74,7 @@ def test_edit_link_is_reported():
     post_id = next(iter(wp.posts))
 
     assert outcomes[0].edit_link == (
-        f"https://cleartone.co.kr/wp-admin/post.php?post={post_id}&action=edit"
+        f"{BASE}/wp-admin/post.php?post={post_id}&action=edit"
     )
 
 

@@ -22,6 +22,10 @@ from notionwp.publish import Publisher
 from notionwp.wordpress import Media, Post, WordPressError
 from test_gate_schema import CONFIG, complete_page
 
+#: 가짜 워드프레스가 돌려주는 주소. 설정의 base_url 을 따라가야
+#: 고객사 도메인이 바뀌어도 테스트가 같이 흔들리지 않습니다.
+BASE = CONFIG.wordpress.base_url.rstrip("/")
+
 
 class FakeNotion:
     def __init__(self, pages, blocks):
@@ -68,7 +72,7 @@ class FakeWordPress:
         self._maybe_fail("upload_media")
         self._next_id += 1
         self.media.append({"filename": filename, "alt": alt, "id": self._next_id})
-        return Media(id=self._next_id, url=f"https://cleartone.co.kr/uploads/{filename}")
+        return Media(id=self._next_id, url=f"{BASE}/uploads/{filename}")
 
     def slug_taken(self, slug):
         self._maybe_fail("slug_taken")
@@ -97,7 +101,7 @@ class FakeWordPress:
         slug = self.posts[post_id].get("slug", "x")
         return Post(
             id=post_id,
-            link=f"https://cleartone.co.kr/{slug}/",
+            link=f"{BASE}/{slug}/",
             status=self.posts[post_id].get("status", "draft"),
         )
 
@@ -133,12 +137,12 @@ def test_happy_path_publishes_and_writes_back():
 
     assert len(outcomes) == 1
     assert outcomes[0].published
-    assert outcomes[0].link == "https://cleartone.co.kr/melasma-laser-sessions/"
+    assert outcomes[0].link == f"{BASE}/melasma-laser-sessions/"
 
     # 노션에 게재완료 + URL 이 기록되어야 합니다 (요구사항 3번).
     page_id, props = notion.updates[-1]
     assert props["진행 상황"]["status"]["name"] == "게재완료"
-    assert props["URL"]["url"] == "https://cleartone.co.kr/melasma-laser-sessions/"
+    assert props["URL"]["url"] == f"{BASE}/melasma-laser-sessions/"
 
 
 def test_publish_order_is_draft_then_stamp_then_seo_then_publish():
@@ -220,7 +224,7 @@ def test_already_published_is_skipped():
             "found": True,
             "post_id": 55,
             "status": "publish",
-            "link": "https://cleartone.co.kr/melasma-laser-sessions/",
+            "link": f"{BASE}/melasma-laser-sessions/",
         }
     )
     pub, notion = build(wp)
