@@ -1,0 +1,20 @@
+[tool.ruff]
+# 한글은 한 글자가 두 칸 폭이라 100자 기준이면 실제로는 꽤 짧아집니다.
+line-length = 110
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "RUF"]
+ignore = [
+    # 플래너 컬럼 이름이 한글이라 dict 리터럴로 넘기는 편이 읽기 좋습니다.
+    "PIE804",
+    # 테스트가 sys.path 를 먼저 손봐야 해서 import 위치가 어쩔 수 없습니다.
+    "E402",
+    # 한 건의 발행 실패가 나머지 원고를 막으면 안 되므로 넓게 잡습니다.
+    "BLE001",
+    # 전각 콜론(：)과 이모지 영역 문자는 한글 원고를 다루려고 일부러 넣은 것입니다.
+    "RUF001",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["RUF059"]

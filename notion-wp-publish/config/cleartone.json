@@ -1,0 +1,46 @@
+{
+  "client": "클리어톤의원",
+  "notion": {
+    "database_id": "97668fa2-06ff-837f-90b8-0140f63456e4",
+    "data_source_id": "5ec68fa2-06ff-8312-ad80-878accfa81b4",
+    "api_version": "2022-06-28",
+    "status_ready": "컨펌 진행 중",
+    "status_done": "게재완료",
+    "status_error": "발행 오류",
+    "type_filter": ["롱폼", "엔티티"],
+    "properties": {
+      "title": "제목",
+      "status": "진행 상황",
+      "type": "유형",
+      "publish_date": "발행 예정일",
+      "thumbnail": "썸네일",
+      "body_images": "본문 이미지",
+      "meta_title": "메타타이틀",
+      "meta_description": "메타디스크립션",
+      "slug": "슬러그",
+      "keywords": "키워드",
+      "category": "카테고리",
+      "board": "게시판",
+      "url": "URL"
+    }
+  },
+  "wordpress": {
+    "base_url": "https://cleartone.co.kr",
+    "schema_mode": "rankmath",
+    "default_category": "",
+    "category_map": {
+      "색소 이야기": "색소 이야기",
+      "피부질환": "피부질환",
+      "리프팅・탄력": "리프팅・탄력"
+    },
+    "publisher_name": "클리어톤의원",
+    "publisher_logo": "",
+    "author_name": "클리어톤의원",
+    "brand_suffix": "클리어톤의원"
+  },
+  "render": {
+    "spacer_height": 20,
+    "spacer_before_headings": true,
+    "center_tables": true
+  }
+}
