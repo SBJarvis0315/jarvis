@@ -53,6 +53,10 @@ class RenderConfig:
     spacer_before_headings: bool = True
     center_tables: bool = True
 
+    #: 이 유형은 썸네일 한 장을 대표 이미지로 쓰면서 본문 맨 위에도 같이 넣습니다.
+    #: 숏폼처럼 사진이 한 장뿐인 글을 위한 설정이며, 본문 이미지 칸은 비워둡니다.
+    hero_image_types: list[str] = field(default_factory=list)
+
 
 @dataclass
 class Secrets:

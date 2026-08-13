@@ -7,7 +7,11 @@
     "status_ready": "컨펌 진행 중",
     "status_done": "게재완료",
     "status_error": "발행 오류",
-    "type_filter": ["롱폼", "엔티티", "숏폼"],
+    "type_filter": [
+      "롱폼",
+      "엔티티",
+      "숏폼"
+    ],
     "properties": {
       "title": "제목",
       "status": "진행 상황",
@@ -41,6 +45,9 @@
   "render": {
     "spacer_height": 20,
     "spacer_before_headings": true,
-    "center_tables": true
+    "center_tables": true,
+    "hero_image_types": [
+      "숏폼"
+    ]
   }
 }

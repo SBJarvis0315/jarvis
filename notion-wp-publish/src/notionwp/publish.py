@@ -101,6 +101,18 @@ def today_kst() -> date:
 # ------------------------------------------------------------------------ 게이트
 
 
+def uses_hero_image(cfg: Config, props: dict[str, Any]) -> bool:
+    """썸네일을 본문 맨 위에도 넣는 유형인가.
+
+    숏폼처럼 사진이 한 장뿐인 글에서 쓰입니다. 이 유형은 썸네일만 올리면 되고,
+    같은 미디어를 재사용하므로 워드프레스에 같은 파일이 두 번 올라가지 않습니다.
+    """
+    types = cfg.render.hero_image_types
+    if not types:
+        return False
+    return napi.read_select((props or {}).get(cfg.notion.prop("type"))) in types
+
+
 def check_properties(cfg: Config, page: dict[str, Any], *, on: date) -> Candidate:
     """블록을 내려받기 전에, 속성만으로 판별할 수 있는 조건을 먼저 봅니다."""
     nc = cfg.notion
@@ -138,7 +150,7 @@ def check_properties(cfg: Config, page: dict[str, Any], *, on: date) -> Candidat
 
     if not iter_files(prop("thumbnail")):
         cand.reasons.append("썸네일이 비어 있음")
-    if not iter_files(prop("body_images")):
+    if not iter_files(prop("body_images")) and not uses_hero_image(cfg, props):
         cand.reasons.append("본문 이미지가 비어 있음")
 
     for key, label in (
@@ -407,6 +419,10 @@ class Publisher:
                 media = self.wp.upload_media(name, data, alt=placement.alt)
                 uploaded.append((placement, media.id, media.url))
                 log.debug("이미지 %d → %s (%s)", n, media.url, placement.alt[:30])
+
+            if uses_hero_image(self.cfg, cand.props):
+                uploaded.insert(0, (Placement(index=0, alt=thumb_alt), thumb.id, thumb.url))
+                log.info("썸네일을 본문 맨 위에 재사용합니다 (재업로드 없음)")
 
             for offset, (placement, media_id, media_url) in enumerate(uploaded):
                 body.insert(
