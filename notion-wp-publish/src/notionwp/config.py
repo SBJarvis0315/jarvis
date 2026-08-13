@@ -59,6 +59,32 @@ class RenderConfig:
 
 
 @dataclass
+class RunLogConfig:
+    """노션 '자동화 실행 로그' DB. `database_id` 가 비어 있으면 로그를 남기지 않습니다."""
+
+    database_id: str = ""
+    #: 같은 DB에 1단계(원고 생성) 로그가 함께 쌓이므로, 어느 단계인지 표시합니다.
+    stage: str = "워드프레스 발행"
+    properties: dict[str, str] = field(
+        default_factory=lambda: {
+            "title": "실행",
+            "date": "실행일시",
+            "client": "고객사",
+            "count": "처리 건수",
+            "result": "결과",
+            "detail": "상세",
+            "stage": "단계",
+        }
+    )
+
+    def prop(self, key: str) -> str:
+        name = self.properties.get(key)
+        if not name:
+            raise ConfigError(f"설정에 run_log.properties.{key} 가 없습니다.")
+        return name
+
+
+@dataclass
 class Secrets:
     notion_token: str
     wp_user: str
@@ -71,6 +97,7 @@ class Config:
     notion: NotionConfig
     wordpress: WordPressConfig
     render: RenderConfig = field(default_factory=RenderConfig)
+    run_log: RunLogConfig = field(default_factory=RunLogConfig)
 
     @classmethod
     def load(cls, path: str | Path) -> Config:
@@ -81,6 +108,7 @@ class Config:
                 notion=NotionConfig(**raw["notion"]),
                 wordpress=WordPressConfig(**raw["wordpress"]),
                 render=RenderConfig(**raw.get("render", {})),
+                run_log=RunLogConfig(**raw.get("run_log", {})),
             )
         except (KeyError, TypeError) as exc:
             raise ConfigError(f"설정 파일을 읽지 못했습니다 ({path}): {exc}") from exc

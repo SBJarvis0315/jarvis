@@ -33,6 +33,7 @@ class FakeNotion:
         self._pages = pages
         self._blocks = blocks
         self.updates: list[tuple[str, dict]] = []
+        self.created: list[tuple[str, dict]] = []
 
     def query_planner(self):
         return self._pages
@@ -42,6 +43,10 @@ class FakeNotion:
 
     def update_page(self, page_id, properties):
         self.updates.append((page_id, properties))
+        return {}
+
+    def create_page(self, database_id, properties):
+        self.created.append((database_id, properties))
         return {}
 
 

@@ -43,6 +43,10 @@
     "author_name": "클리어톤의원",
     "brand_suffix": "클리어톤의원"
   },
+  "run_log": {
+    "database_id": "3b368fa2-06ff-81e7-9451-c0241aa263fb",
+    "stage": "워드프레스 발행"
+  },
   "render": {
     "spacer_height": 20,
     "spacer_before_headings": true,

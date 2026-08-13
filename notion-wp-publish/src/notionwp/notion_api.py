@@ -132,6 +132,14 @@ class NotionClient:
     def update_page(self, page_id: str, properties: dict[str, Any]) -> dict[str, Any]:
         return self._request("PATCH", f"/pages/{page_id}", json={"properties": properties})
 
+    def create_page(self, database_id: str, properties: dict[str, Any]) -> dict[str, Any]:
+        """DB에 행 하나를 추가합니다. 실행 로그 기록에만 씁니다."""
+        return self._request(
+            "POST",
+            "/pages",
+            json={"parent": {"database_id": database_id}, "properties": properties},
+        )
+
 
 # ------------------------------------------------------------- 속성 값 읽기/쓰기
 

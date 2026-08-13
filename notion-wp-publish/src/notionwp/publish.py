@@ -43,6 +43,7 @@ from .plan import (
     outline,
     plan_dir_for,
 )
+from .runlog import RunLogger
 from .schema import build_schemas
 from .wordpress import WordPressClient, WordPressError, download
 
@@ -203,6 +204,7 @@ class Publisher:
             secrets.wp_user,  # type: ignore[union-attr]
             secrets.wp_app_password,  # type: ignore[union-attr]
         )
+        self.runlog = RunLogger(cfg.run_log, cfg.client, self.notion)
 
     # -------------------------------------------------------------------- 실행
 
@@ -245,6 +247,11 @@ class Publisher:
 
             outcomes.append(self._publish(cand))
 
+        # --dry-run 은 아무것도 하지 않았고, --draft 는 공개하지도 노션을 건드리지도
+        # 않았으므로 운영 로그에 남기지 않습니다.
+        if not self.dry_run and not self.draft:
+            self.runlog.write(outcomes)
+
         return outcomes
 
     # -------------------------------------------------------------------- 준비
@@ -281,6 +288,11 @@ class Publisher:
                 outcomes.append(
                     Outcome(page_id=cand.page_id, title=cand.title, error=str(exc))
                 )
+
+        # 준비 단계는 보통 뒤이어 --plan 이 돌면서 로그를 남깁니다. 다만 대상이 0건이면
+        # --plan 을 돌릴 일이 없어 그날 기록이 통째로 비므로, 그 경우만 여기서 남깁니다.
+        if not any(o.prepared for o in outcomes):
+            self.runlog.write(outcomes, note="준비 단계에서 발행 대상 없음")
 
         return outcomes
 
