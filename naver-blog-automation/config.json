@@ -1,0 +1,34 @@
+{
+  "_note": "고객사마다 플래너·속성명·지침이 다릅니다. 새 고객사는 clients 배열에 항목 하나만 추가하면 됩니다.",
+  "clients": [
+    {
+      "name": "클리어서울안과",
+      "slug": "clearseoul-eye",
+      "active": true,
+
+      "planner_db_id": "TODO_notionctl.py find-planner 로 확인",
+      "_planner_link": "https://app.notion.com/p/_page-32fa4049aa2080a69295f4e1afd2faea",
+      "_planner_view": "모든 작업 [브랜드블로그]",
+
+      "assignee": "이선우",
+      "trigger_status": "작성 전",
+      "done_status": "원고 저장 완료",
+      "max_per_run": 3,
+
+      "properties": {
+        "title": "콘텐츠 번호",
+        "keyword": "키워드",
+        "assignee": "담당자",
+        "kind": "종류",
+        "status": "진행 상황"
+      },
+
+      "guidelines": {
+        "정보성글": "clients/clearseoul-eye/guideline-정보성글.md",
+        "논문글": "clients/clearseoul-eye/guideline-논문글.md"
+      },
+      "reference": "clients/clearseoul-eye/reference.txt",
+      "samples": "clients/clearseoul-eye/samples/"
+    }
+  ]
+}
