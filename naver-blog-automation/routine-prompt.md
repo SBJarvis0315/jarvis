@@ -12,7 +12,7 @@
 
 - 노션 접근은 반드시 저장소의 `naver-blog-automation/notionctl.py` 로 한다.
   Notion MCP 커넥터는 다른 워크스페이스를 보고 있으므로 이 작업에 쓰지 않는다.
-- 환경변수 NOTION_TOKEN 이 비어 있으면 그 사실만 보고하고 즉시 종료한다.
+- 환경변수 NOTION_TOKEN_NAVER 가 비어 있으면 그 사실만 보고하고 즉시 종료한다.
   다른 경로로 우회하지 않는다.
 - 같은 호출을 3회 이상 재시도하지 않는다. 빠르게 실패하고 빠르게 보고한다.
 - WebSearch 와 WebFetch 는 사용 가능하다. 논문글의 출처 확보에 쓴다.

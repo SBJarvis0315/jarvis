@@ -8,7 +8,7 @@ Claude의 Notion MCP 커넥터는 승인한 워크스페이스 하나만 볼 수
 준비:
   1. notion.so/my-integrations 에서 내부 통합 생성 → 시크릿 복사
   2. 대상 플래너 페이지 ⋯ → 연결 → 그 통합 추가
-  3. 환경변수 NOTION_TOKEN 에 시크릿 저장 (새 세션에서 반영됨)
+  3. 환경변수 NOTION_TOKEN_NAVER 에 시크릿 저장 (새 세션에서 반영됨)
 
 사용:
   python3 notionctl.py check
@@ -34,13 +34,25 @@ class NotionError(RuntimeError):
     pass
 
 
+ENV_VAR = "NOTION_TOKEN_NAVER"
+
+
 def token():
-    t = os.environ.get("NOTION_TOKEN", "").strip()
+    """이 자동화 전용 토큰만 쓴다.
+
+    NOTION_TOKEN 은 다른 자동화가 이미 쓰고 있고 워크스페이스도 다르다.
+    실수로 그 토큰을 집어 엉뚱한 워크스페이스를 건드리지 않도록 폴백하지 않는다.
+    """
+    t = os.environ.get(ENV_VAR, "").strip()
     if not t:
+        hint = ""
+        if os.environ.get("NOTION_TOKEN", "").strip():
+            hint = ("\n(NOTION_TOKEN 은 다른 워크스페이스용이라 쓰지 않습니다. "
+                    "덮어쓰지 마시고 %s 를 따로 만드세요.)" % ENV_VAR)
         raise NotionError(
-            "환경변수 NOTION_TOKEN 이 비어 있습니다.\n"
-            "claude.ai/code 환경 설정에 저장한 뒤 새 세션에서 다시 실행하세요."
-        )
+            "환경변수 %s 가 비어 있습니다.\n"
+            "claude.ai/code 환경 설정에 저장한 뒤 새 세션에서 다시 실행하세요.%s"
+            % (ENV_VAR, hint))
     return t
 
 
