@@ -3,6 +3,32 @@
 발행 단계는 사용자 PC에서만 돌아갑니다. 네이버가 데이터센터 IP의 로그인을 막기 때문입니다.
 사진 폴더도 PC에 있으니 4번 단계부터는 여기서 하는 편이 편합니다.
 
+## 0. 로컬에서 Claude 부르기
+
+이 저장소를 만든 대화는 웹 세션이라 로컬로 넘어오지 않습니다. 로컬 세션은 빈 상태로
+시작하므로, 아래 문단을 첫 메시지로 붙여넣어 주세요.
+
+```
+네이버 블로그 발행 자동화를 이어서 작업합니다.
+naver-blog-automation/README.md 와 LOCAL.md 를 먼저 읽어주세요.
+
+지금 상태:
+- DOCX 파싱, 템플릿 배치, 관련 글 선정, 이미지 배정까지 만들어져 있고 검증도 끝났습니다.
+- 남은 것은 publish/editor.py 의 발행 단계입니다.
+  publish/selectors.json 이 TODO 로 비어 있어서 멈춰 있습니다.
+
+할 일:
+1. python publish\editor.py login   (제가 직접 로그인합니다)
+2. python publish\editor.py inspect --blog niceolive
+   결과(work\inspect.json)를 읽고 selectors.json 을 채워주세요.
+3. 사진 폴더는 C:\Users\이선우\Desktop\Freelancer\두청한의원(스마트브랜딩)\사진 입니다.
+   images.py catalog 로 목록을 만든 뒤, 사진을 직접 열어보고 caption 을 채워주세요.
+4. 발행은 임시저장까지만 합니다. 최종 발행 버튼은 제가 직접 누릅니다.
+```
+
+설치는 데스크톱 앱(claude.com/download) 또는 터미널(`npm install -g @anthropic-ai/claude-code`)
+둘 중 편한 쪽을 쓰시면 됩니다. 계정은 웹에서 쓰던 것과 같은 계정으로 로그인합니다.
+
 ## 1. 준비 (한 번만)
 
 파워셸을 열고 순서대로 실행합니다.
