@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import logging
 import mimetypes
 import time
@@ -183,21 +184,48 @@ class WordPressClient:
 
     # ------------------------------------------------------------------ 카테고리
 
+    def list_categories(self) -> dict[str, int]:
+        """워드프레스에 있는 분류를 이름 → id 로 전부 가져옵니다."""
+        names: dict[str, int] = {}
+        page = 1
+
+        while True:
+            items = self._request(
+                "GET", "/wp/v2/categories", params={"per_page": 100, "page": page}
+            )
+            if not items:
+                break
+            for item in items:
+                # 워드프레스는 이름을 HTML 이스케이프해서 돌려줍니다 (&amp; 등).
+                label = html.unescape(str(item.get("name", ""))).strip()
+                if label:
+                    names[label] = int(item["id"])
+            if len(items) < 100:
+                break
+            page += 1
+
+        return names
+
     def resolve_category(self, name: str) -> int | None:
-        """이름으로 카테고리를 찾고, 없으면 만듭니다."""
+        """이름으로 분류를 찾습니다. 없으면 만들지 않고 실패시킵니다.
+
+        예전에는 없는 이름이면 그 이름으로 분류를 새로 만들었습니다. 편의 기능이었지만
+        오타 하나로 유령 분류가 생기고 그 글만 거기 격리되는데도 발행은 성공으로
+        보고돼서, 며칠 뒤에나 발견됐습니다. 지금은 발행을 멈추고 사람에게 넘깁니다.
+        """
         if not name:
             return None
 
-        found = self._request(
-            "GET", "/wp/v2/categories", params={"search": name, "per_page": 20}
-        )
-        for item in found or []:
-            if item.get("name", "").strip() == name.strip():
-                return int(item["id"])
+        existing = self.list_categories()
+        found = existing.get(name.strip())
+        if found is not None:
+            return found
 
-        created = self._request("POST", "/wp/v2/categories", json={"name": name})
-        log.info("카테고리를 새로 만들었습니다: %s", name)
-        return int(created["id"])
+        raise WordPressError(
+            f"워드프레스에 '{name}' 분류가 없습니다. "
+            f"플래너의 카테고리를 워드프레스에 있는 이름으로 맞춰 주세요. "
+            f"현재 있는 분류: {', '.join(sorted(existing)) or '(없음)'}"
+        )
 
 
 def download(url: str, session: requests.Session | None = None) -> bytes:
