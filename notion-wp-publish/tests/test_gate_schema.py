@@ -26,8 +26,6 @@ def registry_row(**overrides) -> dict:
         "플래너 DB ID": "97668fa206ff837f90b80140f63456e4",
         "대상 유형": "롱폼, 숏폼, 브랜드 엔티티, 제품 엔티티",
         "워드프레스 주소": "https://blog.cleartone.co.kr",
-        "카테고리 대응": "",
-        "속성 재정의": "",
     }
     unknown = set(overrides) - set(values)
     if unknown:  # 오타 난 컬럼명이 조용히 무시되지 않도록
@@ -41,7 +39,7 @@ def registry_row(**overrides) -> dict:
         },
         "상태": {"type": "select", "select": {"name": values["상태"]} if values["상태"] else None},
     }
-    for key in ("플래너 DB ID", "대상 유형", "워드프레스 주소", "카테고리 대응", "속성 재정의"):
+    for key in ("플래너 DB ID", "대상 유형", "워드프레스 주소"):
         props[key] = {
             "type": "rich_text",
             "rich_text": [{"plain_text": values[key], "annotations": {}}],

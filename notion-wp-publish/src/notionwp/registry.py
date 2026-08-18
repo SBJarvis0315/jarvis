@@ -34,27 +34,6 @@ def normalize_id(value: str) -> str:
     return match.group(0) if match else ""
 
 
-def parse_pairs(text: str) -> dict[str, str]:
-    """'노션이름 = 워드프레스이름' 목록을 표에서 읽어 사전으로 만듭니다.
-
-    줄바꿈·쉼표 어느 쪽으로 나눠 적어도 되고, 구분자는 `=` 와 `->` 둘 다 받습니다.
-    사람이 노션 표 칸에 직접 적는 값이라 형식을 너그럽게 받습니다.
-    """
-    pairs: dict[str, str] = {}
-    for chunk in re.split(r"[\n,]", text or ""):
-        chunk = chunk.strip()
-        if not chunk:
-            continue
-        parts = re.split(r"->|=", chunk, maxsplit=1)
-        if len(parts) != 2:
-            log.warning("카테고리 대응을 알아볼 수 없어 건너뜁니다: %r", chunk)
-            continue
-        left, right = parts[0].strip(), parts[1].strip()
-        if left and right:
-            pairs[left] = right
-    return pairs
-
-
 def parse_list(text: str) -> list[str]:
     return [t.strip() for t in re.split(r"[\n,]", text or "") if t.strip()]
 
@@ -94,12 +73,10 @@ def build_config(defaults: Config, row: dict[str, Any]) -> tuple[Config | None, 
         defaults.notion,
         database_id=planner,
         type_filter=parse_list(text("types")) or list(defaults.notion.type_filter),
-        properties={**defaults.notion.properties, **parse_pairs(text("overrides"))},
     )
     wordpress = replace(
         defaults.wordpress,
         base_url=wp_url.rstrip("/"),
-        category_map={**defaults.wordpress.category_map, **parse_pairs(text("category_map"))},
         publisher_name=defaults.wordpress.publisher_name or client,
         author_name=defaults.wordpress.author_name or client,
         brand_suffix=defaults.wordpress.brand_suffix or client,

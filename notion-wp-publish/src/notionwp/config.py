@@ -71,8 +71,6 @@ class RegistryConfig:
             "planner": "플래너 DB ID",
             "types": "대상 유형",
             "wp_url": "워드프레스 주소",
-            "category_map": "카테고리 대응",
-            "overrides": "속성 재정의",
         }
     )
 

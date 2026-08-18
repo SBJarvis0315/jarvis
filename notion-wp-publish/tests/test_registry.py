@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from notionwp.registry import build_config, load_clients, normalize_id, parse_pairs
+from notionwp.registry import build_config, load_clients, normalize_id
 from test_gate_schema import DEFAULTS, DEFAULTS_PATH, registry_row
 
 
@@ -33,16 +33,6 @@ def test_planner_id_accepts_a_pasted_url():
     url = "https://www.notion.so/leadgen-lab/97668fa206ff837f90b80140f63456e4?v=abc"
     assert normalize_id(url) == "97668fa206ff837f90b80140f63456e4"
     assert normalize_id("9766-8fa2-06ff") == ""
-
-
-def test_category_pairs_are_forgiving_about_format():
-    assert parse_pairs("색소 이야기 = 색소\n피부질환 -> 피부 질환") == {
-        "색소 이야기": "색소",
-        "피부질환": "피부 질환",
-    }
-    assert parse_pairs("A=B, C=D") == {"A": "B", "C": "D"}
-    assert parse_pairs("") == {}
-    assert parse_pairs("형식이 틀린 줄") == {}  # 버리되 나머지는 살립니다
 
 
 # ------------------------------------------------------------------ 행 → 설정
@@ -86,10 +76,18 @@ def test_broken_planner_id_is_reported_not_silently_dropped():
     assert "플래너 DB ID" in reason
 
 
-def test_column_names_can_be_overridden_per_client():
-    cfg, _ = build_config(DEFAULTS, registry_row(**{"속성 재정의": "thumbnail = 대표 이미지"}))
-    assert cfg.notion.prop("thumbnail") == "대표 이미지"
-    assert cfg.notion.prop("title") == "제목"  # 나머지는 공통값 그대로
+def test_planner_columns_come_from_the_shared_template():
+    # 플래너 컬럼 이름은 전 고객사가 통일해 쓰므로 고객사별로 달라지지 않습니다.
+    cfg, _ = build_config(DEFAULTS, registry_row())
+    assert cfg.notion.prop("thumbnail") == "썸네일"
+    assert cfg.notion.prop("title") == "제목"
+
+
+def test_category_name_passes_through_untouched():
+    # 노션 카테고리 옵션을 워드프레스에 이미 있는 이름으로 맞춰 쓰기 때문에
+    # 중간에 이름을 바꾸지 않습니다.
+    cfg, _ = build_config(DEFAULTS, registry_row())
+    assert cfg.wordpress.category_map == {}
 
 
 def test_empty_type_filter_falls_back_to_defaults():
