@@ -1,0 +1,21 @@
+{
+  "_note": "editor.py inspect 결과를 보고 채웁니다. TODO 가 하나라도 남아 있으면 publish 가 멈춥니다.",
+  "editor_frame": "TODO 에디터가 들어있는 iframe 이름 (보통 mainFrame)",
+  "title_input": "TODO 제목 입력 영역",
+  "body_area": "TODO 본문 contenteditable 영역",
+  "template_button": "TODO 우측 상단 '템플릿' 버튼",
+  "template_my_tab": "TODO 템플릿 패널의 '내 템플릿' 탭",
+  "template_item": "TODO '두청한의원 템플릿(26.08.12 ver.)' 항목",
+  "image_button": "TODO 툴바 '사진' 버튼",
+  "link_button": "TODO 툴바 '링크' 버튼",
+  "save_draft_button": "TODO '저장' (임시저장) 버튼",
+  "publish_button": "TODO '발행' 버튼",
+  "placeholders": {
+    "_note": "템플릿을 불러오면 자리표시 문구가 들어있습니다. 그 문구를 실제 내용으로 바꿉니다.",
+    "title_quote": "제목과 똑같은 문장",
+    "toc_items": ["1.", "2.", "3."],
+    "intro": "서론",
+    "section_body": "본론",
+    "outro": "마무리"
+  }
+}
