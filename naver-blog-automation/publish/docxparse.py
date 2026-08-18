@@ -32,6 +32,10 @@ QUOTE_CLOSE = re.compile(r"^\[\s*/\s*인용구\s*\]$")
 TABLE_OPEN = re.compile(r"^\[\s*표\s*\]$")
 TABLE_CLOSE = re.compile(r"^\[\s*/\s*표\s*\]$")
 NUMBERED = re.compile(r"^\s*([1-9])\s*\.\s*\S")
+TITLE_LABEL = re.compile(r"^\[?\s*제목\s*후보\s*\]?\s*$")
+OUTRO_MARK = re.compile(r"^(-+|\[?\s*칼럼을\s*마치며\s*\]?|\[?\s*마무리\s*\]?)$")
+OUTRO_CUE = ("오늘 말씀드린", "오늘은", "긴 글", "감사합니다", "감사드립니다",
+             "문의 주", "문의주", "마음입니다", "바랍니다")
 PART_MARK = re.compile(r"^<</?[^>]+>>$")
 
 
@@ -138,7 +142,7 @@ def read_table(tbl):
     return rows
 
 
-def parse(path, outdir):
+def parse(path, outdir, heading_lines=1):
     z = zipfile.ZipFile(path)
     relmap = rels(z)
     mediadir = os.path.join(outdir, "media")
@@ -218,54 +222,123 @@ def parse(path, outdir):
 
         blocks.append({"kind": "para", "pieces": pieces, "text": text})
 
-    blocks = classify(blocks)
+    blocks = classify(blocks, heading_lines)
+    cands = [b for b in blocks if b.get("role") == "제목후보"]
     doc = {
         "source": os.path.basename(path),
+        "title_candidates": [b["lines"][0] if b["kind"] == "quote" else b["text"]
+                             for b in cands],
         "title_line": blocks[0]["text"] if blocks and blocks[0]["kind"] == "para" else "",
         "blocks": blocks,
     }
     return doc
 
 
-def classify(blocks):
-    """제목·소제목·잠깐 블록을 표시한다. 태그가 없는 원고도 읽기 위함."""
+def classify(blocks, heading_lines=1):
+    """제목 후보·소제목·잠깐 블록을 구분하고 섹션을 나눈다.
+
+    heading_lines 는 소제목이 몇 줄짜리인지다. 고객사 템플릿마다 다르다.
+    두청한의원은 한 줄이라 뒤따르는 본문 첫 문장을 붙이면 안 된다.
+    """
     out = []
+    in_candidates = False
     for i, b in enumerate(blocks):
         if b["kind"] == "table":
             flat = " ".join(" ".join(r) for r in b["rows"])
             b["role"] = "잠깐" if "잠깐" in flat else "표"
+            in_candidates = False
         elif b["kind"] == "para":
-            if i == 0:
+            text = b["text"]
+            if TITLE_LABEL.match(text):
+                b["role"] = "제목후보라벨"
+                in_candidates = True
+            elif in_candidates and NUMBERED.match(text):
+                b["role"] = "제목후보"
+            elif i == 0:
                 b["role"] = "제목"
-            elif NUMBERED.match(b["text"]) and len(b["text"]) <= 60:
-                # 넘버링 짧은 줄은 소제목으로 본다. 인용구 태그가 없는 원고 대응
+                in_candidates = False
+            elif NUMBERED.match(text) and len(text) <= 60:
                 b["kind"] = "quote"
-                b["lines"] = [b["text"]]
+                b["lines"] = [text]
                 b["role"] = "소제목"
                 b.pop("pieces", None)
+                in_candidates = False
             else:
                 b["role"] = "본문"
+                in_candidates = False
         elif b["kind"] == "quote":
-            b["role"] = "소제목" if NUMBERED.match(b["lines"][0]) else "인용"
+            first = b["lines"][0]
+            if TITLE_LABEL.match(first):
+                b["role"] = "제목후보라벨"
+                in_candidates = True
+            elif in_candidates and NUMBERED.match(first):
+                b["role"] = "제목후보"
+            elif NUMBERED.match(first):
+                b["role"] = "소제목"
+                in_candidates = False
+            else:
+                b["role"] = "인용"
+                in_candidates = False
         elif b["kind"] == "image":
             b["role"] = "이미지"
         out.append(b)
-    # 소제목 바로 뒤에 이어붙은 짧은 줄을 소제목에 합친다 (두 줄 소제목 대응)
-    merged = []
-    for b in out:
-        if (merged and merged[-1].get("role") == "소제목"
-                and b["kind"] == "para" and len(b["text"]) <= 30
-                and not NUMBERED.match(b["text"])
-                and merged[-1].get("_open", True)):
-            merged[-1]["lines"].append(b["text"])
-            merged[-1]["_open"] = False
+
+    out = split_overlong_headings(out, heading_lines)
+    assign_sections(out)
+    return out
+
+
+def split_overlong_headings(blocks, heading_lines):
+    """소제목 블록이 정해진 줄 수보다 길면 나머지를 본문으로 되돌린다."""
+    fixed = []
+    for b in blocks:
+        if b.get("role") in ("소제목", "제목후보") and b["kind"] == "quote" \
+                and len(b["lines"]) > heading_lines:
+            keep, rest = b["lines"][:heading_lines], b["lines"][heading_lines:]
+            b["lines"] = keep
+            fixed.append(b)
+            for line in rest:
+                fixed.append({"kind": "para", "role": "본문", "text": line,
+                              "pieces": [{"text": line, "bold": False}]})
+        else:
+            fixed.append(b)
+    return fixed
+
+
+def assign_sections(blocks):
+    """블록마다 어느 파트인지 표시한다. plan 단계에서 이미지 배치에 쓴다."""
+    section, n = "머리말", 0
+    outro_at = find_outro(blocks)
+    for i, b in enumerate(blocks):
+        if outro_at is not None and i >= outro_at:
+            b["section"] = "마무리"
+            continue
+        if b.get("role") in ("제목", "제목후보라벨", "제목후보"):
+            b["section"] = "제목"
             continue
         if b.get("role") == "소제목":
-            b["_open"] = True
-        merged.append(b)
-    for b in merged:
-        b.pop("_open", None)
-    return merged
+            n += 1
+            section = "소제목%d" % n
+        elif section == "머리말" and b.get("role") == "본문":
+            section = "서론"
+        b["section"] = section
+
+
+def find_outro(blocks):
+    """마무리가 시작되는 인덱스. 마커가 있으면 그것을, 없으면 단서로 찾는다."""
+    for i, b in enumerate(blocks):
+        if b["kind"] == "para" and OUTRO_MARK.match(b["text"].strip()):
+            return i
+    last_heading = max((i for i, b in enumerate(blocks)
+                        if b.get("role") == "소제목"), default=None)
+    if last_heading is None:
+        return None
+    tail_start = max(last_heading + 1, int(len(blocks) * 0.7))
+    for i in range(tail_start, len(blocks)):
+        b = blocks[i]
+        if b["kind"] == "para" and any(c in b["text"] for c in OUTRO_CUE):
+            return i
+    return None
 
 
 def report(doc):
@@ -282,18 +355,33 @@ def report(doc):
     embedded = sum(1 for b in doc["blocks"]
                    if b["kind"] == "image" and b["source"] == "embedded")
     print("이미지 — 빈 슬롯 %d개, 문서에 박힌 것 %d개" % (slots, embedded))
+    if doc.get("title_candidates"):
+        print("제목 후보 %d개" % len(doc["title_candidates"]))
+        for c in doc["title_candidates"]:
+            print("  · %s" % c[:70])
     subs = [b for b in doc["blocks"] if b.get("role") == "소제목"]
-    for s in subs:
-        print("  소제목: %s" % " / ".join(s["lines"])[:70])
+    for sb in subs:
+        print("  소제목: %s" % " / ".join(sb["lines"])[:70])
+    order, seen = [], set()
+    for b in doc["blocks"]:
+        sec = b.get("section")
+        if sec and sec not in seen:
+            seen.add(sec)
+            order.append(sec)
+    print("파트 구성: %s" % " → ".join(order))
+    if "마무리" not in seen:
+        print("  ! 마무리 경계를 못 찾았습니다. 원고에 '-' 한 줄을 넣어주시면 확실해집니다.")
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("docx")
     ap.add_argument("--out", required=True, help="작업 디렉터리")
+    ap.add_argument("--heading-lines", type=int, default=1,
+                    help="소제목이 몇 줄인지 (두청한의원 1줄)")
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
-    doc = parse(args.docx, args.out)
+    doc = parse(args.docx, args.out, args.heading_lines)
     dest = os.path.join(args.out, "doc.json")
     with open(dest, "w", encoding="utf-8") as f:
         json.dump(doc, f, ensure_ascii=False, indent=2)
