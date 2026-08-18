@@ -14,8 +14,12 @@ Rank Math 설정까지 채운 뒤 플래너를 '게재완료'로 되돌려 씁�
 
 ```bash
 cd notion-wp-publish
-PYTHONPATH=src python3 -m notionwp --config config/cleartone.json
+PYTHONPATH=src python3 -m notionwp
 ```
+
+고객사 설정은 노션 '고객사 설정표'에서 읽습니다. 상태가 '활성'이고 워드프레스 주소가
+적힌 고객사를 **한 번의 실행으로 전부** 처리하므로, 고객사마다 따로 돌릴 필요가 없습니다.
+한 곳만 돌리려면 `--client 클리어톤` 처럼 이름 일부를 넘기세요.
 
 모드가 넷 있습니다. 확신이 없으면 안전한 쪽을 고르세요.
 
@@ -26,7 +30,8 @@ PYTHONPATH=src python3 -m notionwp --config config/cleartone.json
 | `--plan DIR --draft` | 검수한 ALT로 초안 생성. **공개하지 않음**, 노션도 그대로 |
 | `--plan DIR` | 공개 발행 + 노션 게재완료·URL 기록 |
 
-고객사가 여러 곳이면 `config/` 안의 설정 파일마다 한 번씩 돌립니다.
+`--config 파일.json` 은 설정표를 거치지 않는 예외 경로입니다. 표에 없는 대상을 임시로
+돌릴 때만 쓰고, 평소에는 쓰지 마세요.
 
 ## 표준 절차 — ALT는 이미지를 직접 보고 씁니다
 
@@ -36,7 +41,7 @@ PYTHONPATH=src python3 -m notionwp --config config/cleartone.json
 
 ```bash
 cd notion-wp-publish
-PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --prepare work/
+PYTHONPATH=src python3 -m notionwp --prepare work/
 ```
 
 발행 조건을 통과한 원고의 이미지를 `work/<페이지ID>/images/` 에 내려받고
@@ -71,7 +76,7 @@ ALT가 하나라도 비어 있으면 3단계가 거부합니다.
 ### 3단계 — 발행
 
 ```bash
-PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --plan work/ --draft
+PYTHONPATH=src python3 -m notionwp --plan work/ --draft
 ```
 
 **처음 돌리는 원고는 반드시 `--draft` 를 붙이세요.** 사용자가 초안을 확인하고
@@ -83,9 +88,8 @@ PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --plan work/ -
 
 ## 인자 해석
 
-사용자가 고객사 이름을 말하면 그에 맞는 설정 파일을 고르세요
-(예: "클리어톤" → `config/cleartone.json`). 지정이 없으면 `config/` 의
-모든 설정을 순서대로 실행합니다.
+사용자가 고객사 이름을 말하면 `--client` 로 넘기세요 (예: "클리어톤" → `--client 클리어톤`).
+지정이 없으면 설정표의 활성 고객사를 전부 처리합니다.
 
 - "확인만", "미리보기" → `--dry-run` 만 돌리고 끝냅니다
 - "임시저장", "초안으로", "발행하지 말고", "테스트" → 3단계 절차 + `--draft`
@@ -117,6 +121,7 @@ PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --plan work/ -
 
 | 메시지 | 원인 | 대처 |
 |---|---|---|
+| `발행 대상 고객사가 없습니다` | 설정표에 활성 행이 없거나 워드프레스 주소가 빔 | 설정표의 상태·워드프레스 주소 확인 |
 | `mu-plugin 을 찾을 수 없습니다` | 워드프레스에 브리지 플러그인 미설치 | `wp-mu-plugin/` 의 플러그인을 설치 (README 1-① 참고) |
 | `환경변수가 비어 있습니다` | 토큰 미설정 | README의 '환경변수' 항목 참고 |
 | `슬러그 … 가 이미 사용 중입니다` | 같은 슬러그의 글이 이미 있음 | 플래너에서 슬러그를 바꾼 뒤 상태를 '컨펌 진행 중'으로 되돌리기 |

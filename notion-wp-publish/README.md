@@ -86,18 +86,21 @@ Claude Code 루틴에서 돌리는 경우, 세션 환경(Environment)의 환경�
 cd notion-wp-publish
 
 # ① 확인만 — 워드프레스·노션 어느 쪽도 건드리지 않습니다
-PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --dry-run
+PYTHONPATH=src python3 -m notionwp --dry-run
 
 # ② 준비 + 임시저장 (4·5장 참고)
-PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --prepare work/
+PYTHONPATH=src python3 -m notionwp --prepare work/
 # (이미지를 보고 plan.json 의 alt 를 채운 뒤)
-PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --plan work/ --draft
+PYTHONPATH=src python3 -m notionwp --plan work/ --draft
 
 # ③ 실제 발행
-PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --plan work/
+PYTHONPATH=src python3 -m notionwp --plan work/
 ```
 
 **처음이라면 ① → ② → ③ 순서로 가세요.**
+
+고객사 설정은 노션 '고객사 설정표'에서 읽어옵니다. 한 번 실행하면 활성 고객사를 전부
+처리하고, `--client 이름` 으로 한 곳만 고를 수 있습니다 (7장 참고).
 
 | | 워드프레스 | 노션 |
 |---|---|---|
@@ -193,13 +196,13 @@ ALT는 **이미지를 실제로 보고** 씁니다. 스크립트는 이미지를
 
 ```bash
 # 1단계 — 이미지를 내려받고 plan.json 생성 (아무것도 발행하지 않음)
-PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --prepare work/
+PYTHONPATH=src python3 -m notionwp --prepare work/
 
 # 2단계 — 이미지를 보고 plan.json 의 alt 를 채웁니다
 #          (루틴에서는 Claude가, 손으로 할 때는 사람이)
 
 # 3단계 — 검수된 ALT로 발행
-PYTHONPATH=src python3 -m notionwp --config config/cleartone.json --plan work/ --draft
+PYTHONPATH=src python3 -m notionwp --plan work/ --draft
 ```
 
 `plan.json` 에는 본문 헤딩 구조와 각 구간의 발췌가 함께 들어갑니다.
@@ -275,33 +278,56 @@ API로 발행하면 그 코드가 돌지 않아 점수가 찍히지 않습니다
 
 ## 7. 새 고객사 추가하기
 
-`config/cleartone.json` 을 복사해서 값만 바꾸면 됩니다.
+**저장소에서 할 일이 없습니다.** 노션 '고객사 설정표'에 행을 하나 추가하면 끝입니다.
 
-```jsonc
-{
-  "client": "고객사 이름",
-  "notion": {
-    "database_id": "플래너 데이터베이스 ID",
-    "status_ready": "컨펌 진행 중",   // 이 상태일 때만 발행
-    "status_done":  "게재완료",       // 발행 후 이 상태로 변경
-    "status_error": "발행 오류",
-    "type_filter": ["롱폼", "엔티티", "숏폼"], // 빈 배열이면 유형 무관
-    "properties": { /* 플래너 컬럼 이름 그대로 */ }
-  },
-  "wordpress": {
-    "base_url": "https://고객사도메인",
-    "category_map": { "노션 카테고리": "워드프레스 카테고리" }
-  },
-  "run_log": {
-    "database_id": "자동화 실행 로그 DB ID"  // 없으면 이 블록을 통째로 빼면 됩니다
-  }
-}
+| 컬럼 | 값 | 필수 |
+|---|---|---|
+| 고객사 | 표시 이름. 브랜드 접미사·작성자 기본값으로도 쓰입니다 | ○ |
+| 상태 | `활성` 이어야 처리합니다. `일시중지` 면 건너뜁니다 | ○ |
+| 플래너 DB ID | 플래너 URL을 통째로 붙여넣어도 32자리만 뽑아 씁니다 | ○ |
+| **워드프레스 주소** | `https://blog.고객사.co.kr`. **비어 있으면 발행 대상에서 빠집니다** | ○ |
+| 대상 유형 | `롱폼, 숏폼, 브랜드 엔티티, 제품 엔티티`. 비우면 유형 무관 | |
+| 카테고리 대응 | 노션과 워드프레스의 분류 이름이 다를 때만 | |
+| 속성 재정의 | 플래너 컬럼 이름이 템플릿과 다를 때만 | |
+
+**워드프레스 주소를 비워두면 그 고객사는 원고 생성만 하고 발행은 하지 않습니다.**
+의도한 상태일 수도 있어서 오류로 처리하지 않지만, 실행 로그에 사유가 남습니다.
+
+### 카테고리 대응 · 속성 재정의 적는 법
+
+한 줄에 하나씩, 또는 쉼표로 이어서 적습니다. 구분자는 `=` 와 `->` 둘 다 됩니다.
+
+```
+색소 이야기 = 색소케어
+피부질환 -> 피부 질환
 ```
 
-`properties` 는 **플래너의 실제 컬럼 이름**과 정확히 같아야 합니다.
-고객사마다 컬럼 이름이 조금씩 다르므로 여기서 흡수합니다.
+이름이 같으면 적을 필요가 없습니다. 목록에 없는 분류는 노션 이름 그대로 쓰고,
+워드프레스에 없으면 발행할 때 자동으로 만들어집니다.
 
-워드프레스에 없는 카테고리는 자동으로 만들어집니다.
+속성 재정의도 형식이 같습니다. 왼쪽은 아래 키 중 하나입니다.
+
+```
+thumbnail = 대표 이미지
+body_images = 본문 사진
+```
+
+`title` `status` `type` `publish_date` `thumbnail` `body_images` `meta_title`
+`meta_description` `slug` `keywords` `category` `board` `url`
+
+### 저장소에 남은 것
+
+`config/defaults.json` 에는 **전 고객사 공통값만** 있습니다. 상태 이름, 플래너 컬럼
+이름, 여백·표 정렬 같은 렌더링 설정, 실행 로그 DB, 설정표 위치입니다.
+고객사 고유값은 하나도 없습니다.
+
+`--config 파일.json` 으로 표를 거치지 않고 돌릴 수도 있지만, 표에 없는 임시 대상을
+확인할 때만 쓰세요. 같은 고객사를 표와 파일 양쪽에 두면 값이 어긋납니다.
+
+### 워드프레스 계정은 아직 한 벌입니다
+
+`WP_USER` · `WP_APP_PASSWORD` 는 환경변수 하나만 읽습니다. 고객사마다 다른 워드프레스
+계정을 써야 하면 이 부분은 따로 확장해야 합니다.
 
 ---
 
@@ -351,11 +377,12 @@ notion-wp-publish/
 ├── README.md                       이 문서
 ├── requirements.txt
 ├── config/
-│   └── cleartone.json              고객사 설정
+│   └── defaults.json               전 고객사 공통 설정 (고객사별 값은 노션 설정표)
 ├── wp-mu-plugin/
 │   └── notion-publish-bridge.php   워드프레스에 올리는 파일
 ├── src/notionwp/
 │   ├── config.py                   설정·비밀값
+│   ├── registry.py                 노션 설정표에서 고객사 설정 읽기
 │   ├── notion_api.py               노션 REST
 │   ├── wordpress.py                워드프레스 REST + 브리지
 │   ├── extract.py                  본문 추출 (가이드/검수용 제외)
@@ -364,5 +391,5 @@ notion-wp-publish/
 │   ├── schema.py                   BlogPosting / FAQPage 생성
 │   └── publish.py                  게이트 + 오케스트레이터
 ├── work/                           준비 단계 산출물 (커밋하지 않음)
-└── tests/                          76개 테스트
+└── tests/                          113개 테스트
 ```

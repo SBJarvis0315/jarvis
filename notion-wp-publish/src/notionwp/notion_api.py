@@ -132,6 +132,25 @@ class NotionClient:
     def update_page(self, page_id: str, properties: dict[str, Any]) -> dict[str, Any]:
         return self._request("PATCH", f"/pages/{page_id}", json={"properties": properties})
 
+    def query_database(self, database_id: str) -> list[dict[str, Any]]:
+        """임의의 DB 행을 전부 가져옵니다. 고객사 설정표를 읽는 데 씁니다."""
+        rows: list[dict[str, Any]] = []
+        cursor: str | None = None
+
+        while True:
+            payload: dict[str, Any] = {"page_size": 100}
+            if cursor:
+                payload["start_cursor"] = cursor
+
+            data = self._request("POST", f"/databases/{database_id}/query", json=payload)
+            rows.extend(data.get("results", []))
+
+            if not data.get("has_more"):
+                break
+            cursor = data.get("next_cursor")
+
+        return rows
+
     def create_page(self, database_id: str, properties: dict[str, Any]) -> dict[str, Any]:
         """DB에 행 하나를 추가합니다. 실행 로그 기록에만 씁니다."""
         return self._request(

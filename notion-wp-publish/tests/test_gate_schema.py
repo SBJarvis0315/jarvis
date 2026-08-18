@@ -8,13 +8,49 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from fixtures import sample_page
-from notionwp.config import Config
 from notionwp.extract import extract
 from notionwp.publish import check_body, check_properties
+from notionwp.registry import build_config, load_defaults
 from notionwp.schema import build_schemas, extract_faqs
 
-CONFIG = Config.load(Path(__file__).resolve().parents[1] / "config" / "cleartone.json")
+DEFAULTS_PATH = Path(__file__).resolve().parents[1] / "config" / "defaults.json"
+DEFAULTS = load_defaults(DEFAULTS_PATH)
 TODAY = date(2026, 8, 12)
+
+
+def registry_row(**overrides) -> dict:
+    """노션 '고객사 설정표' 행 한 줄. 실제 발행 설정이 만들어지는 경로 그대로 씁니다."""
+    values = {
+        "고객사": "클리어톤의원",
+        "상태": "활성",
+        "플래너 DB ID": "97668fa206ff837f90b80140f63456e4",
+        "대상 유형": "롱폼, 숏폼, 브랜드 엔티티, 제품 엔티티",
+        "워드프레스 주소": "https://blog.cleartone.co.kr",
+        "카테고리 대응": "",
+        "속성 재정의": "",
+    }
+    unknown = set(overrides) - set(values)
+    if unknown:  # 오타 난 컬럼명이 조용히 무시되지 않도록
+        raise KeyError(f"설정표에 없는 컬럼: {sorted(unknown)}")
+    values.update(overrides)
+
+    props: dict = {
+        "고객사": {
+            "type": "title",
+            "title": [{"plain_text": values["고객사"], "annotations": {}}],
+        },
+        "상태": {"type": "select", "select": {"name": values["상태"]} if values["상태"] else None},
+    }
+    for key in ("플래너 DB ID", "대상 유형", "워드프레스 주소", "카테고리 대응", "속성 재정의"):
+        props[key] = {
+            "type": "rich_text",
+            "rich_text": [{"plain_text": values[key], "annotations": {}}],
+        }
+    return {"id": "row", "properties": props}
+
+
+CONFIG = build_config(DEFAULTS, registry_row())[0]
+assert CONFIG is not None
 
 
 def file_prop(*names: str) -> dict:

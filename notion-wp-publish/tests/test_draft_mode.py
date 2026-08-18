@@ -126,14 +126,18 @@ def test_summary_mentions_draft_and_how_to_publish():
 def test_dry_run_and_draft_are_mutually_exclusive():
     from notionwp.__main__ import main
 
-    cfg_path = str(Path(__file__).resolve().parents[1] / "config" / "cleartone.json")
-    assert main(["--config", cfg_path, "--dry-run", "--draft"]) == 2
+    assert main(["--dry-run", "--draft"]) == 2
 
 
-def test_config_still_loads():
-    assert Config.load(
-        Path(__file__).resolve().parents[1] / "config" / "cleartone.json"
-    ).client == "클리어톤의원"
+def test_defaults_file_loads():
+    defaults = Config.load(
+        Path(__file__).resolve().parents[1] / "config" / "defaults.json"
+    )
+    # 공통 설정에는 고객사 고유값이 없어야 합니다. 있으면 설정표와 어긋납니다.
+    assert defaults.client == ""
+    assert defaults.notion.database_id == ""
+    assert defaults.wordpress.base_url == ""
+    assert defaults.registry.database_id
 
 
 def test_wordpress_error_is_importable():

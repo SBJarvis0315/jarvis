@@ -59,6 +59,31 @@ class RenderConfig:
 
 
 @dataclass
+class RegistryConfig:
+    """노션 '고객사 설정표'. 고객사별 발행 설정이 저장소가 아니라 여기에 있습니다."""
+
+    database_id: str = ""
+    state_active: str = "활성"
+    properties: dict[str, str] = field(
+        default_factory=lambda: {
+            "client": "고객사",
+            "state": "상태",
+            "planner": "플래너 DB ID",
+            "types": "대상 유형",
+            "wp_url": "워드프레스 주소",
+            "category_map": "카테고리 대응",
+            "overrides": "속성 재정의",
+        }
+    )
+
+    def prop(self, key: str) -> str:
+        name = self.properties.get(key)
+        if not name:
+            raise ConfigError(f"설정에 registry.properties.{key} 가 없습니다.")
+        return name
+
+
+@dataclass
 class RunLogConfig:
     """노션 '자동화 실행 로그' DB. `database_id` 가 비어 있으면 로그를 남기지 않습니다."""
 
@@ -98,17 +123,19 @@ class Config:
     wordpress: WordPressConfig
     render: RenderConfig = field(default_factory=RenderConfig)
     run_log: RunLogConfig = field(default_factory=RunLogConfig)
+    registry: RegistryConfig = field(default_factory=RegistryConfig)
 
     @classmethod
     def load(cls, path: str | Path) -> Config:
         raw = json.loads(Path(path).read_text(encoding="utf-8"))
         try:
             return cls(
-                client=raw["client"],
+                client=raw.get("client", ""),
                 notion=NotionConfig(**raw["notion"]),
                 wordpress=WordPressConfig(**raw["wordpress"]),
                 render=RenderConfig(**raw.get("render", {})),
                 run_log=RunLogConfig(**raw.get("run_log", {})),
+                registry=RegistryConfig(**raw.get("registry", {})),
             )
         except (KeyError, TypeError) as exc:
             raise ConfigError(f"설정 파일을 읽지 못했습니다 ({path}): {exc}") from exc
