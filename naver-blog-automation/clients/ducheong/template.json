@@ -1,65 +1,99 @@
 {
-  "_note": "두청한의원 템플릿(26.08.12 ver.) — 스마트에디터 '내 템플릿'에 저장된 양식. 아래 순서는 사용자가 보내준 템플릿 스크린샷에서 읽은 것이며, 실제 발행글 2건으로 대조 확인 필요(naver.com 접근이 열리면 즉시 대조).",
+  "_note": "두청한의원 템플릿(26.08.12 ver.). 발행글 2건을 실제로 열어 컴포넌트 순서·서식·이미지 위치까지 대조 확인한 버전.",
   "client": "두청한의원",
+  "doctor": "대표원장 김도환",
   "template_name": "두청한의원 템플릿(26.08.12 ver.)",
   "blog": "https://blog.naver.com/niceolive/",
-  "_blog_note": "이 블로그에는 다른 고객사 글도 올라온다. 템플릿 기준은 아래 reference_posts 2건만 본다.",
+  "_blog_note": "이 블로그에는 다른 고객사 글도 올라온다. 템플릿 기준은 reference_posts 2건만 본다.",
   "reference_posts": [
     "https://blog.naver.com/niceolive/224379639626",
     "https://blog.naver.com/niceolive/224379638501"
   ],
-  "related_posts_source": "https://blog.naver.com/aoske551/",
-  "_related_note": "'함께 읽으면 좋은 글' 링크는 반드시 이 블로그에서만 고른다. niceolive 글을 넣지 않는다.",
+  "related_posts_source": "aoske551",
+  "_related_note": "'함께 읽으면 좋은 글' 링크는 이 블로그에서만 고른다. niceolive 글은 넣지 않는다.",
 
-  "structure": [
-    { "id": "title_quote",   "type": "quote",      "align": "center", "style": "italic",
-      "content_rule": "제목과 똑같은 문장" },
-
-    { "id": "toc",           "type": "box",        "align": "center",
-      "style": "회색 배경, 위아래 굵은 가로선",
-      "content_rule": "'목차' 볼드 헤더 + 소제목 1~3을 번호와 함께 가운데 정렬" },
-
-    { "id": "greeting",      "type": "paragraph",  "style": "bold",
-      "fixed_text": "안녕하세요.\n임상 15년, 25,000건 이상 신경계질환을 진료해온 서울대 공대 출신 한의사, 두청한의원 대표원장 김도환입니다.",
-      "_fixed_note": "고정 문구. 원고에 인사말이 있어도 이 문장으로 대체한다." },
-
-    { "id": "intro",         "type": "body",       "from": "서론" },
-
-    { "id": "intro_divider", "type": "divider",    "style": "짧은 검정 선, 가운데" },
-
-    { "id": "section_1",     "type": "section",    "from": "소제목1",
-      "parts": ["quote_mark", "numbered_heading", "thin_divider", "body"] },
-    { "id": "section_2",     "type": "section",    "from": "소제목2",
-      "parts": ["quote_mark", "numbered_heading", "thin_divider", "body"] },
-    { "id": "section_3",     "type": "section",    "from": "소제목3",
-      "parts": ["quote_mark", "numbered_heading", "thin_divider", "body"] },
-
-    { "id": "outro_label",   "type": "label",      "style": "노란 형광펜 + 볼드",
-      "fixed_text": "[칼럼을 마치며]" },
-    { "id": "outro",         "type": "body",       "from": "마무리" },
-    { "id": "thanks",        "type": "paragraph",
-      "fixed_text": "긴 글 함께해주셔서 감사드립니다." },
-
-    { "id": "signature",     "type": "paragraph",  "align": "right",
-      "fixed_text": "두청한의원\n원장 김도환 드림" },
-
-    { "id": "end_divider",   "type": "divider",    "style": "얇은 가로선" },
-
-    { "id": "related_label", "type": "label",      "align": "center",
-      "style": "노란 형광펜 + 볼드 + 이탤릭",
-      "fixed_text": "[함께 읽으면 좋은 글]" },
-    { "id": "related_links", "type": "links",      "source": "related_posts_source",
-      "count": 2,
-      "rule": "본문 주제와 가장 가까운 글을 고른다. 링크는 네이버 카드형 미리보기로 붙는다." }
-  ],
-
-  "images": {
-    "_status": "미확정",
-    "_reason": "템플릿 스크린샷에는 이미지 자리가 빈칸으로만 보인다. 실제 발행글 2건을 열어 어느 지점에 몇 장이 들어가는지 확인한 뒤 채운다.",
-    "sources": ["client_internal", "free_stock"],
-    "free_stock_hosts": ["unsplash.com", "pexels.com", "pixabay.com"],
-    "license_record": "이미지마다 출처 URL과 라이선스를 manifest 에 남긴다"
+  "style": {
+    "highlight_color": "#fff8b2",
+    "quote_type": "네이버 스마트에디터 인용구 기능",
+    "aligns_used": ["left", "center", "right"]
   },
 
-  "structure_note": "소제목 3개 구조다. 클리어서울안과의 정보성글(소제목 4개 + 표 9개)과 다르므로 지침을 섞지 않는다."
+  "structure": [
+    { "n": 1,  "component": "quotation", "role": "제목 인용구",
+      "content_rule": "제목과 똑같은 문장을 그대로 넣는다", "align": "center" },
+
+    { "n": 2,  "component": "table", "role": "목차",
+      "content_rule": "'목차' 헤더 + 소제목 1~3을 번호와 함께. 라벨이 아니라 소제목 문장 전체를 그대로 옮긴다",
+      "align": "center" },
+
+    { "n": 3,  "component": "text", "role": "인사말", "fixed": true,
+      "text": "안녕하세요.\n임상 15년, 25,000건 이상 신경계질환을 진료해온 서울대 공대 출신 한의사, 두청한의원 대표원장 김도환 입니다.",
+      "_note": "고정 문구. 원고에 인사말이 있어도 이 문장으로 대체한다." },
+
+    { "n": 4,  "component": "image", "role": "인사말 직후 이미지", "count": 1 },
+
+    { "n": 5,  "component": "text", "role": "서론", "from": "서론" },
+
+    { "n": 6,  "component": "horizontalLine", "role": "서론 끝 구분선" },
+
+    { "n": 7,  "component": "quotation", "role": "소제목 1", "from": "소제목1",
+      "content_rule": "'1. ' 넘버링을 붙인 소제목 한 줄" },
+    { "n": 8,  "component": "text+image", "role": "소제목 1 본문", "images": "1~2",
+      "_note": "본문 문단 사이에 이미지를 끼워 넣는다. 문단 → 이미지 → 문단 순." },
+
+    { "n": 9,  "component": "quotation", "role": "소제목 2", "from": "소제목2" },
+    { "n": 10, "component": "text+image", "role": "소제목 2 본문", "images": "1~2" },
+
+    { "n": 11, "component": "quotation", "role": "소제목 3", "from": "소제목3" },
+    { "n": 12, "component": "text+image", "role": "소제목 3 본문", "images": "1~2" },
+
+    { "n": 13, "component": "table", "role": "본문 비교표", "count": 1, "optional": true,
+      "placement": "소제목 1~3 중 유형·구분을 다루는 파트 안",
+      "_note": "발행글 2건 모두 본문에 표가 1개씩 있었다. 626은 소제목 2, 501은 소제목 1에 위치." },
+
+    { "n": 14, "component": "horizontalLine", "role": "마무리 앞 구분선" },
+
+    { "n": 15, "component": "text", "role": "마무리", "from": "마무리",
+      "compose": [
+        { "label": "[칼럼을 마치며]", "style": "노란 형광펜 + 볼드" },
+        { "body": "마무리 본문" },
+        { "fixed": "긴 글 함께해주셔서 감사드립니다." },
+        { "fixed": "두청한의원\n원장 김도환 드림", "align": "right" }
+      ],
+      "_note": "네 덩어리가 하나의 text 컴포넌트 안에 들어간다." },
+
+    { "n": 16, "component": "horizontalLine", "role": "관련 글 앞 구분선" },
+
+    { "n": 17, "component": "text", "role": "관련 글 라벨", "fixed": true,
+      "text": "[함께 읽으면 좋은 글]", "style": "노란 형광펜 + 볼드", "align": "center" },
+
+    { "n": 18, "component": "oglink", "role": "관련 글 링크", "count": 2,
+      "source": "related_posts_source",
+      "_note": "publish/related.py 로 고른다. 메인 키워드의 증상 어근이 일치하는 글만 후보." }
+  ],
+
+  "fixed_tail": {
+    "_note": "여기부터는 템플릿에 이미 들어 있고 그대로 발행된다. 자동화가 건드리지 않는다.",
+    "blocks": [
+      "quotation: 두청한의원 초진 상담 예약 / 전화: 02-574-1075",
+      "text: [네이버 예약] + oglink(m.booking.naver.com/booking/13/bizes/355228)",
+      "text: [내 병의 진짜 원인을 알고 싶다면? (무료상담)] + oglink(pf.kakao.com/_utegxb)",
+      "text: [두청한의원 원장이 삼성/LG를 포기하고 한의사가 된 이유] + oglink(aoske551/223716069876)",
+      "horizontalLine",
+      "placesMap: 두청한의원 / 서울특별시 강남구 강남대로 250 심현빌딩 2층"
+    ]
+  },
+
+  "images": {
+    "total": "5~6장",
+    "layout": "인사말 직후 1장 + 소제목 1~3 파트마다 1~2장",
+    "sources": ["client_internal", "free_stock"],
+    "free_stock_hosts": ["unsplash.com", "pexels.com", "pixabay.com"],
+    "license_record": "이미지마다 출처 URL과 라이선스를 manifest.json 에 남긴다"
+  },
+
+  "manuscript": {
+    "sections": 3,
+    "_note": "소제목 3개 구조. 클리어서울안과 정보성글(소제목 4개 + 표 9개)과 다르므로 지침을 섞지 않는다."
+  }
 }
