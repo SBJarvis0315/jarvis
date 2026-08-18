@@ -141,10 +141,11 @@ def build(doc, tpl, keyword, related, title=None):
                    "text": greeting.get("text", "")})
 
     # 인사말 직후 이미지 1장은 템플릿 고정 위치다
+    head_brief = image_brief("머리", chosen, intro, 0)
+    head_brief["hint"] = "인사말 직후 자리. 원장 인물이나 진료실 전경처럼 화자와 공간을 보여주는 사진"
     blocks.append({"component": "image", "role": "인사말 직후",
-                   "slot": "머리_1",
-                   "brief": image_brief("머리", chosen, intro, 0)})
-    slots.append({"slot": "머리_1", **image_brief("머리", chosen, intro, 0)})
+                   "slot": "머리_1", "brief": head_brief})
+    slots.append({"slot": "머리_1", **head_brief})
     blocks.append({"component": "text", "role": "서론",
                    "paras": intro})
     blocks.append({"component": "horizontalLine", "role": "서론 끝"})
