@@ -21,21 +21,50 @@ FAQ_HEADING_HINTS = ("faq", "자주 묻는 질문", "자주묻는질문")
 _Q_PREFIX = re.compile(r"^\s*(?:Q\s*\.?\s*\d*|질문\s*\d*)\s*[.):]?\s*", re.IGNORECASE)
 
 
+def _heading_level(block: Block) -> int:
+    """heading_2 → 2. 헤딩이 아니면 0."""
+    btype = str(block.get("type") or "")
+    return int(btype[-1]) if btype.startswith("heading_") and btype[-1].isdigit() else 0
+
+
 def extract_faqs(body: list[Block]) -> list[dict[str, str]]:
     """본문에서 FAQ 문답을 뽑아냅니다.
 
-    구조: `## [FAQ] …` 아래 `### Q1. 질문` + 뒤따르는 문단들이 답변.
+    헤딩 깊이를 고정하지 않습니다. 자동 생성 원고는 `## [FAQ] …` 아래 `### Q1.` 이지만,
+    사람이 쓴 원고는 글 전체가 H2 하나 아래 묶여 있어 `### [FAQ] …` + `#### Q1.` 이
+    되기도 합니다. 깊이를 h2/h3 으로 못 박아두면 후자에서 FAQ 스키마가 통째로 빠집니다.
+
+    FAQ 헤딩을 찾은 뒤, 그 아래에서 처음 나오는 더 깊은 헤딩을 질문 단계로 삼고,
+    FAQ 헤딩과 같거나 더 얕은 헤딩이 나오면 섹션이 끝난 것으로 봅니다.
     """
     start = None
+    section_level = 0
+
     for i, block in enumerate(body):
-        if block.get("type") != "heading_2":
+        level = _heading_level(block)
+        if not level:
             continue
         text = strip_markers(block_text(block)).lower()
         if any(hint in text for hint in FAQ_HEADING_HINTS):
             start = i + 1
+            section_level = level
             break
 
     if start is None:
+        return []
+
+    # 질문 단계는 FAQ 헤딩 아래에서 처음 만나는 더 깊은 헤딩으로 정합니다.
+    question_level = 0
+    for block in body[start:]:
+        level = _heading_level(block)
+        if not level:
+            continue
+        if level <= section_level:
+            break
+        question_level = level
+        break
+
+    if not question_level:
         return []
 
     faqs: list[dict[str, str]] = []
@@ -47,18 +76,25 @@ def extract_faqs(body: list[Block]) -> list[dict[str, str]]:
             faqs.append({"question": question, "answer": " ".join(answer).strip()})
 
     for block in body[start:]:
-        btype = block.get("type")
+        level = _heading_level(block)
 
-        if btype == "heading_2":
+        if level and level <= section_level:
             break  # FAQ 섹션 종료
 
-        if btype == "heading_3":
+        if level == question_level:
             flush()
             question = _Q_PREFIX.sub("", strip_markers(block_text(block))).strip()
             answer = []
             continue
 
-        if question and btype in ("paragraph", "bulleted_list_item", "numbered_list_item"):
+        if level:
+            continue  # 답변 안의 더 깊은 소제목은 답변에 넣지 않습니다
+
+        if question and block.get("type") in (
+            "paragraph",
+            "bulleted_list_item",
+            "numbered_list_item",
+        ):
             text = block_text(block).strip()
             if text:
                 answer.append(text)

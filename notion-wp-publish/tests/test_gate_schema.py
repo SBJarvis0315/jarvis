@@ -217,3 +217,72 @@ def test_faqpage_omitted_when_no_faq_section():
         published_iso="2026-08-12T09:00:00+09:00",
     )
     assert [s["@type"] for s in schemas] == ["BlogPosting"]
+
+
+# ------------------------------------------------------------------ FAQ 헤딩 깊이
+
+
+def heading(level: int, text: str) -> dict:
+    return {
+        "type": f"heading_{level}",
+        f"heading_{level}": {"rich_text": [{"plain_text": text, "annotations": {}}]},
+    }
+
+
+def para(text: str) -> dict:
+    return {"type": "paragraph", "paragraph": {"rich_text": [{"plain_text": text, "annotations": {}}]}}
+
+
+def test_faqs_are_found_one_level_deeper():
+    """사람이 쓴 원고는 글 전체가 H2 하나 아래라 FAQ가 H3, 질문이 H4가 됩니다.
+
+    깊이를 h2/h3 으로 못 박아두면 이런 글에서 FAQ 스키마가 통째로 빠집니다.
+    """
+    body = [
+        heading(2, "클리어톤의원은 어떤 병원인가요?"),
+        para("소개 문단."),
+        heading(3, "[FAQ] 자주 묻는 질문"),
+        heading(4, "Q1. 어떤 병원인가요?"),
+        para("피부 진료 중심 의원입니다."),
+        heading(4, "Q2. 예약은 어떻게 하나요?"),
+        para("전화와 네이버 예약이 가능합니다."),
+        heading(3, "진료 안내"),
+        para("이 문단은 FAQ 가 아닙니다."),
+    ]
+
+    faqs = extract_faqs(body)
+
+    assert [f["question"] for f in faqs] == ["어떤 병원인가요?", "예약은 어떻게 하나요?"]
+    assert faqs[1]["answer"] == "전화와 네이버 예약이 가능합니다."
+
+
+def test_same_level_heading_ends_the_faq_section():
+    body = [
+        heading(3, "[FAQ] 자주 묻는 질문"),
+        heading(4, "Q1. 질문"),
+        para("답변."),
+        heading(3, "진료 안내"),
+        heading(4, "Q2. 이건 FAQ 가 아닙니다"),
+        para("섞이면 안 됩니다."),
+    ]
+
+    assert [f["question"] for f in extract_faqs(body)] == ["질문"]
+
+
+def test_deeper_headings_inside_an_answer_are_ignored():
+    body = [
+        heading(2, "[FAQ] 자주 묻는 질문"),
+        heading(3, "Q1. 질문"),
+        para("답변 앞부분."),
+        heading(4, "곁가지 소제목"),
+        para("답변 뒷부분."),
+    ]
+
+    faqs = extract_faqs(body)
+    assert len(faqs) == 1
+    assert "곁가지 소제목" not in faqs[0]["answer"]
+
+
+def test_no_question_headings_means_no_faq_schema():
+    body = [heading(2, "[FAQ] 자주 묻는 질문"), para("질문 없이 문단만 있습니다.")]
+    assert extract_faqs(body) == []
