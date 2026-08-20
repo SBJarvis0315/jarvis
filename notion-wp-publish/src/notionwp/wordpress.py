@@ -5,8 +5,10 @@ from __future__ import annotations
 import html
 import logging
 import mimetypes
+import re
 import time
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import requests
@@ -17,6 +19,8 @@ from .config import WordPressConfig
 log = logging.getLogger(__name__)
 
 TIMEOUT = 60
+#: 이미지 업로드는 서버가 받아서 여러 크기로 재가공하는 시간이 붙습니다.
+UPLOAD_TIMEOUT = 300
 MAX_RETRIES = 4
 
 
@@ -52,15 +56,28 @@ class WordPressClient:
 
     # ------------------------------------------------------------------ 저수준
 
-    def _request(self, method: str, path: str, **kwargs: Any) -> Any:
+    def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        timeout: int = TIMEOUT,
+        retry_network: bool = True,
+        **kwargs: Any,
+    ) -> Any:
+        """`retry_network=False` 는 재시도하면 안 되는 요청(파일 업로드)에 씁니다.
+
+        응답을 못 받았다고 해서 서버가 처리하지 않은 것은 아닙니다. 업로드를 그냥
+        다시 보내면 같은 파일이 여러 장 생깁니다.
+        """
         url = f"{self.config.api_root}{path}"
         delay = 2.0
 
         for attempt in range(MAX_RETRIES):
             try:
-                resp = self.session.request(method, url, timeout=TIMEOUT, **kwargs)
+                resp = self.session.request(method, url, timeout=timeout, **kwargs)
             except requests.RequestException as exc:
-                if attempt == MAX_RETRIES - 1:
+                if not retry_network or attempt == MAX_RETRIES - 1:
                     raise WordPressError(f"워드프레스 요청 실패 {method} {path}: {exc}") from exc
                 time.sleep(delay)
                 delay *= 2
@@ -113,17 +130,34 @@ class WordPressClient:
     # -------------------------------------------------------------------- 미디어
 
     def upload_media(self, filename: str, data: bytes, alt: str = "") -> Media:
-        mime = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+        from .images import web_ready
 
-        created = self._request(
-            "POST",
-            "/wp/v2/media",
-            data=data,
-            headers={
-                "Content-Disposition": f'attachment; filename="{filename}"',
-                "Content-Type": mime,
-            },
-        )
+        data, filename = web_ready(data, filename)
+        mime = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+        started = datetime.now(timezone.utc) - timedelta(minutes=1)
+
+        try:
+            created = self._request(
+                "POST",
+                "/wp/v2/media",
+                data=data,
+                headers={
+                    "Content-Disposition": f'attachment; filename="{filename}"',
+                    "Content-Type": mime,
+                },
+                timeout=UPLOAD_TIMEOUT,
+                retry_network=False,
+            )
+        except WordPressError:
+            # 응답이 안 왔을 뿐 서버에는 올라가 있을 수 있습니다. 다시 보내기 전에
+            # 방금 올라온 파일이 있는지 확인합니다. 확인 없이 재시도하면 같은 사진이
+            # 미디어 라이브러리에 여러 장 쌓입니다.
+            created = self._find_recent_upload(filename, since=started)
+            if created is None:
+                raise
+            log.warning(
+                "업로드 응답을 받지 못했지만 서버에는 올라가 있어 그대로 씁니다: %s", filename
+            )
 
         media_id = int(created["id"])
 
@@ -183,6 +217,40 @@ class WordPressClient:
         return bool(found)
 
     # ------------------------------------------------------------------ 카테고리
+
+    def _find_recent_upload(self, filename: str, *, since: datetime) -> dict[str, Any] | None:
+        """방금 올린 파일이 서버에 남아 있는지 확인합니다.
+
+        `since` 이후에 만들어진 것만 인정합니다. 예전 회차가 남긴 같은 이름의 파일을
+        집어오면, 노션에서 사진을 바꿔 올렸을 때 옛날 사진이 그대로 나갑니다.
+        """
+        slug = re.sub(r"\.[^.]+$", "", filename).lower()
+
+        try:
+            items = self._request(
+                "GET", "/wp/v2/media", params={"search": slug, "per_page": 20}
+            )
+        except WordPressError:
+            return None
+
+        best: dict[str, Any] | None = None
+        for item in items or []:
+            item_slug = str(item.get("slug", ""))
+            if item_slug != slug and not item_slug.startswith(slug + "-"):
+                continue
+
+            stamp = str(item.get("date_gmt") or "")
+            try:
+                created_at = datetime.fromisoformat(stamp).replace(tzinfo=timezone.utc)
+            except ValueError:
+                continue
+            if created_at < since:
+                continue
+
+            if best is None or str(best.get("date_gmt")) < stamp:
+                best = item
+
+        return best
 
     def list_categories(self) -> dict[str, int]:
         """워드프레스에 있는 분류를 이름 → id 로 전부 가져옵니다."""

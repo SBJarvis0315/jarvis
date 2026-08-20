@@ -13,6 +13,8 @@
 
 from __future__ import annotations
 
+import io
+import logging
 import posixpath
 import re
 from dataclasses import dataclass
@@ -21,6 +23,67 @@ from urllib.parse import unquote, urlparse
 
 from .extract import ImageHint
 from .richtext import block_text, strip_markers
+
+log = logging.getLogger(__name__)
+
+#: 업로드 전 축소 기준. 본문 폭이 800px 안팎인 블로그에서 이보다 큰 원본은 의미가 없습니다.
+UPLOAD_MAX_EDGE = 1600
+#: 이보다 작으면 손대지 않습니다. 로고·도식은 다시 인코딩하면 오히려 지저분해집니다.
+UPLOAD_MAX_BYTES = 1_500_000
+UPLOAD_JPEG_QUALITY = 82
+
+
+def web_ready(data: bytes, filename: str) -> tuple[bytes, str]:
+    """업로드 전에 사진을 웹에 맞는 크기로 줄입니다.
+
+    노션에 올라오는 원본은 10MB를 넘기도 합니다. 그대로 올리면 워드프레스가 받아서
+    여러 크기로 재가공하는 사이에 응답 시간을 넘겨 업로드가 실패하고, 성공하더라도
+    방문자가 그 큰 파일을 그대로 내려받게 됩니다.
+
+    줄이지 못하는 상황(Pillow 없음·형식 미지원)에서는 원본을 그대로 돌려줍니다.
+    화질보다 발행이 되는 쪽이 중요합니다.
+    """
+    if len(data) <= UPLOAD_MAX_BYTES:
+        return data, filename
+
+    try:
+        from PIL import Image
+    except ImportError:
+        log.warning("Pillow 가 없어 이미지를 줄이지 못했습니다. 원본을 그대로 올립니다: %s", filename)
+        return data, filename
+
+    try:
+        with Image.open(io.BytesIO(data)) as im:
+            transparent = im.mode in ("RGBA", "LA") or (
+                im.mode == "P" and "transparency" in im.info
+            )
+            im.thumbnail((UPLOAD_MAX_EDGE, UPLOAD_MAX_EDGE))
+
+            buffer = io.BytesIO()
+            if transparent:
+                # 투명도가 있는 그림은 JPEG로 바꾸면 배경이 검게 칠해집니다.
+                im.convert("RGBA").save(buffer, "PNG", optimize=True)
+                new_name = re.sub(r"\.[^.]+$", "", filename) + ".png"
+            else:
+                im.convert("RGB").save(
+                    buffer, "JPEG", quality=UPLOAD_JPEG_QUALITY, optimize=True
+                )
+                new_name = re.sub(r"\.[^.]+$", "", filename) + ".jpg"
+    except Exception as exc:
+        log.warning("이미지를 줄이지 못해 원본을 올립니다 (%s): %s", filename, exc)
+        return data, filename
+
+    shrunk = buffer.getvalue()
+    if len(shrunk) >= len(data):
+        return data, filename
+
+    log.info(
+        "이미지를 줄였습니다: %s %.1fMB → %.1fMB",
+        filename,
+        len(data) / 1_048_576,
+        len(shrunk) / 1_048_576,
+    )
+    return shrunk, new_name
 
 Block = dict[str, Any]
 
