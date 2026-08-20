@@ -62,6 +62,10 @@ def summarize_for_log(outcomes: list[Any]) -> Summary:
     for o in failed:
         lines.append(f"❌ {o.title[:60]} — {o.error[:200]}")
 
+    for o in outcomes:
+        for warning in getattr(o, "warnings", []):
+            lines.append(f"⚠️ {o.title[:60]} — {warning[:200]}")
+
     # 아직 작성 중인 행까지 나열하면 정작 봐야 할 것이 묻힙니다.
     # 발행 직전까지 갔다가 걸린 것만 남깁니다.
     for o in skipped:

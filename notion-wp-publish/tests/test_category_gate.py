@@ -107,3 +107,54 @@ def test_publish_stops_before_going_public():
     written = [props for _, props in notion.updates]
     assert any("진행 상황" in p for p in written)
     assert not any("URL" in p for p in written)
+
+
+# ------------------------------------------------------------------ FAQ 경고
+
+
+def block(kind: str, text: str) -> dict:
+    key = kind
+    return {"type": kind, key: {"rich_text": [{"plain_text": text, "annotations": {}}]}}
+
+
+def body_blocks(*, with_questions: bool) -> list[dict]:
+    blocks = [
+        block("heading_2", "클리어톤의원은 어떤 병원인가요?"),
+        block("paragraph", "소개 문단입니다."),
+        block("heading_2", "[FAQ] 자주 묻는 질문"),
+    ]
+    if with_questions:
+        blocks += [block("heading_3", "Q1. 예약은 어떻게 하나요?"), block("paragraph", "전화로 가능합니다.")]
+    else:
+        # 질문이 헤딩이 아니라 문단으로만 적힌 원고. FAQ 스키마를 만들 수 없습니다.
+        blocks += [block("paragraph", "Q1. 예약은 어떻게 하나요? 전화로 가능합니다.")]
+    return blocks
+
+
+def publish_with(blocks):
+    wp = FakeWordPress()
+    notion = FakeNotion([complete_page()], blocks)
+    return Publisher(CONFIG, notion=notion, wp=wp).run()[0]
+
+
+def test_faq_section_without_extractable_questions_warns():
+    out = publish_with(body_blocks(with_questions=False))
+
+    assert out.published  # 막지는 않습니다. BlogPosting 은 정상입니다
+    assert out.warnings
+    assert "FAQ" in out.warnings[0]
+
+
+def test_well_formed_faq_produces_no_warning():
+    out = publish_with(body_blocks(with_questions=True))
+
+    assert out.published
+    assert out.warnings == []
+
+
+def test_article_without_any_faq_section_is_not_warned():
+    blocks = [block("heading_2", "본문"), block("paragraph", "FAQ 가 없는 글입니다.")]
+    out = publish_with(blocks)
+
+    assert out.published
+    assert out.warnings == []

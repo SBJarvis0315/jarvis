@@ -27,6 +27,21 @@ def _heading_level(block: Block) -> int:
     return int(btype[-1]) if btype.startswith("heading_") and btype[-1].isdigit() else 0
 
 
+def has_faq_heading(body: list[Block]) -> bool:
+    """원고에 FAQ 섹션이 있는지만 봅니다.
+
+    문답을 못 뽑았을 때, 원고에 FAQ 가 아예 없어서인지 형식이 어긋나서인지를
+    구분하는 데 씁니다.
+    """
+    for block in body:
+        if not _heading_level(block):
+            continue
+        text = strip_markers(block_text(block)).lower()
+        if any(hint in text for hint in FAQ_HEADING_HINTS):
+            return True
+    return False
+
+
 def extract_faqs(body: list[Block]) -> list[dict[str, str]]:
     """본문에서 FAQ 문답을 뽑아냅니다.
 

@@ -44,7 +44,7 @@ from .plan import (
     plan_dir_for,
 )
 from .runlog import RunLogger
-from .schema import build_schemas
+from .schema import build_schemas, extract_faqs, has_faq_heading
 from .wordpress import WordPressClient, WordPressError, download
 
 
@@ -87,6 +87,8 @@ class Outcome:
     post_id: int | None = None
     reasons: list[str] = field(default_factory=list)
     error: str = ""
+    #: 발행은 됐지만 사람이 봐야 하는 것. 막지는 않습니다.
+    warnings: list[str] = field(default_factory=list)
     #: --draft 로 돌려 임시저장까지만 한 경우. 공개되지 않았고 노션도 건드리지 않았습니다.
     drafted: bool = False
     edit_link: str = ""
@@ -496,6 +498,17 @@ class Publisher:
             guessed_permalink = f"{self.cfg.wordpress.base_url.rstrip('/')}/{slug}/"
             published_iso = datetime.now(KST).isoformat(timespec="seconds")
 
+            # FAQ 섹션이 있는데 문답을 하나도 못 뽑았다면 형식이 어긋난 것입니다.
+            # BlogPosting 은 정상이라 발행 자체는 성공하고, FAQ 스키마만 조용히
+            # 빠집니다. 막지는 않되 반드시 눈에 띄게 남깁니다.
+            if has_faq_heading(cand.extracted.body) and not extract_faqs(cand.extracted.body):
+                warning = (
+                    "원고에 FAQ 섹션이 있는데 문답을 뽑지 못해 FAQ 스키마가 빠졌습니다. "
+                    "질문이 FAQ 제목보다 한 단계 깊은 헤딩인지 확인해 주세요"
+                )
+                out.warnings.append(warning)
+                log.warning("[%s] %s", cand.title[:40], warning)
+
             def seo_payload(permalink: str) -> dict[str, Any]:
                 return {
                     "notion_page_id": cand.page_id,
@@ -685,6 +698,10 @@ def summarize(outcomes: list[Outcome]) -> str:
         )
     for o in failed:
         lines.append(f"  ❌ {o.title[:50]}\n     {o.error}")
+
+    for o in outcomes:
+        for warning in o.warnings:
+            lines.append(f"  ⚠️ {o.title[:50]}\n     {warning}")
 
     # 발행 직전까지 갔다가 걸린 것만 보여줍니다. 아직 작성 중인 행까지 나열하면
     # 로그가 길어져서 정작 봐야 할 것이 묻힙니다.
