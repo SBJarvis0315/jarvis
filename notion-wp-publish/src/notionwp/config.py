@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -113,8 +114,9 @@ class RunLogConfig:
 @dataclass
 class Secrets:
     notion_token: str
-    wp_user: str
-    wp_app_password: str
+    #: 전 고객사 공용 워드프레스 계정. 고객사별 값이 있으면 그쪽이 우선입니다.
+    wp_user: str = ""
+    wp_app_password: str = ""
 
 
 @dataclass
@@ -142,25 +144,79 @@ class Config:
             raise ConfigError(f"설정 파일을 읽지 못했습니다 ({path}): {exc}") from exc
 
 
+#: 주소에서 이름을 뽑을 때 떼어낼 꼬리표. 앞에서부터가 아니라 뒤에서부터 벗깁니다.
+_DOMAIN_TAILS = {
+    "com", "net", "org", "co", "kr", "jp", "io", "me", "biz", "info",
+    "shop", "site", "dev", "ai", "app", "kro", "or", "ne", "go", "pe",
+}
+
+
+def credential_key(base_url: str) -> str:
+    """워드프레스 주소 → 환경변수 이름에 붙일 고객사 키.
+
+        https://blog.cleartone.co.kr  →  CLEARTONE
+        https://example.com           →  EXAMPLE
+
+    고객사마다 워드프레스 계정이 다르므로 자격증명도 고객사별로 나뉘어야 합니다.
+    설정표에 컬럼을 하나 더 두는 대신 주소에서 키를 뽑아, 사람이 관리할 값을
+    늘리지 않았습니다.
+    """
+    host = (base_url or "").strip().lower()
+    host = re.sub(r"^[a-z]+://", "", host).split("/")[0].split(":")[0]
+    if not host:
+        return ""
+
+    labels = [l for l in host.split(".") if l]
+    while len(labels) > 1 and labels[-1] in _DOMAIN_TAILS:
+        labels.pop()
+
+    return re.sub(r"[^A-Z0-9]", "_", labels[-1].upper()) if labels else ""
+
+
+def wp_credentials(
+    base_url: str, secrets: Secrets, env: dict[str, str] | None = None
+) -> tuple[str, str]:
+    """이 고객사에 쓸 워드프레스 계정. 고객사 전용 값이 없으면 공용 값을 씁니다."""
+    src: Any = env if env is not None else os.environ
+    key = credential_key(base_url)
+
+    user = (src.get(f"WP_USER_{key}") or "").strip() if key else ""
+    password = (src.get(f"WP_APP_PASSWORD_{key}") or "").strip() if key else ""
+
+    # 한쪽만 넣어두면 섞여서 엉뚱한 계정으로 로그인합니다. 둘 다 있을 때만 씁니다.
+    if user and password:
+        return user, password
+
+    if user or password:
+        raise ConfigError(
+            f"'{base_url}' 용 자격증명이 반쪽만 있습니다. "
+            f"WP_USER_{key} 와 WP_APP_PASSWORD_{key} 를 둘 다 넣어 주세요."
+        )
+
+    if secrets.wp_user and secrets.wp_app_password:
+        return secrets.wp_user, secrets.wp_app_password
+
+    raise ConfigError(
+        f"'{base_url}' 에 쓸 워드프레스 계정이 없습니다.\n"
+        f"  환경변수에 아래 두 개를 넣어 주세요:\n"
+        f"    WP_USER_{key}=워드프레스 사용자명\n"
+        f"    WP_APP_PASSWORD_{key}=응용 프로그램 비밀번호\n"
+        f"  (고객사가 한 곳뿐이면 WP_USER · WP_APP_PASSWORD 로 넣어도 됩니다)"
+    )
+
+
 def load_secrets(env: dict[str, str] | None = None) -> Secrets:
+    """공용 비밀값. 워드프레스 계정은 고객사별로 따로 둘 수 있어 여기서는 선택입니다."""
     src: Any = env if env is not None else os.environ
 
-    missing = [
-        name
-        for name in ("NOTION_TOKEN", "WP_USER", "WP_APP_PASSWORD")
-        if not src.get(name)
-    ]
-    if missing:
+    if not src.get("NOTION_TOKEN"):
         raise ConfigError(
-            "환경변수가 비어 있습니다: "
-            + ", ".join(missing)
-            + "\n  NOTION_TOKEN      노션 내부 통합(Integration) 시크릿"
-            + "\n  WP_USER           워드프레스 사용자명"
-            + "\n  WP_APP_PASSWORD   워드프레스 응용 프로그램 비밀번호"
+            "환경변수가 비어 있습니다: NOTION_TOKEN"
+            "\n  NOTION_TOKEN      노션 내부 통합(Integration) 시크릿"
         )
 
     return Secrets(
         notion_token=src["NOTION_TOKEN"],
-        wp_user=src["WP_USER"],
-        wp_app_password=src["WP_APP_PASSWORD"],
+        wp_user=(src.get("WP_USER") or "").strip(),
+        wp_app_password=(src.get("WP_APP_PASSWORD") or "").strip(),
     )

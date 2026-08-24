@@ -24,7 +24,7 @@ from urllib.parse import unquote, urlparse
 from zoneinfo import ZoneInfo
 
 from . import notion_api as napi
-from .config import Config, Secrets
+from .config import Config, Secrets, credential_key, wp_credentials
 from .extract import Extracted, extract
 from .gutenberg import RenderOptions, image_block, render, video_block
 from .images import (
@@ -204,11 +204,16 @@ class Publisher:
         # plan.json 이 있는 작업 폴더. 있으면 검수된 ALT·배치를 그대로 씁니다.
         self.plan_root = plan_root
         self.notion = notion or NotionClient(secrets.notion_token, cfg.notion)  # type: ignore[union-attr]
-        self.wp = wp or WordPressClient(
-            cfg.wordpress,
-            secrets.wp_user,  # type: ignore[union-attr]
-            secrets.wp_app_password,  # type: ignore[union-attr]
-        )
+
+        if wp is None:
+            # 고객사마다 워드프레스 계정이 다릅니다. 주소에서 뽑은 키로 그 고객사
+            # 전용 환경변수를 먼저 찾고, 없으면 공용 값으로 물러납니다.
+            user, password = wp_credentials(cfg.wordpress.base_url, secrets)  # type: ignore[arg-type]
+            log.debug(
+                "%s 자격증명 키: %s", cfg.client, credential_key(cfg.wordpress.base_url) or "(없음)"
+            )
+            wp = WordPressClient(cfg.wordpress, user, password)
+        self.wp = wp
         self.runlog = RunLogger(cfg.run_log, cfg.client, self.notion)
 
     # -------------------------------------------------------------------- 실행
