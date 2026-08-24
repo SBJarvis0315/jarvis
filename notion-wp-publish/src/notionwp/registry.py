@@ -77,6 +77,7 @@ def build_config(defaults: Config, row: dict[str, Any]) -> tuple[Config | None, 
     wordpress = replace(
         defaults.wordpress,
         base_url=wp_url.rstrip("/"),
+        youtube_channel=text("youtube"),
         publisher_name=defaults.wordpress.publisher_name or client,
         author_name=defaults.wordpress.author_name or client,
         brand_suffix=defaults.wordpress.brand_suffix or client,

@@ -37,6 +37,8 @@ class WordPressConfig:
     schema_mode: str = "rankmath"  # rankmath | jsonld
     default_category: str = ""
     category_map: dict[str, str] = field(default_factory=dict)
+    #: 고객사 유튜브 채널 (UC… · @핸들 · 채널 주소). 비우면 영상을 넣지 않습니다.
+    youtube_channel: str = ""
     publisher_name: str = ""
     publisher_logo: str = ""
     author_name: str = ""
@@ -71,6 +73,7 @@ class RegistryConfig:
             "planner": "플래너 DB ID",
             "types": "대상 유형",
             "wp_url": "워드프레스 주소",
+            "youtube": "유튜브 채널",
         }
     )
 

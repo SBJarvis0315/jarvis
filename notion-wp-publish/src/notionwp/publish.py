@@ -26,7 +26,7 @@ from zoneinfo import ZoneInfo
 from . import notion_api as napi
 from .config import Config, Secrets
 from .extract import Extracted, extract
-from .gutenberg import RenderOptions, image_block, render
+from .gutenberg import RenderOptions, image_block, render, video_block
 from .images import (
     Placement,
     iter_files,
@@ -39,6 +39,7 @@ from .plan import (
     PLAN_FILENAME,
     PagePlan,
     PlannedImage,
+    VideoCandidate,
     make_preview,
     outline,
     plan_dir_for,
@@ -46,6 +47,8 @@ from .plan import (
 from .runlog import RunLogger
 from .schema import build_schemas, extract_faqs, has_faq_heading
 from .wordpress import WordPressClient, WordPressError, download
+from .youtube import api_key as youtube_key
+from .youtube import list_videos
 
 
 def _suffix(url: str, name: str = "") -> str:
@@ -329,6 +332,7 @@ class Publisher:
             title=cand.title,
             slug=slug,
             sections=outline(cand.extracted.body),
+            video_candidates=self._video_candidates(),
         )
 
         # 썸네일
@@ -443,6 +447,16 @@ class Publisher:
                     placement.index + offset,
                     image_block(url=media_url, media_id=media_id, alt=placement.alt),
                 )
+
+            # 검수 단계에서 고른 영상이 있으면 그 자리에 끼워 넣습니다.
+            # 고르지 않았으면 아무것도 넣지 않습니다 — 주제가 어긋나는 영상을
+            # 억지로 붙이는 것보다 없는 편이 낫습니다.
+            video = page_plan.video if page_plan else None
+            if video and video.url.strip():
+                at = video.anchor if video.anchor >= 0 else len(body) // 2
+                at = max(0, min(at + len(uploaded), len(body)))
+                body.insert(at, video_block(url=video.url.strip(), note=video.note))
+                log.info("영상을 본문에 넣었습니다: %s", video.url.strip())
 
             content = render(
                 body,
@@ -577,6 +591,17 @@ class Publisher:
             return out
 
     # ------------------------------------------------------- 이미지 출처 결정
+
+    def _video_candidates(self) -> list[VideoCandidate]:
+        """고객사 채널의 영상 목록. 채널이 없거나 조회에 실패하면 빈 목록입니다."""
+        channel = self.cfg.wordpress.youtube_channel
+        if not channel:
+            return []
+
+        videos = list_videos(channel, key=youtube_key())
+        if videos:
+            log.info("유튜브 영상 후보 %d개를 담았습니다", len(videos))
+        return [VideoCandidate(title=v.title, url=v.url, published=v.published) for v in videos]
 
     def _load_plan(self, page_id: str) -> PagePlan | None:
         if not self.plan_root:

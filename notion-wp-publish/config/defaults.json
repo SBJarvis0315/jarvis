@@ -6,7 +6,8 @@
       "state": "상태",
       "planner": "플래너 DB ID",
       "types": "대상 유형",
-      "wp_url": "워드프레스 주소"
+      "wp_url": "워드프레스 주소",
+      "youtube": "유튜브 채널"
     },
     "state_active": "활성"
   },

@@ -53,6 +53,26 @@ class PlannedImage:
 
 
 @dataclass
+class VideoChoice:
+    """본문에 넣을 영상. `url` 이 비어 있으면 넣지 않습니다.
+
+    맞는 영상이 없으면 비워두는 것이 기본값입니다. 주제가 어긋나는 영상을 억지로
+    넣는 것보다 없는 편이 낫습니다.
+    """
+
+    url: str = ""
+    anchor: int = -1  # -1 이면 발행 단계가 글 중반에 알아서 놓습니다
+    note: str = ""    # 영상 바로 위에 붙일 한 줄 안내
+
+
+@dataclass
+class VideoCandidate:
+    title: str
+    url: str
+    published: str = ""
+
+
+@dataclass
 class PagePlan:
     page_id: str
     title: str
@@ -63,6 +83,9 @@ class PagePlan:
     thumbnail_preview: str = ""
     thumbnail_alt: str = ""
     thumbnail_hint: str = ""
+    #: 고객사 채널의 영상 목록. 고르라고 놓아둔 후보이며, 고르지 않아도 됩니다.
+    video_candidates: list[VideoCandidate] = field(default_factory=list)
+    video: VideoChoice = field(default_factory=VideoChoice)
 
     # ------------------------------------------------------------------ 입출력
 
@@ -88,6 +111,8 @@ class PagePlan:
             thumbnail_preview=raw.get("thumbnail_preview", ""),
             thumbnail_alt=raw.get("thumbnail_alt", ""),
             thumbnail_hint=raw.get("thumbnail_hint", ""),
+            video_candidates=[VideoCandidate(**v) for v in raw.get("video_candidates", [])],
+            video=VideoChoice(**(raw.get("video") or {})),
         )
 
     @property

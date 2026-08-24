@@ -17,6 +17,7 @@ from .richtext import to_html
 Block = dict[str, Any]
 
 #: 본문에 끼워 넣는 이미지용 가상 블록 타입.
+WP_VIDEO = "wp_video"
 WP_IMAGE = "_wp_image"
 
 LIST_TYPES = ("bulleted_list_item", "numbered_list_item", "to_do")
@@ -30,6 +31,11 @@ class RenderOptions:
     spacer_height: int = 20
     spacer_before_headings: bool = True
     center_tables: bool = True
+
+
+def video_block(*, url: str, note: str = "") -> Block:
+    """유튜브 영상을 본문에 끼워 넣기 위한 가상 블록."""
+    return {"object": "block", "type": WP_VIDEO, WP_VIDEO: {"url": url, "note": note}}
 
 
 def image_block(*, url: str, media_id: int, alt: str, caption: str = "") -> Block:
@@ -141,6 +147,9 @@ def _render_block(block: Block, opts: RenderOptions) -> str:
         # 레이아웃 블록은 펼쳐서 내용만 살립니다.
         return render(children, opts) if children else ""
 
+    if btype == WP_VIDEO:
+        return youtube_embed(payload.get("url", ""), payload.get("note", ""))
+
     if btype == "image":
         # 노션 본문에 직접 박힌 이미지. 업로드 단계에서 이미 치환되었어야 하지만,
         # 남아 있다면 만료되는 노션 URL을 그대로 쓰지 않고 건너뜁니다.
@@ -176,6 +185,35 @@ def _spacer(height: int) -> str:
         f'<!-- wp:spacer {{"height":"{height}px"}} -->\n'
         f'<div style="height:{height}px" aria-hidden="true" class="wp-block-spacer"></div>\n'
         f"<!-- /wp:spacer -->"
+    )
+
+
+def youtube_embed(url: str, note: str = "") -> str:
+    """유튜브 임베드 블록.
+
+    맨 URL 을 문단에 넣으면 워드프레스가 임베드로 바꿔주지 않습니다. REST 로 넣을
+    때는 특히 그렇습니다. 구텐베르크 embed 블록 형태로 내보내야 발행 시점에
+    워드프레스가 유튜브에서 정보를 받아와 썸네일 카드로 보여줍니다.
+    """
+    safe = html.escape(url, quote=True)
+    aspect = "wp-embed-aspect-16-9 wp-has-aspect-ratio"
+
+    lead = (
+        _paragraph(f"<strong>{html.escape(note, quote=False)}</strong>") + "\n\n"
+        if note.strip()
+        else ""
+    )
+
+    return (
+        lead
+        + f'<!-- wp:embed {{"url":"{safe}","type":"video",'
+        f'"providerNameSlug":"youtube","responsive":true,'
+        f'"className":"{aspect}"}} -->\n'
+        f'<figure class="wp-block-embed is-type-video is-provider-youtube '
+        f'wp-block-embed-youtube {aspect}"><div class="wp-block-embed__wrapper">\n'
+        f"{safe}\n"
+        f"</div></figure>\n"
+        f"<!-- /wp:embed -->"
     )
 
 
