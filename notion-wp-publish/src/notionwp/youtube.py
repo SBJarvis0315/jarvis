@@ -150,6 +150,19 @@ def _from_rss(channel_id: str, session: requests.Session | None) -> list[Video]:
     return videos
 
 
+def _newest_first(videos: list[Video]) -> list[Video]:
+    """최신순으로 정렬합니다.
+
+    고를 때 '주제가 맞는 것 중 최신'을 집으라고 하므로, 목록 자체가 최신순이면
+    판단이 쉬워집니다. 게시일이 없는 항목은 원래 순서를 유지한 채 뒤로 보냅니다.
+    """
+    return sorted(
+        videos,
+        key=lambda v: (v.published != "", v.published),
+        reverse=True,
+    )
+
+
 def list_videos(
     channel: str,
     *,
@@ -157,14 +170,14 @@ def list_videos(
     session: requests.Session | None = None,
     limit: int = MAX_VIDEOS,
 ) -> list[Video]:
-    """채널의 영상 목록. 실패하면 빈 목록을 돌려주고 발행은 그대로 진행합니다."""
+    """채널의 영상 목록(최신순). 실패하면 빈 목록을 돌려주고 발행은 그대로 진행합니다."""
     channel_id, handle = parse_channel(channel)
     if not channel_id and not handle:
         return []
 
     if key:
         try:
-            return _from_api(channel_id, handle, key, session, limit)
+            return _newest_first(_from_api(channel_id, handle, key, session, limit))
         except Exception as exc:
             log.warning("유튜브 API 조회에 실패해 RSS로 물러납니다: %s", exc)
 
@@ -176,7 +189,7 @@ def list_videos(
         return []
 
     try:
-        return _from_rss(channel_id, session)
+        return _newest_first(_from_rss(channel_id, session))
     except Exception as exc:
         log.warning("유튜브 RSS 조회에 실패했습니다: %s", exc)
         return []

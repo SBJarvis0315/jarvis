@@ -185,3 +185,40 @@ def test_no_choice_means_no_embed(tmp_path):
 def test_plan_without_video_key_still_loads(tmp_path):
     # 예전 회차가 남긴 plan.json 에는 video 칸이 없습니다.
     assert "wp:embed" not in publish_with(None, tmp_path)
+
+
+# ------------------------------------------------------------------ 정렬
+
+
+def test_candidates_come_back_newest_first():
+    """주제가 맞는 것 중 최신을 고르라고 하므로, 목록이 최신순이어야 쉽습니다."""
+    session = FakeSession(
+        [
+            CHANNELS,
+            {
+                "items": [
+                    {"snippet": {"title": "오래된 기미 영상", "resourceId": {"videoId": "old"},
+                                 "publishedAt": "2024-01-02T00:00:00Z"}},
+                    {"snippet": {"title": "최신 기미 영상", "resourceId": {"videoId": "new"},
+                                 "publishedAt": "2026-08-05T00:00:00Z"}},
+                    {"snippet": {"title": "중간 기미 영상", "resourceId": {"videoId": "mid"},
+                                 "publishedAt": "2025-05-05T00:00:00Z"}},
+                ]
+            },
+        ]
+    )
+    videos = list_videos("UC" + "x" * 22, key="k", session=session)
+
+    assert [v.video_id for v in videos] == ["new", "mid", "old"]
+
+
+def test_old_videos_are_kept_as_candidates():
+    # 오래됐다는 이유로 후보에서 빼지 않습니다. 주제가 맞으면 그게 맞는 영상입니다.
+    session = FakeSession(
+        [
+            CHANNELS,
+            {"items": [{"snippet": {"title": "2년 전 기미 영상", "resourceId": {"videoId": "old"},
+                                    "publishedAt": "2024-01-02T00:00:00Z"}}]},
+        ]
+    )
+    assert [v.title for v in list_videos("UC" + "x" * 22, key="k", session=session)] == ["2년 전 기미 영상"]
