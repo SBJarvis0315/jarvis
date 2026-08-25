@@ -2,3 +2,5 @@ google-session.json
 google-session.b64
 *.png
 __pycache__/
+_*.py
+_*.txt
