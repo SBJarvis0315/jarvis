@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>캐릭터톡 — AI 캐릭터와 나누는 진짜 같은 대화</title>
+<meta name="description" content="소꿉친구부터 조선 탐정까지. 취향에 맞는 AI 캐릭터와 롤플레이 대화를 나누고, 나만의 캐릭터도 직접 만들어보세요.">
+<meta property="og:title" content="캐릭터톡 — AI 캐릭터와 나누는 진짜 같은 대화">
+<meta property="og:description" content="가입 즉시 무료 메시지 지급. 취향의 캐릭터를 고르고 바로 대화를 시작하세요.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .hero { padding: 68px 0 44px; text-align: center; }
+  .hero h1 { font-size: clamp(30px, 5.4vw, 50px); line-height: 1.22; letter-spacing: -.035em; font-weight: 800; }
+  .hero h1 em { font-style: normal; background: linear-gradient(100deg, #a68bff, #ff8fb0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { color: var(--muted); font-size: 17px; margin: 16px auto 26px; max-width: 540px; }
+  .hero .cta { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .hero .btn { padding: 13px 24px; font-size: 15px; }
+  .trust { display: flex; gap: 26px; justify-content: center; margin-top: 30px; color: var(--muted); font-size: 13px; flex-wrap: wrap; }
+  .trust b { color: var(--text); display: block; font-size: 19px; font-weight: 700; }
+  .bar { display: flex; gap: 10px; align-items: center; margin: 30px 0 16px; flex-wrap: wrap; }
+  .bar input { max-width: 260px; }
+  .chips { display: flex; gap: 7px; flex-wrap: wrap; }
+  .chip { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg-soft);
+    font-size: 13px; cursor: pointer; color: var(--muted); }
+  .chip.on { background: var(--accent-soft); border-color: var(--accent); color: #c9b8ff; }
+  section h2 { font-size: 24px; letter-spacing: -.02em; margin-bottom: 8px; }
+  section { margin: 64px 0; }
+  .plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 24px; }
+  .plan { background: var(--bg-card); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; position: relative; }
+  .plan.best { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .plan .price { font-size: 30px; font-weight: 800; letter-spacing: -.03em; margin: 10px 0 4px; }
+  .plan .price small { font-size: 14px; color: var(--muted); font-weight: 500; }
+  .plan ul { list-style: none; margin: 16px 0 20px; display: grid; gap: 9px; font-size: 14px; }
+  .plan li::before { content: '✓ '; color: var(--good); font-weight: 700; }
+  .plan .flag { position: absolute; top: -11px; left: 24px; background: var(--accent); color: #fff;
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+  .faq { display: grid; gap: 10px; margin-top: 20px; }
+  .faq details { background: var(--bg-card); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .faq summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+  .faq p { color: var(--muted); font-size: 14px; margin-top: 10px; }
+  footer { border-top: 1px solid var(--line); padding: 30px 0 50px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div id="header"></div>
+
+<main class="wrap">
+  <div class="hero">
+    <h1>오늘은 누구와<br><em>이야기</em>할까요?</h1>
+    <p>소꿉친구, 조선의 탐정, 새벽 라디오 DJ까지.<br>취향의 캐릭터를 고르고 바로 대화를 시작하세요. 가입하면 무료 메시지가 바로 지급됩니다.</p>
+    <div class="cta">
+      <button class="btn primary" data-auth="signup" id="cta-start">무료로 시작하기</button>
+      <a class="btn ghost" href="#plans">요금 보기</a>
+    </div>
+    <div class="trust">
+      <div><b id="stat-chars">–</b>명의 캐릭터</div>
+      <div><b id="stat-chats">–</b>번의 대화</div>
+      <div><b>3초</b> 만에 시작</div>
+    </div>
+  </div>
+
+  <section id="explore" style="margin-top:20px">
+    <h2>캐릭터 탐색</h2>
+    <p class="muted small">마음에 드는 캐릭터를 누르면 바로 대화가 시작됩니다.</p>
+    <div class="bar">
+      <input type="text" id="q" placeholder="이름·태그로 검색" autocomplete="off">
+      <div class="chips" id="sorts">
+        <button class="chip on" data-sort="hot">인기순</button>
+        <button class="chip" data-sort="new">최신순</button>
+      </div>
+      <div class="chips" id="tags"></div>
+    </div>
+    <div class="char-grid" id="grid"></div>
+  </section>
+
+  <section id="plans">
+    <h2>요금제</h2>
+    <p class="muted small">무료로 충분히 써보고, 더 대화하고 싶을 때만 결제하세요. 언제든 해지할 수 있습니다.</p>
+    <div class="plans" id="plan-cards"></div>
+    <p class="muted small" style="margin-top:14px">· 결제는 토스페이먼츠로 안전하게 처리됩니다. · 한도를 다 쓰면 충전팩으로 그 달만 늘릴 수 있습니다.</p>
+  </section>
+
+  <section>
+    <h2>자주 묻는 질문</h2>
+    <div class="faq">
+      <details open><summary>무료로 얼마나 쓸 수 있나요?</summary>
+        <p>가입하면 매달 무료 메시지가 지급됩니다. 캐릭터 탐색과 대화 저장은 무료 플랜에서도 그대로 쓸 수 있어요.</p></details>
+      <details><summary>대화 내용은 안전한가요?</summary>
+        <p>대화는 본인 계정으로만 열람할 수 있고, 다른 이용자에게 공개되지 않습니다. 계정을 지우면 대화도 함께 삭제됩니다.</p></details>
+      <details><summary>내가 만든 캐릭터를 공개할 수 있나요?</summary>
+        <p>네. 라이트 플랜부터 캐릭터를 만들 수 있고, 공개로 설정하면 탐색 목록에 올라가 다른 이용자와 대화 수가 쌓입니다.</p></details>
+      <details><summary>해지하면 남은 기간은 어떻게 되나요?</summary>
+        <p>해지해도 이미 결제한 기간이 끝날 때까지는 그대로 이용할 수 있고, 다음 달부터 결제되지 않습니다.</p></details>
+      <details><summary>어떤 대화까지 가능한가요?</summary>
+        <p>캐릭터 연기는 자유롭지만, 미성년자에 대한 선정적 묘사·실존 인물 사칭·범죄 조장 등은 어떤 경우에도 지원하지 않습니다.</p></details>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap">
+  <p>© 캐릭터톡 · 문의 support@example.com</p>
+  <p style="margin-top:6px">AI가 생성한 대화이며 실존 인물·기관과 관련이 없습니다. 18세 미만 이용자는 보호자 동의가 필요합니다.</p>
+</div></footer>
+
+<script type="module">
+import { api, state, loadMe, header, mountAuthModal, esc, won } from '/assets/common.js';
+
+let filters = { sort: 'hot', q: '', tag: '' };
+
+function renderHeader() {
+  document.getElementById('header').innerHTML = header('/');
+}
+
+function characterCard(c) {
+  return `<article class="char" data-slug="${esc(c.slug)}" style="--c:${esc(c.accent)}">
+    <div class="face">${esc(c.avatar)}</div>
+    <h3>${esc(c.name)} ${c.isOfficial ? '<span class="badge">공식</span>' : ''}</h3>
+    <p>${esc(c.tagline)}</p>
+    <div class="meta">
+      <span>💬 ${c.chatCount.toLocaleString('ko-KR')}</span>
+      <span>♡ ${c.likeCount.toLocaleString('ko-KR')}</span>
+      ${c.tags[0] ? `<span class="tag">${esc(c.tags[0])}</span>` : ''}
+    </div>
+  </article>`;
+}
+
+async function loadCharacters() {
+  const params = new URLSearchParams(filters);
+  const { characters, tags } = await api(`/api/characters?${params}`);
+  document.getElementById('grid').innerHTML =
+    characters.map(characterCard).join('') || '<p class="muted">조건에 맞는 캐릭터가 없어요.</p>';
+  document.getElementById('stat-chars').textContent = characters.length;
+  document.getElementById('stat-chats').textContent =
+    characters.reduce((sum, c) => sum + c.chatCount, 0).toLocaleString('ko-KR');
+  document.getElementById('tags').innerHTML = tags
+    .slice(0, 7)
+    .map((t) => `<button class="chip ${filters.tag === t.tag ? 'on' : ''}" data-tag="${esc(t.tag)}">#${esc(t.tag)}</button>`)
+    .join('');
+}
+
+function renderPlans() {
+  document.getElementById('plan-cards').innerHTML = state.plans
+    .map(
+      (p) => `<div class="plan ${p.id === 'lite' ? 'best' : ''}">
+        ${p.id === 'lite' ? '<span class="flag">가장 많이 선택</span>' : ''}
+        <strong>${esc(p.name)}</strong>
+        <div class="price">${p.priceKrw ? won(p.priceKrw) : '무료'}<small>${p.priceKrw ? ' / 월' : ''}</small></div>
+        <p class="muted small">${esc(p.blurb)}</p>
+        <ul>${p.features.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
+        <a class="btn ${p.id === 'lite' ? 'primary' : ''}" style="width:100%" href="${state.user ? '/account' : '#'}"
+           ${state.user ? '' : 'data-auth="signup"'}>${p.priceKrw ? '이 플랜 시작하기' : '무료로 시작하기'}</a>
+      </div>`
+    )
+    .join('');
+}
+
+document.addEventListener('click', (e) => {
+  const card = e.target.closest('.char');
+  if (card) {
+    if (!state.user) return document.querySelector('[data-auth="signup"]').click();
+    location.href = `/c/${card.dataset.slug}`;
+    return;
+  }
+  const sort = e.target.closest('[data-sort]');
+  if (sort) {
+    filters.sort = sort.dataset.sort;
+    document.querySelectorAll('#sorts .chip').forEach((c) => c.classList.toggle('on', c === sort));
+    loadCharacters();
+  }
+  const tag = e.target.closest('[data-tag]');
+  if (tag) {
+    filters.tag = filters.tag === tag.dataset.tag ? '' : tag.dataset.tag;
+    loadCharacters();
+  }
+});
+
+let timer;
+document.getElementById('q').addEventListener('input', (e) => {
+  clearTimeout(timer);
+  timer = setTimeout(() => { filters.q = e.target.value.trim(); loadCharacters(); }, 250);
+});
+
+mountAuthModal(() => { renderHeader(); renderPlans(); });
+await loadMe();
+renderHeader();
+renderPlans();
+await loadCharacters();
+if (state.user) document.getElementById('cta-start').outerHTML = '<a class="btn primary" href="/chat">대화 이어가기</a>';
+</script>
+</body>
+</html>

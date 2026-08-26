@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>대화 · 캐릭터톡</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  body { overflow: hidden; }
+  .app { display: grid; grid-template-columns: 280px 1fr; height: 100dvh; }
+  .side { border-right: 1px solid var(--line); display: flex; flex-direction: column; background: var(--bg-soft); }
+  .side .head { padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
+  .side .list { flex: 1; overflow-y: auto; padding: 8px; }
+  .conv { padding: 10px 12px; border-radius: 10px; cursor: pointer; display: flex; gap: 10px; align-items: center; }
+  .conv:hover { background: var(--bg-card); }
+  .conv.on { background: var(--bg-card); box-shadow: inset 2px 0 0 var(--accent); }
+  .conv .face { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; font-size: 17px; flex: none;
+    background: color-mix(in srgb, var(--c, var(--accent)) 22%, transparent); }
+  .conv .txt { min-width: 0; }
+  .conv strong { font-size: 13.5px; display: block; }
+  .conv span { font-size: 12px; color: var(--muted); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .side .foot { border-top: 1px solid var(--line); padding: 14px 16px; }
+
+  .main { display: flex; flex-direction: column; min-width: 0; }
+  .chat-head { display: flex; align-items: center; gap: 12px; padding: 12px 20px; border-bottom: 1px solid var(--line); }
+  .chat-head .face { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 21px;
+    background: color-mix(in srgb, var(--c, var(--accent)) 22%, transparent); border: 1px solid color-mix(in srgb, var(--c, var(--accent)) 40%, transparent); }
+  .chat-head .who strong { display: block; font-size: 15px; }
+  .chat-head .who span { font-size: 12.5px; color: var(--muted); }
+  .chat-head .actions { margin-left: auto; display: flex; gap: 8px; }
+
+  .stream { flex: 1; overflow-y: auto; padding: 26px 20px 10px; }
+  .thread { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+  .msg { display: flex; gap: 12px; }
+  .msg .face { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; font-size: 18px; flex: none;
+    background: color-mix(in srgb, var(--c, var(--accent)) 22%, transparent); }
+  .msg .bubble { background: var(--bg-card); border: 1px solid var(--line); border-radius: 4px 14px 14px 14px; padding: 13px 16px; font-size: 15px; }
+  .msg.me { flex-direction: row-reverse; }
+  .msg.me .bubble { background: var(--accent); border-color: var(--accent); color: #fff; border-radius: 14px 4px 14px 14px; }
+  .msg.me .face { background: var(--bg-card); border: 1px solid var(--line); font-size: 15px; }
+  .bubble .act { color: #a9aecb; font-style: italic; }
+  .msg.me .bubble .act { color: rgba(255,255,255,.8); }
+  .typing span { display: inline-block; width: 6px; height: 6px; margin-right: 3px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite; }
+  .typing span:nth-child(2) { animation-delay: .2s } .typing span:nth-child(3) { animation-delay: .4s }
+  @keyframes blink { 0%, 60%, 100% { opacity: .25 } 30% { opacity: 1 } }
+
+  .composer { border-top: 1px solid var(--line); padding: 14px 20px 18px; }
+  .composer .inner { max-width: 760px; margin: 0 auto; display: flex; gap: 10px; align-items: flex-end; }
+  .composer textarea { min-height: 48px; max-height: 180px; border-radius: 12px; }
+  .notice { max-width: 760px; margin: 0 auto 10px; font-size: 13px; }
+  .empty { max-width: 460px; margin: 12vh auto; text-align: center; color: var(--muted); }
+
+  .side-toggle { display: none; }
+  @media (max-width: 780px) {
+    .app { grid-template-columns: 1fr; }
+    .side { position: fixed; inset: 0 auto 0 0; width: 82%; max-width: 300px; z-index: 40; transform: translateX(-100%); transition: .2s; }
+    .side.on { transform: none; box-shadow: var(--shadow); }
+    .side-toggle { display: inline-flex; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" id="side">
+    <div class="head">
+      <a class="logo" href="/">💬 캐릭터<b>톡</b></a>
+      <a class="btn sm ghost" href="/" style="margin-left:auto">＋</a>
+    </div>
+    <div class="list" id="convs"></div>
+    <div class="foot" id="usage"></div>
+  </aside>
+
+  <section class="main">
+    <div class="chat-head" id="chead"></div>
+    <div class="stream" id="stream"><div class="thread" id="thread"></div></div>
+    <div class="composer">
+      <div class="notice" id="notice"></div>
+      <div class="inner">
+        <textarea id="input" rows="1" placeholder="메시지를 입력하세요 (Enter 전송 · Shift+Enter 줄바꿈)"></textarea>
+        <button class="btn primary" id="send">보내기</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script type="module">
+import { api, state, loadMe, esc, renderRoleplay, won } from '/assets/common.js';
+
+const $ = (id) => document.getElementById(id);
+let current = null;      // 현재 대화
+let character = null;    // 현재 캐릭터
+let sending = false;
+
+await loadMe();
+if (!state.user) location.href = '/';
+
+function renderUsage() {
+  const q = state.quota;
+  if (!q) return;
+  $('usage').innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px">
+      <span class="muted">${esc(q.planName)} 플랜</span>
+      <strong>${q.messagesLeft.toLocaleString('ko-KR')}메시지 남음</strong>
+    </div>
+    <div class="gauge ${q.percent > 80 ? 'hot' : ''}"><i style="width:${Math.min(100, q.percent)}%"></i></div>
+    <a class="btn sm" style="width:100%;margin-top:10px" href="/account">${q.plan === 'free' ? '플랜 올리기' : '사용량·결제'}</a>`;
+}
+
+async function loadConversations(activeId) {
+  const { conversations } = await api('/api/conversations');
+  $('convs').innerHTML = conversations.length
+    ? conversations
+        .map(
+          (c) => `<div class="conv ${c.id === activeId ? 'on' : ''}" data-id="${c.id}" style="--c:${esc(c.accent)}">
+            <div class="face">${esc(c.avatar)}</div>
+            <div class="txt"><strong>${esc(c.character_name)}</strong><span>${esc((c.last_message || '').replace(/\*/g, '').slice(0, 40))}</span></div>
+          </div>`
+        )
+        .join('')
+    : '<p class="muted small" style="padding:14px">아직 대화가 없어요.<br><a href="/" style="color:var(--accent)">캐릭터를 골라보세요 →</a></p>';
+  return conversations;
+}
+
+function messageHtml(role, content) {
+  if (role === 'assistant') {
+    return `<div class="msg" style="--c:${esc(character.accent)}">
+      <div class="face">${esc(character.avatar)}</div>
+      <div class="bubble">${renderRoleplay(content)}</div></div>`;
+  }
+  return `<div class="msg me"><div class="face">🙂</div><div class="bubble">${esc(content).replace(/\n/g, '<br>')}</div></div>`;
+}
+
+function scrollDown() {
+  $('stream').scrollTop = $('stream').scrollHeight;
+}
+
+function renderHead() {
+  $('chead').innerHTML = character
+    ? `<div class="face" style="--c:${esc(character.accent)}">${esc(character.avatar)}</div>
+       <div class="who"><strong>${esc(character.name)}</strong><span>${esc(character.tagline)}</span></div>
+       <div class="actions">
+         <button class="btn sm side-toggle" id="toggle">☰</button>
+         <button class="btn sm" id="regen" title="마지막 답변 다시 받기">다시 생성</button>
+         <button class="btn sm danger" id="del">대화 삭제</button>
+       </div>`
+    : '';
+}
+
+async function openConversation(id) {
+  const { conversation, messages } = await api(`/api/conversations/${id}`);
+  current = conversation;
+  character = {
+    name: conversation.character_name,
+    avatar: conversation.avatar,
+    accent: conversation.accent,
+    tagline: '',
+    slug: conversation.character_slug,
+  };
+  const detail = await api(`/api/characters/${conversation.character_slug}`).catch(() => null);
+  if (detail) character = { ...character, ...detail.character };
+  renderHead();
+  $('thread').innerHTML = messages.map((m) => messageHtml(m.role, m.content)).join('');
+  scrollDown();
+  await loadConversations(id);
+  $('side').classList.remove('on');
+}
+
+async function startWith(slug) {
+  const conversations = await api('/api/conversations').then((d) => d.conversations);
+  const existing = conversations.find((c) => c.character_slug === slug);
+  if (existing) return openConversation(existing.id);
+  const { conversation } = await api('/api/conversations', { method: 'POST', body: { characterSlug: slug } });
+  return openConversation(conversation.id);
+}
+
+async function send(text, { regenerate = false } = {}) {
+  if (sending || !current) return;
+  sending = true;
+  $('send').disabled = true;
+  $('notice').innerHTML = '';
+
+  if (!regenerate) {
+    $('thread').insertAdjacentHTML('beforeend', messageHtml('user', text));
+  } else {
+    $('thread').lastElementChild?.remove();
+  }
+  const holder = document.createElement('div');
+  holder.className = 'msg';
+  holder.style.setProperty('--c', character.accent);
+  holder.innerHTML = `<div class="face">${esc(character.avatar)}</div>
+    <div class="bubble"><span class="typing"><span></span><span></span><span></span></span></div>`;
+  $('thread').appendChild(holder);
+  scrollDown();
+  const bubble = holder.querySelector('.bubble');
+
+  try {
+    const res = await fetch(
+      regenerate ? `/api/conversations/${current.id}/regenerate` : `/api/conversations/${current.id}/messages`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(regenerate ? {} : { message: text }),
+      }
+    );
+
+    if (!res.ok || !res.body) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || '메시지를 보내지 못했습니다.');
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let answer = '';
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split('\n\n');
+      buffer = parts.pop();
+      for (const part of parts) {
+        const evMatch = part.match(/^event: (.+)$/m);
+        const dataMatch = part.match(/^data: (.+)$/m);
+        if (!evMatch || !dataMatch) continue;
+        const payload = JSON.parse(dataMatch[1]);
+        if (evMatch[1] === 'delta') {
+          answer += payload.text;
+          bubble.innerHTML = renderRoleplay(answer);
+          scrollDown();
+        } else if (evMatch[1] === 'done') {
+          state.quota = payload.quota;
+          renderUsage();
+          if (payload.demo) $('notice').innerHTML = '<div class="ok">데모 모드입니다. 서버에 ANTHROPIC_API_KEY 를 설정하면 실제 캐릭터가 답합니다.</div>';
+          if (payload.quota.messagesLeft <= 5) {
+            $('notice').innerHTML = `<div class="err">남은 메시지가 ${payload.quota.messagesLeft}개입니다. <a href="/account" style="color:#fff;text-decoration:underline">충전하거나 플랜 올리기</a></div>`;
+          }
+        } else if (evMatch[1] === 'error') {
+          bubble.innerHTML = `<span class="muted">${esc(payload.message)}</span>`;
+        }
+      }
+    }
+    if (!answer && !bubble.textContent.trim()) bubble.innerHTML = '<span class="muted">답변이 비어 있습니다. 다시 시도해주세요.</span>';
+    loadConversations(current.id);
+  } catch (err) {
+    holder.remove();
+    const upsell = err.message.includes('사용') || err.message.includes('플랜');
+    $('notice').innerHTML = `<div class="err">${esc(err.message)} ${upsell ? '<a href="/account" style="color:#fff;text-decoration:underline">결제 페이지로</a>' : ''}</div>`;
+  } finally {
+    sending = false;
+    $('send').disabled = false;
+    $('input').focus();
+  }
+}
+
+// --- 이벤트 ---
+$('send').addEventListener('click', () => {
+  const text = $('input').value.trim();
+  if (!text) return;
+  $('input').value = '';
+  $('input').style.height = 'auto';
+  send(text);
+});
+
+$('input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
+    e.preventDefault();
+    $('send').click();
+  }
+});
+$('input').addEventListener('input', (e) => {
+  e.target.style.height = 'auto';
+  e.target.style.height = Math.min(180, e.target.scrollHeight) + 'px';
+});
+
+$('convs').addEventListener('click', (e) => {
+  const item = e.target.closest('.conv');
+  if (item) openConversation(Number(item.dataset.id));
+});
+
+document.addEventListener('click', async (e) => {
+  if (e.target.id === 'regen') return send('', { regenerate: true });
+  if (e.target.id === 'toggle') return $('side').classList.toggle('on');
+  if (e.target.id === 'del' && current) {
+    if (!confirm(`${character.name} 와의 대화를 삭제할까요? 되돌릴 수 없습니다.`)) return;
+    await api(`/api/conversations/${current.id}`, { method: 'DELETE' });
+    current = null;
+    character = null;
+    $('thread').innerHTML = '<div class="empty">대화를 삭제했습니다. 왼쪽에서 다른 대화를 고르거나 새 캐릭터를 만나보세요.</div>';
+    renderHead();
+    loadConversations();
+  }
+});
+
+// --- 시작 ---
+renderUsage();
+const slug = location.pathname.startsWith('/c/') ? decodeURIComponent(location.pathname.slice(3)) : null;
+const conversations = await loadConversations();
+if (slug) {
+  await startWith(slug);
+} else if (conversations.length) {
+  await openConversation(conversations[0].id);
+} else {
+  $('thread').innerHTML =
+    '<div class="empty"><h3 style="color:var(--text);margin-bottom:8px">아직 대화가 없어요</h3><p>마음에 드는 캐릭터를 고르면 바로 시작됩니다.</p><a class="btn primary" style="margin-top:16px" href="/">캐릭터 보러 가기</a></div>';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>결제 실패 · 캐릭터톡</title>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<main class="wrap" style="max-width:460px;padding-top:16vh;text-align:center">
+  <div class="card">
+    <h2>결제가 취소되었습니다</h2>
+    <p class="muted small" style="margin-top:10px" id="reason">카드 등록이 완료되지 않았습니다.</p>
+    <a class="btn primary" href="/account" style="margin-top:18px">다시 시도하기</a>
+  </div>
+</main>
+<script>
+  const message = new URLSearchParams(location.search).get('message');
+  if (message) document.getElementById('reason').textContent = message;
+</script>
+</body>
+</html>

@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>내 계정 · 캐릭터톡</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  main { padding: 34px 0 70px; }
+  h1 { font-size: 26px; letter-spacing: -.02em; margin-bottom: 22px; }
+  h2 { font-size: 17px; margin-bottom: 4px; }
+  .cols { display: grid; grid-template-columns: 1.25fr 1fr; gap: 18px; align-items: start; }
+  .plans { display: grid; gap: 12px; margin-top: 16px; }
+  .prow { display: flex; align-items: center; gap: 14px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+  .prow.on { border-color: var(--accent); background: var(--accent-soft); }
+  .prow .info { flex: 1; min-width: 0; }
+  .prow strong { display: block; font-size: 15px; }
+  .prow .price { font-weight: 800; font-size: 17px; white-space: nowrap; }
+  .packs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .pack { border: 1px solid var(--line); border-radius: 12px; padding: 14px; text-align: center; background: var(--bg); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 12px; }
+  th, td { text-align: left; padding: 9px 6px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: 12.5px; }
+  @media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="header"></div>
+<main class="wrap">
+  <h1>내 계정</h1>
+  <div id="msg"></div>
+
+  <div class="cols">
+    <div class="grid">
+      <div class="card">
+        <h2>이번 달 사용량</h2>
+        <p class="muted small">한도는 매달 1일(한국 시간)에 초기화됩니다.</p>
+        <div id="usage" style="margin-top:16px"></div>
+      </div>
+
+      <div class="card">
+        <h2>요금제</h2>
+        <p class="muted small">지금 플랜을 바꾸면 즉시 결제되고 이용 기간이 한 달 늘어납니다.</p>
+        <div class="plans" id="plans"></div>
+      </div>
+
+      <div class="card">
+        <h2>메시지 충전</h2>
+        <p class="muted small">이번 달만 한도를 늘립니다. 등록된 카드로 바로 결제돼요.</p>
+        <div class="packs" id="packs"></div>
+      </div>
+
+      <div class="card">
+        <h2>결제 내역</h2>
+        <div id="history"></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>캐릭터가 부를 이름</h2>
+        <p class="muted small">모든 대화에서 캐릭터가 나를 어떻게 부르고, 어떤 사람으로 알지 정합니다.</p>
+        <form id="profile" style="margin-top:14px">
+          <div class="field">
+            <label>닉네임</label>
+            <input type="text" name="nickname" maxlength="20" placeholder="예: 준호">
+          </div>
+          <div class="field">
+            <label>나에 대한 설정 (선택)</label>
+            <textarea name="persona" maxlength="600" placeholder="예: 스물다섯 대학원생. 밤을 새우는 일이 잦고 고양이를 키운다."></textarea>
+            <p class="hint">캐릭터가 이 내용을 알고 대화합니다. 실명·연락처 같은 개인정보는 넣지 마세요.</p>
+          </div>
+          <button class="btn primary" type="submit">저장</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>결제수단</h2>
+        <div id="card-info" style="margin-top:10px"></div>
+      </div>
+
+      <div class="card">
+        <h2>계정</h2>
+        <p class="small muted" id="account-info" style="margin:8px 0 14px"></p>
+        <button class="btn" id="logout">로그아웃</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import { api, state, loadMe, header, esc, won } from '/assets/common.js';
+const $ = (id) => document.getElementById(id);
+
+await loadMe();
+if (!state.user) location.href = '/';
+document.getElementById('header').innerHTML = header('/account');
+
+let billing = await api('/api/billing/config');
+
+const flash = (html, kind = 'ok') => {
+  $('msg').innerHTML = `<div class="${kind}">${html}</div>`;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+function renderUsage() {
+  const q = state.quota;
+  $('usage').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px">
+      <strong style="font-size:22px">${q.messagesLeft.toLocaleString('ko-KR')}<span class="muted small"> / ${q.monthlyMessages.toLocaleString('ko-KR')}메시지 남음</span></strong>
+      <span class="tag">${esc(q.planName)}</span>
+    </div>
+    <div class="gauge ${q.percent > 80 ? 'hot' : ''}"><i style="width:${Math.min(100, q.percent)}%"></i></div>
+    <p class="muted small" style="margin-top:10px">이번 달 보낸 메시지 ${q.messagesSent.toLocaleString('ko-KR')}개${q.topupKrw ? ` · 충전으로 늘린 한도 ${won(q.topupKrw)}` : ''}</p>`;
+}
+
+function renderPlans() {
+  const currentPlan = state.user.plan;
+  $('plans').innerHTML = state.plans
+    .map((p) => {
+      const isCurrent = p.id === currentPlan;
+      return `<div class="prow ${isCurrent ? 'on' : ''}">
+        <div class="info">
+          <strong>${esc(p.name)} ${isCurrent ? '<span class="badge">이용 중</span>' : ''}</strong>
+          <span class="muted small">${esc(p.blurb)}</span>
+        </div>
+        <div class="price">${p.priceKrw ? won(p.priceKrw) : '무료'}</div>
+        ${
+          p.priceKrw
+            ? `<button class="btn ${isCurrent ? '' : 'primary'} sm" data-plan="${p.id}">${isCurrent ? '한 달 연장' : '이 플랜으로'}</button>`
+            : ''
+        }
+      </div>`;
+    })
+    .join('');
+
+  const u = state.user;
+  if (u.plan !== 'free') {
+    $('plans').insertAdjacentHTML(
+      'beforeend',
+      `<p class="muted small">이용 기간: ${u.planExpiresAt ? new Date(u.planExpiresAt).toLocaleDateString('ko-KR') : '-'} 까지
+        ${u.cancelAtPeriodEnd ? '· <b style="color:var(--warn)">해지 예약됨</b>' : ''}
+        <button class="btn sm ghost" id="${u.cancelAtPeriodEnd ? 'resume' : 'cancel'}" style="margin-left:6px">
+          ${u.cancelAtPeriodEnd ? '구독 계속하기' : '해지 예약'}</button></p>`
+    );
+  }
+}
+
+function renderPacks() {
+  $('packs').innerHTML = state.packs
+    .map(
+      (p) => `<div class="pack">
+        <strong>${esc(p.name)}</strong>
+        <div class="muted small" style="margin:4px 0 10px">+ 약 ${Math.floor(p.capKrw / 13).toLocaleString('ko-KR')}메시지</div>
+        <button class="btn sm primary" style="width:100%" data-pack="${p.id}">${won(p.amountKrw)}</button>
+      </div>`
+    )
+    .join('');
+}
+
+function renderCard() {
+  $('card-info').innerHTML = state.user.hasBillingKey
+    ? `<p class="small">등록됨 · ${esc(state.user.cardLabel || '카드')}</p>
+       <button class="btn sm" id="recard" style="margin-top:10px">카드 바꾸기</button>`
+    : `<p class="small muted">등록된 카드가 없습니다. 유료 플랜을 선택하면 카드 등록 창이 열립니다.</p>
+       <button class="btn sm" id="recard" style="margin-top:10px">카드 등록하기</button>`;
+  if (billing.mock) {
+    $('card-info').insertAdjacentHTML('beforeend', '<p class="hint" style="margin-top:8px">지금은 모의 결제 모드입니다. 실제로 돈이 빠져나가지 않습니다.</p>');
+  }
+}
+
+async function renderHistory() {
+  const { payments } = await api('/api/billing/history');
+  $('history').innerHTML = payments.length
+    ? `<table><thead><tr><th>일시</th><th>내역</th><th>금액</th><th>상태</th></tr></thead><tbody>
+        ${payments
+          .map(
+            (p) => `<tr>
+              <td>${new Date(p.paid_at || p.created_at).toLocaleDateString('ko-KR')}</td>
+              <td>${p.kind === 'topup' ? '충전' : '구독'} · ${esc(p.plan)}</td>
+              <td>${won(p.amount_krw)}</td>
+              <td>${p.status === 'paid' ? '완료' : p.status === 'failed' ? '<span style="color:var(--bad)">실패</span>' : '대기'}</td>
+            </tr>`
+          )
+          .join('')}
+      </tbody></table>`
+    : '<p class="muted small" style="margin-top:8px">아직 결제 내역이 없습니다.</p>';
+}
+
+/** 카드 등록: 실제 모드면 토스 창을, 모의 모드면 바로 서버에 등록합니다. */
+async function registerCard(planId) {
+  if (billing.mock) {
+    const data = await api('/api/billing/register', { method: 'POST', body: { planId } });
+    state.user = data.user;
+    state.quota = data.quota;
+    return true;
+  }
+  if (planId) sessionStorage.setItem('pendingPlan', planId);
+  await loadTossSdk();
+  const toss = window.TossPayments(billing.clientKey);
+  await toss.requestBillingAuth('카드', {
+    customerKey: billing.customerKey,
+    successUrl: billing.successUrl,
+    failUrl: billing.failUrl,
+  });
+  return false; // 리디렉션됨
+}
+
+function loadTossSdk() {
+  return new Promise((resolve, reject) => {
+    if (window.TossPayments) return resolve();
+    const script = document.createElement('script');
+    script.src = 'https://js.tosspayments.com/v1/payment';
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('결제 모듈을 불러오지 못했습니다.'));
+    document.head.appendChild(script);
+  });
+}
+
+document.addEventListener('click', async (e) => {
+  const planBtn = e.target.closest('[data-plan]');
+  const packBtn = e.target.closest('[data-pack]');
+  const target = planBtn || packBtn;
+  if (target) target.disabled = true;
+
+  try {
+    if (planBtn) {
+      const planId = planBtn.dataset.plan;
+      if (!state.user.hasBillingKey) {
+        const done = await registerCard(planId);
+        if (!done) return;
+      } else {
+        const data = await api('/api/billing/subscribe', { method: 'POST', body: { planId } });
+        state.user = data.user;
+        state.quota = data.quota;
+      }
+      await refresh();
+      flash(`결제가 완료되었습니다. 이제 <a href="/chat" style="color:#fff;text-decoration:underline">대화하러 가기</a>`);
+    }
+
+    if (packBtn) {
+      if (!state.user.hasBillingKey) {
+        const done = await registerCard(null);
+        if (!done) return;
+      }
+      const data = await api('/api/billing/topup', { method: 'POST', body: { packId: packBtn.dataset.pack } });
+      state.quota = data.quota;
+      await refresh();
+      flash(`충전이 완료되었습니다. 한도가 ${won(data.capKrw)} 늘었어요.`);
+    }
+
+    if (e.target.id === 'cancel') {
+      if (!confirm('해지를 예약할까요? 이미 결제한 기간까지는 그대로 이용할 수 있습니다.')) return;
+      const data = await api('/api/billing/cancel', { method: 'POST', body: {} });
+      state.user = data.user;
+      await refresh();
+      flash('해지가 예약되었습니다. 남은 기간까지는 그대로 이용하실 수 있어요.');
+    }
+
+    if (e.target.id === 'resume') {
+      const data = await api('/api/billing/resume', { method: 'POST', body: {} });
+      state.user = data.user;
+      await refresh();
+      flash('구독이 다시 이어집니다.');
+    }
+
+    if (e.target.id === 'recard') await registerCard(null).then(refresh);
+
+    if (e.target.id === 'logout') {
+      await api('/api/auth/logout', { method: 'POST', body: {} });
+      location.href = '/';
+    }
+  } catch (err) {
+    flash(esc(err.message), 'err');
+  } finally {
+    if (target) target.disabled = false;
+  }
+});
+
+$('profile').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = new FormData(e.target);
+  const data = await api('/api/me', {
+    method: 'PATCH',
+    body: { nickname: form.get('nickname'), persona: form.get('persona') },
+  });
+  state.user = data.user;
+  flash('저장했습니다. 다음 대화부터 반영돼요.');
+});
+
+async function refresh() {
+  await loadMe();
+  billing = await api('/api/billing/config');
+  renderUsage();
+  renderPlans();
+  renderPacks();
+  renderCard();
+  await renderHistory();
+  $('profile').nickname.value = state.user.nickname || '';
+  $('profile').persona.value = state.user.persona || '';
+  $('account-info').textContent = `${state.user.email} · 관리자 ${state.user.isAdmin ? 'O' : 'X'}`;
+  document.getElementById('header').innerHTML = header('/account');
+}
+
+await refresh();
+
+// 카드 등록 후 돌아온 경우 안내
+if (new URLSearchParams(location.search).get('done') === '1') {
+  flash('결제수단이 등록되고 결제가 완료되었습니다.');
+  history.replaceState({}, '', '/account');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>캐릭터 만들기 · 캐릭터톡</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  main { padding: 34px 0 70px; }
+  h1 { font-size: 26px; letter-spacing: -.02em; }
+  .cols { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; align-items: start; margin-top: 22px; }
+  .row { display: flex; gap: 12px; }
+  .row .field { flex: 1; }
+  .preview .face { width: 72px; height: 72px; border-radius: 20px; display: grid; place-items: center; font-size: 36px;
+    background: color-mix(in srgb, var(--c, var(--accent)) 22%, transparent);
+    border: 1px solid color-mix(in srgb, var(--c, var(--accent)) 45%, transparent); margin-bottom: 14px; }
+  .preview .bubble { background: var(--bg); border: 1px solid var(--line); border-radius: 4px 14px 14px 14px;
+    padding: 13px 15px; font-size: 14px; margin-top: 12px; white-space: pre-wrap; }
+  .preview .act { color: #a9aecb; font-style: italic; }
+  .mine { display: grid; gap: 8px; margin-top: 14px; }
+  .mine .item { display: flex; gap: 10px; align-items: center; padding: 10px; border: 1px solid var(--line); border-radius: 10px; }
+  .emoji-picks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .emoji-picks button { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; font-size: 17px; }
+  @media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="header"></div>
+<main class="wrap">
+  <h1>캐릭터 만들기</h1>
+  <p class="muted small">설정을 자세히 적을수록 캐릭터가 사람처럼 말합니다. 공개하면 다른 이용자도 대화할 수 있어요.</p>
+  <div id="msg"></div>
+
+  <div class="cols">
+    <form class="card" id="form">
+      <div class="row">
+        <div class="field" style="flex:0 0 110px">
+          <label>아바타</label>
+          <input type="text" name="avatar" value="🙂" maxlength="4" style="text-align:center;font-size:20px">
+          <div class="emoji-picks"></div>
+        </div>
+        <div class="field">
+          <label>이름 *</label>
+          <input type="text" name="name" maxlength="24" placeholder="예: 유리" required>
+        </div>
+        <div class="field" style="flex:0 0 90px">
+          <label>색</label>
+          <input type="color" name="accent" value="#7c5cff" style="width:100%;height:44px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:4px">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>한 줄 소개 *</label>
+        <input type="text" name="tagline" maxlength="60" placeholder="예: 10년째 옆집 사는 소꿉친구. 말은 툭툭 뱉는데 챙길 건 다 챙긴다.">
+      </div>
+
+      <div class="field">
+        <label>첫 인사말 *</label>
+        <textarea name="greeting" maxlength="1200" placeholder="*현관문이 열린다*&#10;&#10;&quot;야, 또 아침 안 먹었지.&quot;" required></textarea>
+        <p class="hint">대화를 열 때 캐릭터가 먼저 건네는 말입니다. 행동 묘사는 *별표* 로 감싸주세요.</p>
+      </div>
+
+      <div class="field">
+        <label>설정 *</label>
+        <textarea name="persona" maxlength="4000" rows="7" placeholder="나이, 직업, 성격, 관계, 좋아하는 것과 싫어하는 것, 말버릇, 숨기고 있는 사정 등" required></textarea>
+        <p class="hint">20자 이상. 성격과 관계를 구체적으로 적을수록 좋습니다.</p>
+      </div>
+
+      <div class="field">
+        <label>말투 (선택)</label>
+        <input type="text" name="speech_style" maxlength="600" placeholder="예: 반말, 짧고 툭툭 끊어지는 문장, 부끄러우면 말이 빨라짐">
+      </div>
+
+      <div class="field">
+        <label>지금 상황 (선택)</label>
+        <input type="text" name="scenario" maxlength="1200" placeholder="예: 평일 아침, 주인공의 집. 노크도 없이 들어왔다.">
+      </div>
+
+      <div class="field">
+        <label>예시 대화 (선택)</label>
+        <textarea name="example_dialog" maxlength="2000" placeholder="사용자: 고맙다&#10;유리: *고개를 홱 돌린다* &quot;고맙긴 뭐가 고마워.&quot;"></textarea>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>태그</label>
+          <input type="text" name="tags" maxlength="80" placeholder="쉼표로 구분 · 예: 소꿉친구,일상,츤데레">
+        </div>
+        <div class="field" style="flex:0 0 150px">
+          <label>공개 여부</label>
+          <select name="is_public">
+            <option value="1">공개</option>
+            <option value="0">나만 보기</option>
+          </select>
+        </div>
+      </div>
+
+      <button class="btn primary" type="submit" style="width:100%">캐릭터 만들고 대화 시작</button>
+    </form>
+
+    <div class="grid">
+      <div class="card preview" id="preview"></div>
+      <div class="card">
+        <h2 style="font-size:16px">내가 만든 캐릭터</h2>
+        <div class="mine" id="mine"></div>
+      </div>
+      <div class="card">
+        <h2 style="font-size:16px">지켜야 할 것</h2>
+        <ul class="muted small" style="margin:10px 0 0 16px;line-height:1.9">
+          <li>미성년자에 대한 선정적 설정 금지</li>
+          <li>실존 인물을 그대로 흉내내는 캐릭터 금지</li>
+          <li>범죄·자해를 조장하는 설정 금지</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import { api, state, loadMe, header, esc, renderRoleplay } from '/assets/common.js';
+const $ = (id) => document.getElementById(id);
+
+await loadMe();
+if (!state.user) location.href = '/';
+$('header').innerHTML = header('/create');
+
+const form = $('form');
+const EMOJIS = ['🙂','🎒','🔍','🌙','⚔️','🐱','📖','💼','🛰️','🦊','👑','🎻','🧊','🔥','🌸','🩺'];
+form.querySelector('.emoji-picks').innerHTML = EMOJIS.map((e) => `<button type="button" data-emoji="${e}">${e}</button>`).join('');
+
+function renderPreview() {
+  const data = Object.fromEntries(new FormData(form));
+  $('preview').style.setProperty('--c', data.accent);
+  $('preview').innerHTML = `
+    <div class="face">${esc(data.avatar || '🙂')}</div>
+    <strong style="font-size:17px">${esc(data.name || '이름 없는 캐릭터')}</strong>
+    <p class="muted small">${esc(data.tagline || '한 줄 소개가 여기 보입니다.')}</p>
+    <div class="bubble">${data.greeting ? renderRoleplay(data.greeting) : '<span class="muted">첫 인사말이 여기 보입니다.</span>'}</div>`;
+}
+
+async function renderMine() {
+  const { characters } = await api('/api/characters?sort=new');
+  const mine = characters.filter((c) => c.mine);
+  $('mine').innerHTML = mine.length
+    ? mine
+        .map(
+          (c) => `<div class="item" style="--c:${esc(c.accent)}">
+            <span style="font-size:20px">${esc(c.avatar)}</span>
+            <div style="flex:1;min-width:0">
+              <strong style="font-size:14px">${esc(c.name)}</strong>
+              <div class="muted small">💬 ${c.chatCount} · ${c.isPublic ? '공개' : '비공개'}</div>
+            </div>
+            <a class="btn sm" href="/c/${esc(c.slug)}">대화</a>
+            <button class="btn sm danger" data-del="${esc(c.slug)}">삭제</button>
+          </div>`
+        )
+        .join('')
+    : '<p class="muted small">아직 만든 캐릭터가 없습니다.</p>';
+}
+
+form.addEventListener('input', renderPreview);
+form.querySelector('.emoji-picks').addEventListener('click', (e) => {
+  const pick = e.target.closest('[data-emoji]');
+  if (!pick) return;
+  form.avatar.value = pick.dataset.emoji;
+  renderPreview();
+});
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = Object.fromEntries(new FormData(form));
+  body.is_public = body.is_public === '1';
+  const btn = form.querySelector('[type=submit]');
+  btn.disabled = true;
+  try {
+    const { character } = await api('/api/characters', { method: 'POST', body });
+    location.href = `/c/${character.slug}`;
+  } catch (err) {
+    $('msg').innerHTML = `<div class="err">${esc(err.message)}${
+      err.status === 402 ? ' <a href="/account" style="color:#fff;text-decoration:underline">플랜 올리기</a>' : ''
+    }</div>`;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+$('mine').addEventListener('click', async (e) => {
+  const del = e.target.closest('[data-del]');
+  if (!del) return;
+  if (!confirm('이 캐릭터를 삭제할까요? 관련 대화도 함께 사라집니다.')) return;
+  await api(`/api/characters/${del.dataset.del}`, { method: 'DELETE' });
+  renderMine();
+});
+
+renderPreview();
+await renderMine();
+</script>
+</body>
+</html>

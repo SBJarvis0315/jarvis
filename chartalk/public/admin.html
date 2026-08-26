@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>매출 대시보드 · 캐릭터톡</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  main { padding: 34px 0 70px; }
+  h1 { font-size: 26px; letter-spacing: -.02em; margin-bottom: 4px; }
+  .goal { margin: 22px 0; }
+  .goal .nums { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .goal .big { font-size: 38px; font-weight: 800; letter-spacing: -.03em; }
+  .goal .gauge { height: 12px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 18px 0; }
+  .kpi { background: var(--bg-card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+  .kpi b { display: block; font-size: 22px; font-weight: 800; letter-spacing: -.02em; margin-top: 4px; }
+  .kpi span { font-size: 12.5px; color: var(--muted); }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; }
+  td.num, th.num { text-align: right; }
+  .chart { display: flex; align-items: flex-end; gap: 3px; height: 130px; margin-top: 14px; }
+  .chart .bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 1px; }
+  .chart .bar i { display: block; border-radius: 2px 2px 0 0; }
+  .chart .rev { background: var(--accent); }
+  .chart .cost { background: var(--bad); opacity: .65; }
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; }
+  @media (max-width: 860px) { .cols { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="header"></div>
+<main class="wrap">
+  <h1>매출 대시보드</h1>
+  <p class="muted small" id="month"></p>
+  <div id="msg"></div>
+  <div id="body"></div>
+</main>
+
+<script type="module">
+import { api, state, loadMe, header, esc, won } from '/assets/common.js';
+const $ = (id) => document.getElementById(id);
+
+await loadMe();
+if (!state.user) location.href = '/';
+$('header').innerHTML = header('/admin');
+
+let d;
+try {
+  d = await api('/api/admin/stats');
+} catch (err) {
+  $('body').innerHTML = `<div class="card"><p>${esc(err.message)}</p></div>`;
+  throw err;
+}
+
+$('month').textContent = `${d.month} · 한국 시간 기준`;
+
+const maxDaily = Math.max(1, ...d.daily.map((x) => Math.max(x.revenueKrw, x.costKrw)));
+
+$('body').innerHTML = `
+  <div class="card goal">
+    <span class="muted small">이번 달 매출 / 목표 ${won(d.goalKrw)}</span>
+    <div class="nums">
+      <span class="big">${won(d.revenueKrw)}</span>
+      <span class="tag">${d.progressPercent}% 달성</span>
+      ${d.shortfallKrw ? `<span class="muted small">목표까지 ${won(d.shortfallKrw)}</span>` : '<span class="small" style="color:var(--good)">목표 달성 🎉</span>'}
+    </div>
+    <div class="gauge ${d.progressPercent >= 100 ? '' : ''}"><i style="width:${Math.min(100, d.progressPercent)}%"></i></div>
+    <p class="muted small" style="margin-top:12px">
+      현재 MRR ${won(d.mrrKrw)} · 목표까지 라이트 플랜 <b style="color:var(--text)">${d.litePlansNeeded}명</b> 더 필요
+    </p>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><span>MRR (월 반복 매출)</span><b>${won(d.mrrKrw)}</b></div>
+    <div class="kpi"><span>API 원가</span><b>${won(d.costKrw)}</b></div>
+    <div class="kpi"><span>마진</span><b>${won(d.marginKrw)} <small class="muted" style="font-size:13px">${d.marginPercent}%</small></b></div>
+    <div class="kpi"><span>유료 구독자</span><b>${d.paidUsers}명</b></div>
+    <div class="kpi"><span>전체 회원</span><b>${d.users}명 <small class="muted" style="font-size:13px">+${d.newUsers}</small></b></div>
+    <div class="kpi"><span>이번 달 대화한 사람</span><b>${d.activeUsers}명</b></div>
+    <div class="kpi"><span>유료 전환율</span><b>${d.conversionPercent}%</b></div>
+    <div class="kpi"><span>주고받은 메시지</span><b>${d.requests.toLocaleString('ko-KR')}</b></div>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <h2 style="font-size:16px">최근 30일 매출 · 원가</h2>
+      <div class="chart">
+        ${d.daily
+          .map(
+            (x) => `<div class="bar" title="${x.day} 매출 ${won(x.revenueKrw)} / 원가 ${won(x.costKrw)}">
+              <i class="rev" style="height:${(x.revenueKrw / maxDaily) * 100}%"></i>
+              <i class="cost" style="height:${(x.costKrw / maxDaily) * 100}%"></i>
+            </div>`
+          )
+          .join('')}
+      </div>
+      <div class="legend"><span><i class="rev" style="background:var(--accent)"></i>매출</span><span><i class="cost" style="background:var(--bad)"></i>원가</span></div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:16px">플랜별 구독자</h2>
+      <table style="margin-top:10px"><tbody>
+        ${Object.entries(d.subsByPlan).length
+          ? Object.entries(d.subsByPlan).map(([plan, n]) => `<tr><td>${esc(plan)}</td><td class="num">${n}명</td></tr>`).join('')
+          : '<tr><td class="muted">아직 유료 구독자가 없습니다.</td></tr>'}
+      </tbody></table>
+
+      <h2 style="font-size:16px;margin-top:22px">원가를 많이 쓰는 사용자</h2>
+      <table style="margin-top:10px">
+        <thead><tr><th>계정</th><th>플랜</th><th class="num">메시지</th><th class="num">원가</th></tr></thead>
+        <tbody>${
+          d.topSpenders.length
+            ? d.topSpenders
+                .map((u) => `<tr><td>${esc(u.email)}</td><td>${esc(u.plan)}</td><td class="num">${u.requests}</td><td class="num">${won(u.cost_krw)}</td></tr>`)
+                .join('')
+            : '<tr><td colspan="4" class="muted">데이터가 없습니다.</td></tr>'
+        }</tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <h2 style="font-size:16px">최근 결제</h2>
+      <button class="btn sm" id="renew" style="margin-left:auto">정기결제 지금 실행</button>
+    </div>
+    <table style="margin-top:12px">
+      <thead><tr><th>일시</th><th>계정</th><th>내역</th><th class="num">금액</th><th>상태</th></tr></thead>
+      <tbody>${
+        d.recentPayments.length
+          ? d.recentPayments
+              .map(
+                (p) => `<tr>
+                  <td>${new Date(p.paid_at || Date.now()).toLocaleDateString('ko-KR')}</td>
+                  <td>${esc(p.email)}</td><td>${esc(p.plan)}</td>
+                  <td class="num">${won(p.amount_krw)}</td>
+                  <td>${p.status === 'paid' ? '완료' : `<span style="color:var(--bad)">${esc(p.fail_reason || p.status)}</span>`}</td>
+                </tr>`
+              )
+              .join('')
+          : '<tr><td colspan="5" class="muted">아직 결제가 없습니다.</td></tr>'
+      }</tbody>
+    </table>
+  </div>`;
+
+$('renew').addEventListener('click', async (e) => {
+  e.target.disabled = true;
+  try {
+    const { results } = await api('/api/admin/renew', { method: 'POST', body: {} });
+    const ok = results.filter((r) => r.ok).length;
+    $('msg').innerHTML = `<div class="ok">정기결제 실행 완료 · 성공 ${ok}건 / 실패 ${results.length - ok}건</div>`;
+  } catch (err) {
+    $('msg').innerHTML = `<div class="err">${esc(err.message)}</div>`;
+  } finally {
+    e.target.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "chartalk",
+  "version": "1.0.0",
+  "private": true,
+  "description": "카피핏 - 소상공인을 위한 한국어 마케팅 카피 AI 챗봇 (구독 결제 포함)",
+  "type": "module",
+  "engines": { "node": ">=22.5" },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/server.js",
+    "dev": "node --disable-warning=ExperimentalWarning --watch src/server.js",
+    "renew": "node --disable-warning=ExperimentalWarning src/jobs/renew.js",
+    "test": "node --disable-warning=ExperimentalWarning --test \"test/**/*.test.js\""
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0"
+  }
+}

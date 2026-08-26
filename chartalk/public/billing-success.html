@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>결제 처리 중 · 캐릭터톡</title>
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<main class="wrap" style="max-width:460px;padding-top:16vh;text-align:center">
+  <div class="card">
+    <h2 id="title">결제를 확인하는 중입니다…</h2>
+    <p class="muted small" style="margin-top:10px" id="desc">잠시만 기다려주세요. 창을 닫지 마세요.</p>
+    <a class="btn" href="/account" style="margin-top:18px" id="back" hidden>내 계정으로</a>
+  </div>
+</main>
+<script type="module">
+import { api } from '/assets/common.js';
+const params = new URLSearchParams(location.search);
+const authKey = params.get('authKey');
+const customerKey = params.get('customerKey');
+const planId = sessionStorage.getItem('pendingPlan') || null;
+
+try {
+  await api('/api/billing/register', { method: 'POST', body: { authKey, customerKey, planId } });
+  sessionStorage.removeItem('pendingPlan');
+  location.replace('/account?done=1');
+} catch (err) {
+  document.getElementById('title').textContent = '결제를 마치지 못했습니다';
+  document.getElementById('desc').textContent = err.message;
+  document.getElementById('back').hidden = false;
+}
+</script>
+</body>
+</html>
