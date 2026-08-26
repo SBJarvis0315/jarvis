@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>인용연구소</title>
+<meta name="description" content="AI가 답할 때 당신 브랜드가 근거로 인용되도록 만듭니다. 진단에서 끝내지 않고 스키마와 구조를 사이트에 직접 반영하는 AEO·GEO 실행 대행.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap">
+<style>
+:root{
+  --paper:#F1F3F6; --surface:#FFFFFF; --surface-2:#E9ECF1;
+  --ink:#14161C; --ink-2:#4C5464; --ink-3:#828B9C;
+  --rule:#D6DAE3; --rule-soft:#E4E7ED;
+  --cite:#2B37C9; --cite-soft:#E4E6FA; --cite-line:#B9BEF0; --on-cite:#FFFFFF;
+  --signal:#9A5B12; --signal-soft:#F5E9D8;
+  --measure:63ch;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0C0F14; --surface:#141821; --surface-2:#1B2029;
+    --ink:#E9EBF1; --ink-2:#A5ADBD; --ink-3:#6B7484;
+    --rule:#252B36; --rule-soft:#1D222B;
+    --cite:#909CFF; --cite-soft:#1A2044; --cite-line:#333C6B; --on-cite:#0C0F14;
+    --signal:#D9A25C; --signal-soft:#2A2114;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0C0F14; --surface:#141821; --surface-2:#1B2029;
+  --ink:#E9EBF1; --ink-2:#A5ADBD; --ink-3:#6B7484;
+  --rule:#252B36; --rule-soft:#1D222B;
+  --cite:#909CFF; --cite-soft:#1A2044; --cite-line:#333C6B; --on-cite:#0C0F14;
+  --signal:#D9A25C; --signal-soft:#2A2114;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:'IBM Plex Sans KR','Apple SD Gothic Neo',system-ui,sans-serif;
+  font-weight:350; font-size:16px; line-height:1.78;
+  letter-spacing:-.005em; word-break:keep-all;
+}
+a{color:var(--cite);text-decoration:none;border-bottom:1px solid var(--cite-line)}
+a:hover{border-bottom-color:var(--cite)}
+:focus-visible{outline:2px solid var(--cite);outline-offset:3px;border-radius:2px}
+
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* ---- spread: main measure + margin notes ---- */
+.spread{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start}
+@media (min-width:1000px){
+  .spread{grid-template-columns:minmax(0,var(--measure)) 244px;gap:56px}
+}
+.note{
+  font-size:13px;line-height:1.7;color:var(--ink-2);
+  border-top:1px solid var(--rule);padding-top:12px
+}
+.note b{font-weight:600;color:var(--ink);display:block;margin-bottom:2px}
+.note code{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;color:var(--cite)}
+
+/* ---- citation marker: the page's structural device ---- */
+.c{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:.62em;font-weight:500;color:var(--cite);
+  vertical-align:.5em;letter-spacing:0;margin-left:1px;white-space:nowrap
+}
+
+h1,h2,h3{font-family:'Gowun Batang',Georgia,serif;font-weight:700;text-wrap:balance;letter-spacing:-.02em}
+.eyebrow{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--ink-3);display:block;margin-bottom:14px
+}
+
+/* ---- masthead ---- */
+.mast{border-bottom:1px solid var(--rule);background:var(--surface)}
+.mast .wrap{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-top:18px;padding-bottom:18px}
+.brand{font-family:'Gowun Batang',Georgia,serif;font-size:19px;font-weight:700;letter-spacing:-.01em}
+.brand span{color:var(--cite)}
+.mast small{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.12em;color:var(--ink-3)}
+
+/* ---- hero ---- */
+.hero{padding:72px 0 68px;border-bottom:1px solid var(--rule)}
+h1{font-size:clamp(30px,5.2vw,46px);line-height:1.32;margin-bottom:22px}
+h1 em{font-style:normal;color:var(--cite);border-bottom:3px solid var(--cite-line);padding-bottom:1px}
+.lede{font-size:17px;color:var(--ink-2);max-width:56ch;margin-bottom:30px}
+.actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.btn{
+  display:inline-block;padding:12px 22px;border-radius:2px;
+  background:var(--cite);color:var(--on-cite);border:1px solid var(--cite);
+  font-size:14px;font-weight:500;letter-spacing:-.01em;transition:opacity .15s
+}
+.btn:hover{opacity:.86;border-bottom-color:var(--cite)}
+.btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.btn-ghost:hover{border-color:var(--ink-3);opacity:1}
+
+/* ---- answer mock (hero thesis) ---- */
+.answer{
+  background:var(--surface);border:1px solid var(--rule);border-radius:3px;
+  padding:22px 22px 18px;font-size:14.5px;line-height:1.85;box-shadow:0 1px 0 var(--rule-soft)
+}
+.answer .q{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;
+  color:var(--ink-3);padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--rule-soft)
+}
+.answer p{color:var(--ink-2);margin-bottom:14px}
+.answer p strong{color:var(--ink);font-weight:500}
+.srcs{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.srcs .lbl{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:var(--ink-3);margin-right:4px}
+.chip{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;
+  padding:3px 9px;border-radius:2px;background:var(--surface-2);color:var(--ink-3);
+  border:1px solid transparent
+}
+.chip.on{background:var(--cite-soft);color:var(--cite);border-color:var(--cite-line);font-weight:500}
+.answer figcaption{
+  margin-top:14px;font-size:11.5px;color:var(--ink-3);
+  font-family:'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.02em
+}
+
+.fade{opacity:0;animation:rise .7s cubic-bezier(.2,.7,.3,1) forwards}
+.d1{animation-delay:.15s}.d2{animation-delay:.5s}.d3{animation-delay:.85s}.d4{animation-delay:1.25s}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.fade{animation:none;opacity:1}}
+
+/* ---- sections ---- */
+section{padding:60px 0;border-bottom:1px solid var(--rule)}
+h2{font-size:clamp(22px,3.2vw,29px);line-height:1.42;margin-bottom:18px}
+h3{font-size:17px;line-height:1.55;margin-bottom:6px}
+p+p{margin-top:15px}
+.body p{color:var(--ink-2)}
+.body p.strong{color:var(--ink)}
+
+/* ---- comparison table ---- */
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:3px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+th,td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+thead th{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3);font-weight:500;background:var(--surface-2)
+}
+tbody tr:last-child td{border-bottom:0}
+td.mine{color:var(--ink);font-weight:500;background:var(--cite-soft)}
+td.them{color:var(--ink-3)}
+
+/* ---- service list ---- */
+.svc{list-style:none;display:grid;gap:0;margin-top:8px}
+.svc li{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:16px;
+  padding:20px 0;border-top:1px solid var(--rule);align-items:baseline}
+.svc li:last-child{border-bottom:1px solid var(--rule)}
+.svc .idx{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;color:var(--cite)}
+.svc p{font-size:14px;color:var(--ink-2);margin-top:4px}
+.svc .price{
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;color:var(--ink);
+  font-variant-numeric:tabular-nums;white-space:nowrap
+}
+@media (max-width:620px){
+  .svc li{grid-template-columns:30px minmax(0,1fr);gap:10px}
+  .svc .price{grid-column:2;margin-top:8px;color:var(--ink-2)}
+}
+
+/* ---- process ---- */
+ol.steps{list-style:none;counter-reset:s;display:grid;gap:2px;margin-top:6px}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:32px minmax(0,1fr);gap:14px;padding:12px 0}
+ol.steps li::before{
+  content:counter(s,decimal-leading-zero);
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11.5px;color:var(--ink-3);padding-top:5px
+}
+ol.steps b{font-weight:500}
+ol.steps span{display:block;font-size:14px;color:var(--ink-2)}
+
+/* ---- faq ---- */
+.faq{border-top:1px solid var(--rule)}
+.faq details{border-bottom:1px solid var(--rule)}
+.faq summary{
+  cursor:pointer;list-style:none;padding:18px 0;font-size:15.5px;font-weight:500;
+  display:flex;justify-content:space-between;gap:16px;align-items:baseline
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:'+';font-family:'IBM Plex Mono',ui-monospace,monospace;color:var(--cite);font-size:15px}
+.faq details[open] summary::after{content:'\2212'}
+.faq p{padding:0 0 20px;font-size:14.5px;color:var(--ink-2);max-width:60ch}
+
+/* ---- cta ---- */
+.cta{background:var(--surface);border:1px solid var(--rule);border-radius:3px;padding:34px 30px}
+.cta h2{margin-bottom:12px}
+.contact{
+  margin-top:22px;display:flex;flex-wrap:wrap;gap:10px;
+  font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12.5px
+}
+.slot{
+  padding:9px 14px;border:1px dashed var(--cite-line);border-radius:2px;
+  background:var(--cite-soft);color:var(--cite)
+}
+.hint{font-size:12px;color:var(--ink-3);margin-top:12px;font-family:'IBM Plex Mono',ui-monospace,monospace}
+
+footer{padding:34px 0 60px;font-size:12.5px;color:var(--ink-3)}
+footer p+p{margin-top:8px}
+footer .rule{font-family:'IBM Plex Mono',ui-monospace,monospace;letter-spacing:.1em;font-size:11px}
+</style>
+</head>
+<body>
+
+<header class="mast">
+  <div class="wrap">
+    <div class="brand">인용<span>연구소</span></div>
+    <small>AEO · GEO</small>
+  </div>
+</header>
+
+<main>
+
+<section class="hero">
+  <div class="wrap spread">
+    <div class="body">
+      <span class="eyebrow fade">Answer Engine Optimization</span>
+      <h1 class="fade d1">검색은 목록에서 답변으로 옮겨갔습니다.<br>그 답변에 <em>인용되는 쪽</em>으로 만듭니다.</h1>
+      <p class="lede fade d2">진단 리포트에서 끝내지 않습니다. AI가 읽는 형태로 스키마와 문서 구조를 사이트에 직접 반영합니다. 콘텐츠 발행 자동화를 만들고 운영해 온 엔지니어가 작업합니다.<span class="c">[1]</span></p>
+      <div class="actions fade d3">
+        <a class="btn" href="#contact">무료 인용 진단 받기</a>
+        <a class="btn btn-ghost" href="#what">무엇이 다른지 보기</a>
+      </div>
+    </div>
+    <aside class="note fade d2">
+      <b>[1] 익명으로 운영합니다</b>
+      실명과 소속을 공개하지 않습니다. 대신 작업 결과를 <code>재현 가능한 질의문</code>과 함께 드립니다. 스크린샷이 아니라 직접 돌려서 확인하시면 됩니다.
+    </aside>
+  </div>
+
+  <div class="wrap" style="margin-top:44px">
+    <figure class="answer fade d4" style="max-width:var(--measure)">
+      <div class="q">Q. 소규모 이커머스에 맞는 재고관리 방식 추천해줘</div>
+      <p>재고 회전율이 낮은 초기 단계에서는 <strong>주문 시점 기준의 단순 차감 방식</strong>으로 시작하는 편이 관리 비용이 적습니다. 품목이 200개를 넘어가면 안전재고 기준을 도입하는 것이 일반적입니다.</p>
+      <div class="srcs">
+        <span class="lbl">출처</span>
+        <span class="chip">브랜드 A</span>
+        <span class="chip on">당신의 브랜드</span>
+        <span class="chip">브랜드 C</span>
+      </div>
+      <figcaption>* 예시 화면입니다. 목표는 이 자리에 이름이 들어가는 것입니다.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="what">
+  <div class="wrap spread">
+    <div class="body">
+      <span class="eyebrow">무엇이 다른가</span>
+      <h2>대부분의 GEO 대행은 두 갈래고, 그 사이가 비어 있습니다.</h2>
+      <p>전략 문서를 파는 쪽은 적용을 고객사에 넘깁니다. 원고를 대량으로 파는 쪽은 구조화 데이터를 손대지 않습니다. 정작 AI가 읽는 형태로 사이트에 박히는 단계는 아무도 하지 않습니다.<span class="c">[2]</span></p>
+      <p class="strong">그 빈 칸이 제가 매일 하던 일입니다.</p>
+      <div class="tablewrap" style="margin-top:26px">
+        <table>
+          <thead>
+            <tr><th>항목</th><th>일반적인 대행</th><th>인용연구소</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>진단</td><td class="them">리포트 납품까지</td><td class="mine">리포트 + 사이트 반영까지</td></tr>
+            <tr><td>FAQ</td><td class="them">“넣으세요” 권고</td><td class="mine">문답 추출 후 FAQPage 스키마 자동 삽입</td></tr>
+            <tr><td>발행</td><td class="them">원고 파일 전달</td><td class="mine">플래너 → 워드프레스 자동 발행 라인 구축</td></tr>
+            <tr><td>일관성</td><td class="them">담당자가 매번 수동 세팅</td><td class="mine">메타·스키마·퍼머링크가 발행마다 재현</td></tr>
+            <tr><td>기록</td><td class="them">월말 요약 리포트</td><td class="mine">발행 로그가 DB에 자동 적재</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <aside class="note">
+      <b>[2] 구조가 먼저입니다</b>
+      글이 부족해서 인용이 안 되는 경우는 드뭅니다. 답이 글 맨 아래 묻혀 있거나, <code>ld+json</code>이 통째로 비어 있거나, FAQ가 사람 눈에만 FAQ인 경우가 대부분입니다.
+    </aside>
+  </div>
+</section>
+
+<section>
+  <div class="wrap spread">
+    <div class="body">
+      <span class="eyebrow">작업 범위</span>
+      <h2>진단으로 시작해서, 필요한 만큼만 갑니다.</h2>
+      <ul class="svc">
+        <li>
+          <span class="idx">00</span>
+          <div><h3>AI 인용 진단</h3><p>핵심 질의 5개 × ChatGPT · Perplexity · Gemini · Claude. 인용 여부, 경쟁사 인용 현황, 누락 원인 세 가지. 질의문 전문을 함께 드립니다.</p></div>
+          <span class="price">무료</span>
+        </li>
+        <li>
+          <span class="idx">01</span>
+          <div><h3>구조 정비</h3><p>스키마 재설계, 상위 20개 글 구조 개편, 메타·인덱싱 정리. 작업 전후 인용 테스트 포함.</p></div>
+          <span class="price">180만원</span>
+        </li>
+        <li>
+          <span class="idx">02</span>
+          <div><h3>인용 운영</h3><p>질의 의도 기반 원고 발행과 스키마 자동 삽입, 월간 인용 추적 리포트.</p></div>
+          <span class="price">월 69만원~</span>
+        </li>
+        <li>
+          <span class="idx">03</span>
+          <div><h3>발행 파이프라인 구축</h3><p>기획 도구에서 워드프레스까지 이어지는 자동 발행 라인을 만들고 인계합니다. 대행을 끊어도 남는 자산입니다.<span class="c">[3]</span></p></div>
+          <span class="price">350만원</span>
+        </li>
+      </ul>
+    </div>
+    <aside class="note">
+      <b>[3] 끊을 수 있게 만듭니다</b>
+      락인으로 붙잡지 않습니다. 인계 문서와 코드를 넘기고, 담당자가 직접 굴릴 수 있는 상태로 마칩니다. 그래야 다음 회사를 소개받습니다.
+    </aside>
+  </div>
+</section>
+
+<section>
+  <div class="wrap spread">
+    <div class="body">
+      <span class="eyebrow">진행 순서</span>
+      <h2>첫 연락에서 결과 확인까지</h2>
+      <ol class="steps">
+        <li><b>사이트 주소만 주세요</b><span>회사 소개도, 통화도 필요 없습니다. 도메인 하나면 시작됩니다.</span></li>
+        <li><b>질의 5개 합의</b><span>고객이 AI에게 실제로 물어볼 문장으로 정합니다. 검색 키워드가 아닙니다.</span></li>
+        <li><b>진단 (2~3일)</b><span>4개 엔진에서 질의당 2회씩 관측하고 원인을 찾습니다.</span></li>
+        <li><b>리포트 전달</b><span>직접 고칠 수 있는 항목까지 다 적어 드립니다. 여기서 끝내셔도 됩니다.</span></li>
+        <li><b>범위 합의 후 작업</b><span>맡기기로 하신 경우에만 진행합니다.</span></li>
+        <li><b>전후 비교</b><span>같은 질의문으로 다시 돌려 결과를 나란히 놓습니다.</span></li>
+      </ol>
+    </div>
+    <aside class="note">
+      <b>보장하지 않는 것</b>
+      “AI 검색 1위 보장” 같은 말은 하지 않습니다. AI 답변에는 순위 개념이 없고, 그걸 보장한다는 곳은 근거 없이 말하는 겁니다.
+    </aside>
+  </div>
+</section>
+
+<section>
+  <div class="wrap spread">
+    <div class="body">
+      <span class="eyebrow">자주 묻는 질문</span>
+      <h2>먼저 궁금해하시는 것들</h2>
+      <div class="faq">
+        <details open>
+          <summary>왜 이름을 밝히지 않나요?</summary>
+          <p>개인 신원 대신 결과물로 판단받는 편이 서로에게 낫다고 봅니다. 그래서 모든 진단에 재현 가능한 질의문을 함께 드립니다. 제 말을 믿을 필요 없이 직접 확인하시면 됩니다. 계약 단계에서는 계약서와 세금계산서에 필요한 정보를 정식으로 제공합니다.</p>
+        </details>
+        <details>
+          <summary>AEO와 GEO, SEO와 뭐가 다른가요?</summary>
+          <p>SEO는 검색 결과 목록에서 위로 올라가는 일이고, AEO와 GEO는 AI가 만든 답변 안에 근거로 인용되는 일입니다. 순위표가 아예 없기 때문에 평가 방식도, 글을 쓰는 방식도 달라집니다. 결론을 첫 문단에 두고, 하나의 글이 하나의 질문에 답하고, 그 구조를 기계가 읽을 수 있게 표시하는 것이 핵심입니다.</p>
+        </details>
+        <details>
+          <summary>블로그 글이 이미 수백 개인데 다시 써야 하나요?</summary>
+          <p>대부분 다시 쓸 필요 없습니다. 기존 글의 첫 문단을 결론부터 시작하도록 고치고, FAQ 섹션을 붙이고, 스키마를 표시하는 것만으로 상당 부분 해결됩니다. 콘텐츠 자산이 이미 있는 쪽이 처음부터 만드는 곳보다 훨씬 빨리 결과가 나옵니다.</p>
+        </details>
+        <details>
+          <summary>성과는 어떻게 확인하나요?</summary>
+          <p>작업 전에 관측한 질의를 작업 후에 같은 문장으로 다시 돌려서 나란히 비교합니다. AI 답변은 실행할 때마다 달라지므로 질의당 여러 번 관측한 결과를 씁니다. 스크린샷 한 장은 증거가 되지 않습니다.</p>
+        </details>
+        <details>
+          <summary>워드프레스가 아니어도 되나요?</summary>
+          <p>진단과 구조 정비는 플랫폼과 무관하게 가능합니다. 자동 발행 파이프라인 구축은 워드프레스 기준으로 가장 빠르게 진행되며, 다른 환경은 상담 시 가능 범위를 먼저 알려드립니다.</p>
+        </details>
+      </div>
+    </div>
+    <aside class="note">
+      <b>이 페이지도 시연물입니다</b>
+      위 문답은 <code>FAQPage</code> 스키마로 표시되어 있습니다. 페이지 소스에서 <code>ld+json</code>을 확인해 보세요. 고객사 사이트에 하는 작업이 이겁니다.
+    </aside>
+  </div>
+</section>
+
+<section id="contact" style="border-bottom:0">
+  <div class="wrap">
+    <div class="cta" style="max-width:var(--measure)">
+      <span class="eyebrow">시작하기</span>
+      <h2>사이트 주소 하나면 됩니다.</h2>
+      <p style="color:var(--ink-2);font-size:15px">진단은 무료입니다. 결과를 보고 직접 고치기로 하셔도 괜찮습니다. 영업 전화는 하지 않고, 회신이 없으면 한 번만 확인 메일을 보낸 뒤 더 연락드리지 않습니다.</p>
+      <div class="contact">
+        <span class="slot">메일 &nbsp;{{문의메일}}</span>
+        <span class="slot">오픈채팅 &nbsp;{{오픈카톡}}</span>
+      </div>
+      <p class="hint">↑ 배포 전에 이 두 칸을 실제 연락처로 교체하세요.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="rule">인용연구소 · CITATION LAB</p>
+    <p>익명으로 운영되는 1인 작업실입니다. 상담과 진단은 채팅과 메일로만 진행합니다.</p>
+  </div>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "ProfessionalService",
+      "@id": "#org",
+      "name": "인용연구소",
+      "alternateName": "Citation Lab",
+      "description": "AI 답변에 브랜드가 근거로 인용되도록 스키마와 문서 구조를 사이트에 직접 반영하는 AEO·GEO 실행 대행.",
+      "areaServed": "KR",
+      "knowsAbout": ["Answer Engine Optimization", "Generative Engine Optimization", "구조화 데이터", "FAQPage 스키마", "콘텐츠 발행 자동화"]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "왜 이름을 밝히지 않나요?",
+          "acceptedAnswer": {"@type": "Answer", "text": "개인 신원 대신 결과물로 판단받는 편이 낫다고 봅니다. 모든 진단에 재현 가능한 질의문을 함께 제공하므로 직접 확인하실 수 있습니다. 계약 단계에서는 계약서와 세금계산서에 필요한 정보를 정식으로 제공합니다."}
+        },
+        {
+          "@type": "Question",
+          "name": "AEO와 GEO는 SEO와 무엇이 다른가요?",
+          "acceptedAnswer": {"@type": "Answer", "text": "SEO는 검색 결과 목록의 순위를 올리는 일이고, AEO와 GEO는 AI가 생성한 답변 안에 근거로 인용되는 일입니다. 순위 개념이 없어 평가 방식과 글쓰기 방식이 모두 달라집니다. 결론을 첫 문단에 두고, 하나의 글이 하나의 질문에 답하며, 그 구조를 기계가 읽을 수 있게 표시하는 것이 핵심입니다."}
+        },
+        {
+          "@type": "Question",
+          "name": "블로그 글이 이미 수백 개인데 다시 써야 하나요?",
+          "acceptedAnswer": {"@type": "Answer", "text": "대부분 다시 쓸 필요가 없습니다. 첫 문단을 결론부터 시작하도록 고치고, FAQ 섹션을 추가하고, 구조화 데이터를 표시하는 것만으로 상당 부분 해결됩니다. 콘텐츠 자산이 있는 쪽이 처음부터 만드는 곳보다 결과가 빠릅니다."}
+        },
+        {
+          "@type": "Question",
+          "name": "성과는 어떻게 확인하나요?",
+          "acceptedAnswer": {"@type": "Answer", "text": "작업 전에 관측한 질의를 작업 후 동일한 문장으로 다시 관측해 비교합니다. AI 답변은 실행마다 달라지므로 질의당 복수 회 관측한 결과를 사용합니다."}
+        },
+        {
+          "@type": "Question",
+          "name": "워드프레스가 아니어도 되나요?",
+          "acceptedAnswer": {"@type": "Answer", "text": "진단과 구조 정비는 플랫폼과 무관하게 가능합니다. 자동 발행 파이프라인 구축은 워드프레스 기준으로 가장 빠르며, 다른 환경은 상담 시 가능 범위를 먼저 안내합니다."}
+        }
+      ]
+    }
+  ]
+}
+</script>
+</body>
+</html>
