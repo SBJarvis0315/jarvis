@@ -233,7 +233,34 @@ function runSyncCapture(command, args) {
   };
 }
 
+function windowsCodexSearchDirectories() {
+  // `where.exe` prints paths in the console codepage (CP949 on Korean Windows,
+  // for example). Decoding those bytes as UTF-8 corrupts a non-ASCII home
+  // directory, so the resolved path fails existsSync and Codex looks missing.
+  // Read the environment directly instead; Node decodes it correctly.
+  const directories = [];
+  const pathValue = process.env.PATH || process.env.Path || "";
+  for (const entry of pathValue.split(path.delimiter)) {
+    const trimmed = entry.trim().replace(/^"+|"+$/g, "");
+    if (trimmed) directories.push(trimmed);
+  }
+  const localAppData = process.env.LOCALAPPDATA;
+  if (localAppData) {
+    directories.push(path.join(localAppData, "Programs", "OpenAI", "Codex", "bin"));
+  }
+  return directories;
+}
+
 function resolveWindowsCodexInvocation() {
+  for (const directory of windowsCodexSearchDirectories()) {
+    for (const extension of [".exe", ".com"]) {
+      const candidate = path.join(directory, `codex${extension}`);
+      if (existsSync(candidate)) {
+        return { command: candidate, prefix: [], source: "windows-standalone" };
+      }
+    }
+  }
+
   const where = runSyncCapture("where.exe", ["codex"]);
   const candidates = where.code === 0
     ? where.stdout.split(/\r?\n/).map((item) => item.trim()).filter(Boolean)
