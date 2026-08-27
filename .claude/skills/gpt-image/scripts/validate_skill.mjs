@@ -1,0 +1,236 @@
+#!/usr/bin/env node
+
+import { access, readFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const SCRIPT_PATH = fileURLToPath(import.meta.url);
+const SKILL_ROOT = path.resolve(path.dirname(SCRIPT_PATH), "..");
+const REPOSITORY_ROOT = path.resolve(SKILL_ROOT, "..");
+const failures = [];
+
+async function exists(target) {
+  try {
+    await access(target);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function requireCondition(condition, message) {
+  if (!condition) failures.push(message);
+}
+
+const requiredFiles = [
+  path.join(REPOSITORY_ROOT, "README.md"),
+  path.join(REPOSITORY_ROOT, "AGENT_INSTALL.md"),
+  path.join(REPOSITORY_ROOT, ".github", "fixtures", "batch-manifest.json"),
+  path.join(REPOSITORY_ROOT, ".github", "fixtures", "delegated-concepts-manifest.json"),
+  path.join(REPOSITORY_ROOT, ".github", "workflows", "validate.yml"),
+  path.join(SKILL_ROOT, "SKILL.md"),
+  path.join(SKILL_ROOT, "agents", "openai.yaml"),
+  path.join(SKILL_ROOT, "references", "image-workflows.md"),
+  path.join(SKILL_ROOT, "references", "platform-setup.md"),
+  path.join(SKILL_ROOT, "references", "subscription-runtime.md"),
+  path.join(SKILL_ROOT, "scripts", "gpt_image.mjs"),
+];
+
+for (const target of requiredFiles) {
+  requireCondition(await exists(target), `Missing required file: ${path.relative(REPOSITORY_ROOT, target)}`);
+}
+
+const skillPath = path.join(SKILL_ROOT, "SKILL.md");
+const runnerPath = path.join(SKILL_ROOT, "scripts", "gpt_image.mjs");
+const readmePath = path.join(REPOSITORY_ROOT, "README.md");
+const batchManifestPath = path.join(REPOSITORY_ROOT, ".github", "fixtures", "batch-manifest.json");
+const delegatedManifestPath = path.join(
+  REPOSITORY_ROOT,
+  ".github",
+  "fixtures",
+  "delegated-concepts-manifest.json",
+);
+const agentMetadataPath = path.join(SKILL_ROOT, "agents", "openai.yaml");
+const skill = await readFile(skillPath, "utf8");
+const runner = await readFile(runnerPath, "utf8");
+const readme = await readFile(readmePath, "utf8");
+const agentMetadata = await readFile(agentMetadataPath, "utf8");
+let batchManifest = { jobs: [] };
+let delegatedManifest = { jobs: [] };
+try {
+  batchManifest = JSON.parse(await readFile(batchManifestPath, "utf8"));
+} catch (error) {
+  failures.push(`Batch manifest fixture must be valid JSON: ${error.message}`);
+}
+try {
+  delegatedManifest = JSON.parse(await readFile(delegatedManifestPath, "utf8"));
+} catch (error) {
+  failures.push(`Delegated-concepts fixture must be valid JSON: ${error.message}`);
+}
+
+const frontmatter = skill.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
+requireCondition(Boolean(frontmatter), "SKILL.md must start with YAML frontmatter.");
+const name = frontmatter?.[1].match(/^name:\s*(.+)$/m)?.[1]?.trim();
+const description = frontmatter?.[1].match(/^description:\s*(.+)$/m)?.[1]?.trim();
+requireCondition(name === path.basename(SKILL_ROOT), "Skill name must match its directory name.");
+requireCondition(Boolean(description && description.length >= 80), "Skill description must explain concrete triggers.");
+requireCondition(skill.split(/\r?\n/).length < 500, "SKILL.md must stay below 500 lines; move details to references.");
+
+for (const match of skill.matchAll(/(?<!!)\[[^\]]+\]\(([^)]+)\)/g)) {
+  const href = match[1];
+  if (/^(?:https?:|#)/.test(href)) continue;
+  const target = path.resolve(SKILL_ROOT, href);
+  requireCondition(await exists(target), `Broken SKILL.md link: ${href}`);
+}
+
+for (const match of readme.matchAll(/!?\[[^\]]*\]\(([^)]+)\)/g)) {
+  const href = match[1].replace(/^<|>$/g, "").split("#", 1)[0];
+  if (!href || /^(?:https?:|#)/.test(href) || path.isAbsolute(href)) continue;
+  const target = path.resolve(REPOSITORY_ROOT, href);
+  requireCondition(await exists(target), `Broken README link: ${href}`);
+}
+
+for (const token of [
+  "OPENAI_API_KEY",
+  "CODEX_ACCESS_TOKEN",
+  "https://chatgpt.com/codex/install.sh",
+  "https://chatgpt.com/codex/install.ps1",
+  "resolveWindowsCodexInvocation",
+  "platformRuntime",
+  "best_practice_pass",
+  "inspectInputImage",
+  "PROMPT FIDELITY CONTRACT",
+  "BEGIN USER PROMPT",
+  "Pass every numbered image",
+  "This Codex turn is ephemeral",
+  "gettingStartedGuide",
+  "common_aspect_ratios",
+  "friendly_status",
+  "--edit-target",
+  "--reference-role",
+  "--preserve",
+  "--exact-text",
+  "capabilities",
+  "require-transparency",
+  "inspect",
+  "plan",
+  "batch --manifest",
+  "mapWithConcurrency",
+  "authentication_checks",
+  "diagnostics_run",
+  "shared_read_only_inputs_allowed",
+  "shared_anchor_variations",
+  "independent_design_concepts",
+  "delegated_concept_prompts",
+  "ordinal_metadata_in_prompts",
+  "output_dependencies_in_same_batch",
+]) {
+  requireCondition(runner.includes(token), `Runner is missing required guard or platform token: ${token}`);
+}
+
+requireCondition(!runner.includes("https://api.openai.com"), "Runner must not contain an OpenAI API endpoint.");
+requireCondition(!runner.includes("/v1/images"), "Runner must not contain an Images API endpoint.");
+requireCondition(!runner.includes('readFile(path.join(os.homedir(), ".codex", "auth.json"'), "Runner must not read auth.json.");
+requireCondition(
+  (runner.match(/createHash\("sha256"\)/g) || []).length === 1,
+  "SHA-256 must be limited to official installer verification, not generated images.",
+);
+requireCondition(!runner.includes("generation_dry_run"), "Bootstrap must not require a no-image generation check.");
+
+for (const token of ["Windows", "WSL2", "Node.js 22", "best_practice_pass", "verify-installers", "bootstrap --target all --yes", "$gpt-image", "/gpt-image", "Multiple references", "--edit-target", "--reference-role", "capabilities --json", "inspect --input", "prompt is authoritative", "delegated creative intent", "Revisions always edit the latest result", "Why generated images no longer have SHA receipts", "What the agent shows after installation", "Common aspect-ratio requests", "translated into the user's language", "setup check that does not create an image", "Parallel multiple images", "Shared-anchor variations", "Delegated concepts", "Repeated renders", "batch --manifest", "--check-only", "one auth check", "zero diagnostic gates per job"]) {
+  requireCondition(readme.includes(token), `README is missing cross-platform guidance: ${token}`);
+}
+
+for (const token of ["pass it through unchanged", "generated-images/inputs/", "previously returned output", "every bridge call as ephemeral", "Do not require SHA-256", "present `getting_started` once", "Do not repeat this guide", "setup check that does not create an image", "Do not run `doctor`, `plan`, `inspect`, `capabilities`", "A batch checks ChatGPT auth once", "Same design, different styles", "meaningfully different", "Never append ordinal", "Repeated renders", "Do not generate an extra hidden anchor", "Never put an output-dependent revision in the same batch as its source"]) {
+  requireCondition(skill.includes(token), `SKILL.md is missing a lightweight fidelity/reference rule: ${token}`);
+}
+requireCondition(!skill.includes("For vague requests"), "SKILL.md must not encourage inferred prompt expansion.");
+requireCondition(
+  agentMetadata.includes("$gpt-image") && agentMetadata.includes("develop distinct prompts"),
+  "agents/openai.yaml must expose the delegated-concept behavior in its default prompt.",
+);
+
+const batchJobs = Array.isArray(batchManifest.jobs) ? batchManifest.jobs : [];
+const sharedVariations = batchJobs.filter((job) => job.mode === "variation" && job.edit_target);
+const independentConcepts = batchJobs.filter(
+  (job) => job.mode === "generate" && !job.edit_target && !job.references?.length,
+);
+requireCondition(batchJobs.length >= 3, "Batch fixture must exercise multiple ready outputs.");
+requireCondition(sharedVariations.length >= 2, "Batch fixture must exercise parallel shared-anchor variations.");
+requireCondition(
+  new Set(sharedVariations.map((job) => job.edit_target)).size === 1,
+  "Shared-anchor variation jobs must reuse one read-only edit target.",
+);
+requireCondition(
+  sharedVariations.some((job) => job.references?.length && job.reference_roles?.some((role) => /style/i.test(role))),
+  "Shared-anchor fixture must exercise a job-specific style reference after the edit target.",
+);
+requireCondition(independentConcepts.length >= 1, "Batch fixture must also exercise an independent design concept.");
+requireCondition(
+  new Set(batchJobs.map((job) => job.out)).size === batchJobs.length,
+  "Every batch fixture job must use a unique output path.",
+);
+
+const delegatedJobs = Array.isArray(delegatedManifest.jobs) ? delegatedManifest.jobs : [];
+const delegatedPrompts = delegatedJobs.map((job) => job.prompt);
+const forbiddenOrdinalMetadata = /(this (?:job|task|image)|(?:first|second|third|fourth|fifth) of five|\b[1-5](?:st|nd|rd|th) (?:option|concept)|이 작업|[1-5]\s*번째\s*시안)/i;
+const batchOrchestration = /(make five|five (?:images|posters)|5\s*장|각각\s*다른\s*디자인)/i;
+requireCondition(delegatedJobs.length === 5, "Delegated-concepts fixture must contain five image jobs.");
+requireCondition(
+  new Set(delegatedPrompts).size === delegatedJobs.length,
+  "Every delegated concept must have a distinct image-ready prompt.",
+);
+requireCondition(
+  delegatedPrompts.every((prompt) => typeof prompt === "string" && !forbiddenOrdinalMetadata.test(prompt)),
+  "Delegated concept prompts must not contain ordinal job metadata.",
+);
+requireCondition(
+  delegatedPrompts.every((prompt) => typeof prompt === "string" && !batchOrchestration.test(prompt)),
+  "Delegated concept prompts must not repeat multi-output orchestration.",
+);
+requireCondition(
+  delegatedJobs.every(
+    (job) =>
+      job.mode === "generate" &&
+      job.references?.length === 1 &&
+      job.reference_roles?.length === 1 &&
+      /제품/.test(job.reference_roles[0]),
+  ),
+  "Every delegated coffee concept must retain the shared product reference.",
+);
+requireCondition(
+  new Set(delegatedJobs.map((job) => job.out)).size === delegatedJobs.length,
+  "Every delegated concept must use a unique output path.",
+);
+
+const batchBody = runner.match(/async function runBatch\(args\) \{[\s\S]*?\n\}(?=\n\nasync function runPlan)/)?.[0] || "";
+requireCondition(Boolean(batchBody), "Runner must contain the bounded batch implementation.");
+requireCondition(!batchBody.includes("buildDoctorReport"), "Batch must not run a Doctor gate.");
+requireCondition(!batchBody.includes("runPlan"), "Batch must not run a planning gate.");
+requireCondition(!batchBody.includes("runInspect"), "Batch must not run an inspection gate.");
+requireCondition(
+  runner.includes("const DEFAULT_BATCH_CONCURRENCY = 2") && runner.includes("const MAX_BATCH_CONCURRENCY = 4"),
+  "Batch concurrency must remain bounded at a conservative subscription default.",
+);
+
+requireCondition(runner.includes('const SKILL_NAME = "gpt-image"'), "Runner skill name must be gpt-image.");
+requireCondition(runner.includes("owned-legacy-link"), "Runner must safely migrate repository-owned legacy links.");
+
+const result = {
+  ok: failures.length === 0,
+  checks: {
+    api_endpoint_absent: !runner.includes("https://api.openai.com") && !runner.includes("/v1/images"),
+    description_present: Boolean(description),
+    reference_workflows_present: await exists(path.join(SKILL_ROOT, "references", "image-workflows.md")),
+    batch_manifest_fixture_present: await exists(path.join(REPOSITORY_ROOT, ".github", "fixtures", "batch-manifest.json")),
+    multi_image_fixture_present: sharedVariations.length >= 2 && independentConcepts.length >= 1,
+    delegated_concept_fixture_present:
+      delegatedJobs.length === 5 && new Set(delegatedPrompts).size === delegatedJobs.length,
+    required_files: requiredFiles.length,
+    skill_lines: skill.split(/\r?\n/).length,
+  },
+  failures,
+};
+
+process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+if (failures.length) process.exitCode = 1;
