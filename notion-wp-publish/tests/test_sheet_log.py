@@ -8,7 +8,10 @@
 
 from __future__ import annotations
 
+import base64
 import functools
+import hashlib
+import json
 import sys
 from pathlib import Path
 
@@ -287,9 +290,13 @@ def test_shipped_config_matches_the_master_sheet():
 
 @functools.lru_cache(maxsize=1)
 def _test_key() -> str:
-    """테스트용 RSA 키. 만드는 데 시간이 걸려서 한 번만 만듭니다."""
-    from cryptography.hazmat.primitives import serialization
-    from cryptography.hazmat.primitives.asymmetric import rsa
+    """테스트용 RSA 키.
+
+    서명 자체는 표준 라이브러리로 하지만, 키를 만드는 것까지 손으로 할 일은 아니라
+    테스트에서만 cryptography 를 씁니다. 없으면 이 절의 테스트만 건너뜁니다.
+    """
+    serialization = pytest.importorskip("cryptography.hazmat.primitives.serialization")
+    rsa = pytest.importorskip("cryptography.hazmat.primitives.asymmetric.rsa")
 
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
     return key.private_bytes(
@@ -306,6 +313,53 @@ def service_account_info() -> dict:
         "private_key": _test_key(),
         "token_uri": "https://oauth2.test/token",
     }
+
+
+def test_signature_verifies_against_the_public_key():
+    """서명이 그 키로 검증되는지를 라이브러리 없이 직접 확인합니다."""
+    from notionwp.gsheets import _SHA256_PREFIX, _der_ints, _der_read, private_numbers, rs256_sign
+
+    pem = _test_key()
+    modulus, _ = private_numbers(pem)
+    signature = rs256_sign(pem, b"hello")
+
+    # 같은 DER 에서 공개 지수(3번째 정수)를 꺼내 서명을 되풀어 봅니다.
+    body = "".join(x for x in pem.splitlines() if x and not x.startswith("-----"))
+    _, outer, _ = _der_read(base64.b64decode(body), 0)
+    _, _, pos = _der_read(outer, 0)
+    _, _, pos = _der_read(outer, pos)
+    _, wrapped, _ = _der_read(outer, pos)
+    _, inner, _ = _der_read(wrapped, 0)
+    _, _, public_exponent = _der_ints(inner, 3)
+
+    size = (modulus.bit_length() + 7) // 8
+    digest_info = _SHA256_PREFIX + hashlib.sha256(b"hello").digest()
+    expected = b"\x00\x01" + b"\xff" * (size - len(digest_info) - 3) + b"\x00" + digest_info
+
+    recovered = pow(int.from_bytes(signature, "big"), public_exponent, modulus)
+    assert recovered.to_bytes(size, "big") == expected
+    assert len(signature) == size
+
+
+def test_signature_matches_the_reference_library():
+    hashes = pytest.importorskip("cryptography.hazmat.primitives.hashes")
+    padding = pytest.importorskip("cryptography.hazmat.primitives.asymmetric.padding")
+    serialization = pytest.importorskip("cryptography.hazmat.primitives.serialization")
+
+    from notionwp.gsheets import rs256_sign
+
+    pem = _test_key()
+    key = serialization.load_pem_private_key(pem.encode(), password=None)
+    assert rs256_sign(pem, b"payload") == key.sign(b"payload", padding.PKCS1v15(), hashes.SHA256())
+
+
+def test_broken_key_says_so():
+    from notionwp.gsheets import SheetsError, rs256_sign
+
+    with pytest.raises(SheetsError, match="PEM 형식이 아닙니다"):
+        rs256_sign("", b"x")
+    with pytest.raises(SheetsError, match="읽지 못했습니다"):
+        rs256_sign("-----BEGIN PRIVATE KEY-----\nZm9v\n-----END PRIVATE KEY-----", b"x")
 
 
 class FakeResponse:
@@ -342,37 +396,18 @@ def test_access_token_is_a_signed_jwt_exchange():
 
     info = service_account_info()
     session = FakeSession()
-    client = SheetsClient(info, session=session)
-    client.read("sheet-id", SHEET)
+    SheetsClient(info, session=session).read("sheet-id", SHEET)
 
     url, form = session.posts[0]
     assert url == "https://oauth2.test/token"
     assert form["grant_type"] == "urn:ietf:params:oauth:grant-type:jwt-bearer"
 
-    import base64
-    import json as _json
-
     header, claims, signature = form["assertion"].split(".")
-    payload = _json.loads(base64.urlsafe_b64decode(claims + "=="))
+    payload = json.loads(base64.urlsafe_b64decode(claims + "=="))
     assert payload["iss"] == info["client_email"]
     assert payload["scope"] == "https://www.googleapis.com/auth/spreadsheets"
     assert payload["aud"] == "https://oauth2.test/token"
     assert "=" not in header + claims + signature  # base64url 은 채움 문자를 뺍니다
-
-    # 서명이 그 키로 검증되는지까지 봅니다.
-    from cryptography.hazmat.primitives import hashes, serialization
-    from cryptography.hazmat.primitives.asymmetric import padding
-
-    public = serialization.load_pem_private_key(
-        info["private_key"].encode(), password=None
-    ).public_key()
-    public.verify(
-        base64.urlsafe_b64decode(signature + "=="),
-        f"{header}.{claims}".encode(),
-        padding.PKCS1v15(),
-        hashes.SHA256(),
-    )
-
     assert session.calls[0][2]["Authorization"] == "Bearer tok"
 
 
@@ -391,12 +426,10 @@ def test_credentials_env_accepts_json_or_a_path(tmp_path):
     from notionwp.gsheets import SheetsError, load_credentials_info
 
     info = service_account_info()
-    import json as _json
-
-    assert load_credentials_info({"GOOGLE_SERVICE_ACCOUNT_JSON": _json.dumps(info)})["client_email"]
+    assert load_credentials_info({"GOOGLE_SERVICE_ACCOUNT_JSON": json.dumps(info)})["client_email"]
 
     path = tmp_path / "key.json"
-    path.write_text(_json.dumps(info), encoding="utf-8")
+    path.write_text(json.dumps(info), encoding="utf-8")
     assert load_credentials_info({"GOOGLE_SERVICE_ACCOUNT_JSON": str(path)})["client_email"]
 
     with pytest.raises(SheetsError, match="GOOGLE_SERVICE_ACCOUNT_JSON"):

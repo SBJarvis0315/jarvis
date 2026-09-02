@@ -15,13 +15,6 @@ description: 노션 콘텐츠 플래너에서 발행이 끝난 글을 고객사 
 | 제목 | 제목 |
 | 게재본 | URL |
 
-## 먼저 확인할 것
-
-이 일은 구글 Apps Script로 도는 경로(`apps-script/`)와 파이썬으로 도는 경로
-(`notion-wp-publish/`) 둘 중 하나로 설정되어 있습니다. **Apps Script 트리거가 이미
-걸려 있으면 아래 명령을 돌리지 마세요** — 같은 일을 두 번 하는 것입니다
-(중복은 걸러지지만 의미가 없습니다). 어느 쪽인지 모르면 사용자에게 물어보세요.
-
 ## 실행 방법
 
 작업 디렉터리는 `notion-wp-publish/` 입니다.
@@ -67,7 +60,7 @@ PYTHONPATH=src python3 -m notionwp.sheetsync             # 실제 기입
 | `시트에 접근할 수 없습니다 (403/404)` | 시트를 서비스 계정에 공유하지 않음 | 메시지에 나온 주소를 시트에 **편집자**로 추가 |
 | `Could not find database ... shared with your integration` | 플래너에 노션 통합 미연결 | 플래너 `⋯` → 연결 → 통합 선택 |
 | `헤더 줄을 찾지 못했습니다` | 탭 이름이 다르거나 헤더 문구가 바뀜 | `config/sheet-log.json` 의 `sheet`·`columns` 확인 |
-| `cryptography 가 설치되어 있지 않습니다` | 의존성 미설치 | `pip install -r requirements.txt` |
+| `서비스 계정 키를 읽지 못했습니다` | 키 JSON 이 잘렸거나 형식이 깨짐 | 환경변수에 JSON 전체가 들어갔는지 확인 |
 
 ## 하지 말아야 할 것
 

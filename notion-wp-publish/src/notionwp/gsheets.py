@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import logging
 import os
@@ -97,6 +98,96 @@ def load_credentials_info(env: dict[str, str] | None = None) -> dict[str, Any]:
     return info
 
 
+
+# ------------------------------------------------------------------ RS256 서명
+
+#: SHA-256 DigestInfo 의 고정 앞부분 (RFC 8017 부록 B). 뒤에 해시 32바이트가 붙습니다.
+_SHA256_PREFIX = bytes.fromhex("3031300d060960864801650304020105000420")
+
+
+def _der_read(data: bytes, pos: int) -> tuple[int, bytes, int]:
+    """DER 한 조각을 읽어 (태그, 값, 다음 위치) 를 돌려줍니다."""
+    tag = data[pos]
+    length = data[pos + 1]
+    pos += 2
+
+    if length & 0x80:  # 길이가 여러 바이트로 적힌 경우
+        count = length & 0x7F
+        length = int.from_bytes(data[pos : pos + count], "big")
+        pos += count
+
+    return tag, data[pos : pos + length], pos + length
+
+
+def _der_ints(sequence: bytes, count: int) -> list[int]:
+    """SEQUENCE 앞쪽의 INTEGER 를 count 개 읽습니다."""
+    values, pos = [], 0
+    while len(values) < count:
+        tag, value, pos = _der_read(sequence, pos)
+        if tag != 0x02:  # INTEGER
+            raise SheetsError("서비스 계정 키를 읽지 못했습니다 (INTEGER 가 아닙니다).")
+        values.append(int.from_bytes(value, "big"))
+    return values
+
+
+def private_numbers(pem: str) -> tuple[int, int]:
+    """서비스 계정 키(PEM) → (모듈러스 n, 개인 지수 d).
+
+    구글이 주는 키는 PKCS#8(`BEGIN PRIVATE KEY`) 이고, 그 안에 PKCS#1 키가 들어 있습니다.
+    쓰는 값이 n·d 둘뿐이라 DER 을 앞에서부터 필요한 만큼만 읽습니다.
+    """
+    body = "".join(
+        line for line in (pem or "").splitlines() if line and not line.startswith("-----")
+    )
+    if not body:
+        raise SheetsError("서비스 계정 키(private_key)가 PEM 형식이 아닙니다.")
+
+    try:
+        der = base64.b64decode(body)
+        tag, outer, _ = _der_read(der, 0)
+        if tag != 0x30:  # SEQUENCE
+            raise SheetsError("서비스 계정 키를 읽지 못했습니다 (SEQUENCE 가 아닙니다).")
+
+        pos = 0
+        tag, first, pos = _der_read(outer, pos)
+        if tag == 0x02 and first == b"\x00":
+            # PKCS#8: 버전 · 알고리즘 다음의 OCTET STRING 안에 PKCS#1 키가 들어 있습니다.
+            _, _, pos = _der_read(outer, pos)  # AlgorithmIdentifier
+            _, wrapped, _ = _der_read(outer, pos)  # PrivateKey (OCTET STRING)
+            _, inner, _ = _der_read(wrapped, 0)  # RSAPrivateKey (SEQUENCE)
+        else:
+            inner = outer  # PKCS#1 (BEGIN RSA PRIVATE KEY)
+
+        # RSAPrivateKey ::= SEQUENCE { version, modulus(n), publicExponent, privateExponent(d), … }
+        _, modulus, _, private_exponent = _der_ints(inner, 4)
+    except SheetsError:
+        raise
+    except Exception as exc:
+        raise SheetsError(f"서비스 계정 키를 읽지 못했습니다: {exc}") from exc
+
+    return modulus, private_exponent
+
+
+def rs256_sign(pem: str, message: bytes) -> bytes:
+    """JWT 용 RS256 서명.
+
+    구글 SDK 없이 표준 라이브러리만으로 만듭니다. 서비스 계정 인증에 필요한 것은
+    이 서명 하나뿐이라, 이것 때문에 설치 단계를 늘리지 않으려는 것입니다.
+    """
+    modulus, private_exponent = private_numbers(pem)
+    size = (modulus.bit_length() + 7) // 8
+
+    digest_info = _SHA256_PREFIX + hashlib.sha256(message).digest()
+    padding_length = size - len(digest_info) - 3
+    if padding_length < 8:
+        raise SheetsError("서비스 계정 키가 너무 짧습니다.")
+
+    # EMSA-PKCS1-v1_5: 0x00 0x01 <0xFF 채움> 0x00 <DigestInfo>
+    encoded = b"\x00\x01" + b"\xff" * padding_length + b"\x00" + digest_info
+    signature = pow(int.from_bytes(encoded, "big"), private_exponent, modulus)
+    return signature.to_bytes(size, "big")
+
+
 class SheetsClient:
     def __init__(self, info: dict[str, Any], session: requests.Session | None = None):
         self.info = info
@@ -111,23 +202,6 @@ class SheetsClient:
 
     # ------------------------------------------------------------------ 인증
 
-    def _sign(self, message: bytes) -> bytes:
-        # 서비스 계정 인증은 RS256 서명 한 번이면 끝나서, 구글 SDK 대신
-        # 이미 깔려 있는 cryptography 로 직접 만듭니다. 의존성이 하나 줄어듭니다.
-        try:
-            from cryptography.hazmat.primitives import hashes, serialization
-            from cryptography.hazmat.primitives.asymmetric import padding
-        except ImportError as exc:  # pragma: no cover - 설치 안내
-            raise SheetsError(
-                "cryptography 가 설치되어 있지 않습니다.\n"
-                "  pip install -r requirements.txt 를 실행해 주세요."
-            ) from exc
-
-        key = serialization.load_pem_private_key(
-            self.info["private_key"].encode("utf-8"), password=None
-        )
-        return key.sign(message, padding.PKCS1v15(), hashes.SHA256())
-
     def _assertion(self, now: int) -> str:
         header = {"alg": "RS256", "typ": "JWT"}
         claims = {
@@ -138,7 +212,8 @@ class SheetsClient:
             "exp": now + TOKEN_TTL,
         }
         signing_input = b".".join(_b64url(json.dumps(part).encode()) for part in (header, claims))
-        return (signing_input + b"." + _b64url(self._sign(signing_input))).decode("ascii")
+        signature = rs256_sign(self.info["private_key"], signing_input)
+        return (signing_input + b"." + _b64url(signature)).decode("ascii")
 
     def _token(self) -> str:
         now = int(time.time())
