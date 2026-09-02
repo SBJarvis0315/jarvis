@@ -1,0 +1,33 @@
+{
+  "_주석": [
+    "노션 콘텐츠 플래너 → 고객사 마스터 시트 '발행 로그' 대응표.",
+    "고객사를 추가하려면 targets 에 항목을 하나 더 넣으면 됩니다.",
+    "planner_db   노션 플래너 DB 주소나 ID (주소를 통째로 붙여넣어도 됩니다)",
+    "spreadsheet  구글 스프레드시트 ID (주소의 /d/ 와 /edit 사이 값)",
+    "sheet        기입할 탭 이름. 비우면 첫 번째 탭",
+    "properties   플래너 속성 이름 (시트 항목 → 노션 속성)",
+    "columns      시트 헤더 이름 (기본값과 같으면 생략 가능)",
+    "status_done  비우면 URL이 채워진 행을 모두 기입. 값을 넣으면 그 상태만 기입"
+  ],
+  "targets": [
+    {
+      "client": "제로클리닉",
+      "planner_db": "37b68fa2-06ff-80c5-a520-e7500fac7d0e",
+      "spreadsheet": "1fGmSvJzA9y46KQTuKEnuSlknwPkcJcDOtzUq9Fe1Sek",
+      "sheet": "7) 발행 로그",
+      "properties": {
+        "date": "발행 예정일",
+        "type": "유형",
+        "title": "제목",
+        "url": "URL"
+      },
+      "columns": {
+        "date": "날짜",
+        "type": "콘텐츠 유형",
+        "title": "제목",
+        "url": "게재본"
+      },
+      "status_done": []
+    }
+  ]
+}
