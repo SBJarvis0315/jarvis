@@ -245,8 +245,10 @@ def build_html(
     badge: str = "",
     width: int = WIDTH,
     height: int = HEIGHT,
+    palette: Palette | None = None,
 ) -> str:
-    p = Palette.derive(brand.color)
+    # 고객사 전용 디자인이 있으면 그 팔레트를 그대로 씁니다. 없을 때만 색을 파생합니다.
+    p = palette or Palette.derive(brand.color)
     u = width / WIDTH  # 1200px 기준으로 잡은 치수를 요청한 폭에 맞춰 늘립니다.
 
     def px(v: float) -> str:
@@ -361,12 +363,14 @@ def render(
     height: int = HEIGHT,
     scale: float = 1.0,
     timeout: int = 60,
+    palette: Palette | None = None,
 ) -> bytes:
     """썸네일 한 장을 PNG 바이트로 돌려줍니다."""
     if not main.strip():
         raise ThumbnailError("썸네일에 넣을 제목이 없습니다.")
 
-    html = build_html(main, sub, brand, fonts, badge=badge, width=width, height=height)
+    html = build_html(main, sub, brand, fonts, badge=badge, width=width,
+                      height=height, palette=palette)
 
     with tempfile.TemporaryDirectory() as tmp:
         page, shot = Path(tmp, "page.html"), Path(tmp, "out.png")

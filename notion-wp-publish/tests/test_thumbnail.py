@@ -141,3 +141,16 @@ def test_badge_is_dropped_when_the_keyword_is_too_long():
 
 def test_badge_survives_an_empty_keyword_field():
     assert badge_text("") == ""
+
+
+def test_a_client_palette_overrides_the_derived_one():
+    """고객사 전용 디자인이 있으면 브랜드 컬러에서 색을 파생하지 않습니다."""
+    warm = Palette(
+        background="#FAF7F1", accent="#C9A15B", title="#463525", sub="#7A6650",
+        pill_bg="#F0E6D5", pill_fg="#8A6A3A", brand="#463525", muted="#A2917C",
+        rule="#E6DCC9", ornament="#F3ECE0",
+    )
+    html = build_html("기미 레이저", "횟수 정리", Brand(name=CLIENT, color="#2B4FC7"),
+                      Fonts(), palette=warm)
+    assert "#FAF7F1" in html
+    assert "#2B4FC7" not in html
