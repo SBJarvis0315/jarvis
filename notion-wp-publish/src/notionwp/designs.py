@@ -60,6 +60,10 @@ class Design:
     logo_mime: str = "image/png"
     latin_font: str = "NataSans"
     hangul_font: str = "NotoSansKR"
+    #: 조판 골격. thumbnail.SKELETONS 의 키입니다.
+    skeleton: str = "band"
+    width: int = 1200
+    height: int = 630
     note: str = ""
 
     def brand(self) -> Brand:
@@ -115,6 +119,9 @@ def load(client: str, directory: Path | None = None) -> Design | None:
         logo_mime=raw.get("logo_mime", "image/png"),
         latin_font=raw.get("latin_font", "NataSans"),
         hangul_font=raw.get("hangul_font", "NotoSansKR"),
+        skeleton=raw.get("skeleton", "band"),
+        width=int(raw.get("width", 1200)),
+        height=int(raw.get("height", 630)),
         note=raw.get("note", ""),
     )
 
@@ -137,6 +144,9 @@ def save(design: Design, directory: Path | None = None, *, overwrite: bool = Fal
         "domain": design.domain,
         "latin_font": design.latin_font,
         "hangul_font": design.hangul_font,
+        "skeleton": design.skeleton,
+        "width": design.width,
+        "height": design.height,
         "palette": {k: getattr(design.palette, k) for k in PALETTE_KEYS},
         "note": design.note,
     }

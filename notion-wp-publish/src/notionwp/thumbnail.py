@@ -4,18 +4,18 @@
 얹어 이미지를 찍어냅니다. 사람이 정해줄 것이 없도록 하는 게 목표입니다 —
 색도 로고도 `brand.inspect` 가 알아서 찾고, 못 찾으면 못 찾은 대로 갑니다.
 
-화면 구성:
+골격이 둘 있습니다. 고객사 디자인 파일의 `skeleton` 이 하나를 고릅니다.
 
-    ┌──────────────────────────────────┐
-    │ [ 키워드 뱃지 ]                   │
-    │  메인 타이틀                       │
-    │  메인 타이틀 둘째 줄                │
-    │                                  │
-    │  서브 타이틀                       │
-    │ ──────────────────────────────── │
-    │  고객사명            도메인        │
-    │  ENGLISH NAME                    │
-    └──────────────────────────────────┘
+    band (1200x630)                    minimal (1920x1080)
+    ┌──────────────────────────┐       ┌──────────────────────────┐
+    │ [ 키워드 뱃지 ]           │       │  로고                     │
+    │  메인 타이틀              │       │                          │
+    │                          │       │  메인 타이틀              │
+    │  서브 타이틀              │       │                          │
+    │ ──────────────────────── │       │  서브 타이틀              │
+    │  고객사명        도메인    │       │                          │
+    └──────────────────────────┘       └──────────────────────────┘
+    진한 바탕·정보 밀도 높음            흰 바탕·여백 위주, 로고가 중심
 
 제목은 팀이 '메인 키워드 | 부연' 형태로 쓰고 있으므로 그 경계에서 갈라
 앞토막을 큰 글씨로 씁니다(`split_title`).
@@ -282,7 +282,28 @@ def build_html(
     width: int = WIDTH,
     height: int = HEIGHT,
     palette: Palette | None = None,
+    skeleton: str = "band",
 ) -> str:
+    """골격을 골라 조판합니다. 골격은 고객사 디자인 파일이 정합니다."""
+    builder = SKELETONS.get(skeleton)
+    if builder is None:
+        raise ThumbnailError(
+            f"모르는 골격입니다: {skeleton} (쓸 수 있는 것: {', '.join(SKELETONS)})"
+        )
+    return builder(main, sub, brand, fonts, badge, width, height, palette)
+
+
+def _band_html(
+    main: str,
+    sub: str,
+    brand: Brand,
+    fonts: Fonts,
+    badge: str,
+    width: int,
+    height: int,
+    palette: Palette | None,
+) -> str:
+    """진한 바탕에 뱃지·하단 브랜드 바가 있는 골격. 1200x630 기준."""
     # 고객사 전용 디자인이 있으면 그 팔레트를 그대로 씁니다. 없을 때만 색을 파생합니다.
     p = palette or Palette.derive(brand.color)
     u = width / WIDTH  # 1200px 기준으로 잡은 치수를 요청한 폭에 맞춰 늘립니다.
@@ -362,6 +383,87 @@ body{{font-family:'Latin','Hangul',sans-serif}}
 </script>"""
 
 
+#: 여백형 골격의 기준 폭. 16:9 로 그립니다.
+MINIMAL_WIDTH = 1920
+MINIMAL_HEIGHT = 1080
+MINIMAL_MIN_MAIN = 68
+MINIMAL_MAX_MAIN = 130
+
+
+def _minimal_html(
+    main: str,
+    sub: str,
+    brand: Brand,
+    fonts: Fonts,
+    badge: str,
+    width: int,
+    height: int,
+    palette: Palette | None,
+) -> str:
+    """흰 바탕에 로고를 위에 크게 놓고 여백으로 버티는 골격. 1920x1080 기준.
+
+    뱃지·하단 바·장식이 없습니다. 로고와 제목 두 줄만으로 서는 구성이라
+    브랜드 로고가 또렷한 고객사에 맞습니다. `badge` 는 쓰지 않습니다.
+    """
+    p = palette or Palette.derive(brand.color)
+    u = width / MINIMAL_WIDTH
+
+    def px(v: float) -> str:
+        return f"{v * u:.2f}px"
+
+    if brand.has_logo:
+        src = f"data:{brand.logo_mime};base64,{base64.b64encode(brand.logo).decode()}"
+        mark = f'<img class="logo" src="{src}">'
+    else:
+        # 로고가 이 골격의 중심이라, 없으면 이름을 그 자리에 크게 세웁니다.
+        mark = f'<div class="wordmark">{_escape(brand.name)}</div>'
+        if brand.name_en:
+            mark += f'<div class="worden">{_escape(brand.name_en)}</div>'
+
+    return f"""<!doctype html><meta charset="utf-8"><style>
+{fonts.faces()}
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{font-family:'Latin','Hangul',sans-serif}}
+.frame{{width:{width}px;height:{height}px;background:{p.background};
+  overflow:hidden;padding:{px(160)} {px(175)} {px(120)}}}
+.logo{{max-width:{px(600)};max-height:{px(155)};object-fit:contain;
+  object-position:left top;display:block}}
+.wordmark{{color:{p.title};font-size:{px(76)};font-weight:700;letter-spacing:{px(8)}}}
+.worden{{color:{p.sub};font-size:{px(26)};font-weight:600;letter-spacing:{px(9)};
+  margin-top:{px(14)}}}
+.main{{color:{p.title};font-weight:700;font-size:{px(MINIMAL_MAX_MAIN)};
+  line-height:1.24;letter-spacing:-0.03em;word-break:keep-all;margin-top:{px(180)}}}
+.sub{{color:{p.sub};font-weight:700;font-size:{px(40)};line-height:1.45;
+  word-break:keep-all;margin-top:{px(110)}}}
+</style>
+<div class="frame">
+  <div class="head">{mark}</div>
+  <div class="main">{_escape(main)}</div>
+  {f'<div class="sub">{_escape(sub)}</div>' if sub else ''}
+</div>
+<script>
+// 제목이 길어지면 프레임 밖으로 밀려나므로, 다 들어올 때까지 줄입니다.
+(function () {{
+  const frame = document.querySelector('.frame');
+  const main = document.querySelector('.main');
+  let size = {MINIMAL_MAX_MAIN} * {u:.5f};
+  const floor = {MINIMAL_MIN_MAIN} * {u:.5f};
+  const fits = () => frame.scrollHeight <= frame.clientHeight;
+  while (!fits() && size > floor) {{
+    size -= 2;
+    main.style.fontSize = size + 'px';
+  }}
+}})();
+</script>"""
+
+
+#: 쓸 수 있는 골격. 고객사 디자인 파일의 `skeleton` 값이 여기서 하나를 고릅니다.
+SKELETONS = {
+    "band": _band_html,
+    "minimal": _minimal_html,
+}
+
+
 def find_chromium() -> str:
     """헤드리스 브라우저를 찾습니다. 환경마다 놓인 자리가 달라 순서대로 뒤집니다."""
     if os.environ.get("CHROMIUM_PATH"):
@@ -400,13 +502,14 @@ def render(
     scale: float = 1.0,
     timeout: int = 60,
     palette: Palette | None = None,
+    skeleton: str = "band",
 ) -> bytes:
     """썸네일 한 장을 PNG 바이트로 돌려줍니다."""
     if not main.strip():
         raise ThumbnailError("썸네일에 넣을 제목이 없습니다.")
 
     html = build_html(main, sub, brand, fonts, badge=badge, width=width,
-                      height=height, palette=palette)
+                      height=height, palette=palette, skeleton=skeleton)
 
     with tempfile.TemporaryDirectory() as tmp:
         page, shot = Path(tmp, "page.html"), Path(tmp, "out.png")

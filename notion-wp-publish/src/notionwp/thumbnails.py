@@ -127,6 +127,9 @@ def make_for_row(
         design.fonts(),
         badge=badge_text(keywords),
         palette=design.palette,
+        skeleton=design.skeleton,
+        width=design.width,
+        height=design.height,
     )
     slug = napi.read_text(props.get(name("slug"))).strip()
     return png, f"{slug or 'thumbnail'}.png"

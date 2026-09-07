@@ -4,19 +4,22 @@
   "domain": "blog.cleartone.co.kr",
   "latin_font": "NataSans",
   "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
   "palette": {
-    "background": "#FAF7F1",
-    "accent": "#C9A15B",
-    "title": "#463525",
-    "sub": "#7A6650",
+    "background": "#FFFFFF",
+    "accent": "#D8A860",
+    "title": "#D8A860",
+    "sub": "#4A4441",
     "pill_bg": "#F0E6D5",
     "pill_fg": "#8A6A3A",
     "brand": "#463525",
     "muted": "#A2917C",
     "rule": "#E6DCC9",
-    "ornament": "#F3ECE0"
+    "ornament": "#F5F0E8"
   },
-  "note": "로고(logo-header.png)의 금색 #D8A860 · 진갈색 #604830 에서 뽑았습니다. 색소·미백 진료라 밝고 따뜻한 톤이 어울려 크림 바탕에 갈색 글씨로 잡았습니다. 2026-09-07 확정.",
+  "note": "팀이 준 레퍼런스 디자인을 그대로 옮겼습니다. 흰 바탕에 로고를 위에 크게 두고 금색 제목 + 진회색 부제만 남기는 여백형 구성(skeleton=minimal). 로고는 원형 마크를 뺀 글자 부분만 씁니다(레퍼런스와 동일). 금색 #D8A860 은 로고 파일에서 뽑은 값입니다. 2026-09-07 확정.",
   "logo": "클리어톤의원.png",
   "logo_mime": "image/png"
 }
