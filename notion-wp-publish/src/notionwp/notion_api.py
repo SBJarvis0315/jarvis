@@ -16,6 +16,9 @@ API_ROOT = "https://api.notion.com/v1"
 TIMEOUT = 30
 MAX_RETRIES = 4
 
+#: 파일 업로드는 본문 요청보다 오래 걸립니다.
+UPLOAD_TIMEOUT = 180
+
 
 class NotionError(RuntimeError):
     pass
@@ -161,6 +164,52 @@ class NotionClient:
 
 
 # ------------------------------------------------------------- 속성 값 읽기/쓰기
+
+
+    # ------------------------------------------------------------------ 파일 첨부
+
+    def upload_file(self, data: bytes, filename: str, content_type: str) -> str:
+        """파일을 노션에 올리고 업로드 id 를 돌려줍니다.
+
+        두 걸음입니다 — 업로드 자리를 만들고(POST /file_uploads), 그 자리에 내용을
+        보냅니다(POST .../send). 받은 id 를 파일 속성에 꽂으면 첨부가 됩니다.
+        """
+        created = self._request(
+            "POST", "/file_uploads",
+            json={"filename": filename, "content_type": content_type},
+        )
+        upload_id = created.get("id")
+        if not upload_id:
+            raise NotionError(f"업로드 자리를 만들지 못했습니다: {created}")
+
+        # multipart 경계값은 requests 가 붙여야 하므로 세션의 JSON Content-Type 을
+        # 치워야 합니다. 요청별 헤더는 세션 헤더를 덮어쓰지 않고 합쳐지므로,
+        # 지우려면 None 을 명시해야 합니다.
+        try:
+            resp = self.session.post(
+                f"{API_ROOT}/file_uploads/{upload_id}/send",
+                files={"file": (filename, data, content_type)},
+                headers={"Content-Type": None},
+                timeout=UPLOAD_TIMEOUT,
+            )
+        except requests.RequestException as exc:
+            raise NotionError(f"파일을 올리지 못했습니다 ({filename}): {exc}") from exc
+
+        if not resp.ok:
+            raise NotionError(
+                f"파일을 올리지 못했습니다 ({filename}): {resp.status_code} {resp.text[:300]}"
+            )
+        return upload_id
+
+
+def write_files(uploads: list[tuple[str, str]]) -> dict[str, Any]:
+    """파일 속성 값. `uploads` 는 (업로드 id, 표시 이름) 목록입니다."""
+    return {
+        "files": [
+            {"type": "file_upload", "file_upload": {"id": uid}, "name": name}
+            for uid, name in uploads
+        ]
+    }
 
 
 def read_text(prop: dict[str, Any] | None) -> str:
