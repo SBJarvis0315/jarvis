@@ -154,3 +154,33 @@ def test_a_client_palette_overrides_the_derived_one():
                       Fonts(), palette=warm)
     assert "#FAF7F1" in html
     assert "#2B4FC7" not in html
+
+
+# --------------------------------------------------------------- 골격
+
+def test_minimal_skeleton_drops_the_badge_and_footer():
+    """여백형 골격은 뱃지·하단 바·도메인이 없습니다."""
+    brand = Brand(name=CLIENT, domain="example.co.kr")
+    html = build_html("기미 레이저", "횟수 정리", brand, Fonts(),
+                      badge="기미", skeleton="minimal", width=1920, height=1080)
+    assert 'class="pill"' not in html
+    assert 'class="domain"' not in html
+    assert "example.co.kr" not in html
+    assert "기미 레이저" in html
+
+
+def test_band_skeleton_still_has_them():
+    brand = Brand(name=CLIENT, domain="example.co.kr")
+    html = build_html("기미 레이저", "횟수 정리", brand, Fonts(), badge="기미")
+    assert 'class="pill"' in html and "example.co.kr" in html
+
+
+def test_minimal_falls_back_to_a_wordmark_without_a_logo():
+    html = build_html("기미", "", Brand(name=CLIENT, name_en="CLEARTONE"), Fonts(),
+                      skeleton="minimal")
+    assert 'class="wordmark"' in html and CLIENT in html
+
+
+def test_unknown_skeleton_is_rejected():
+    with pytest.raises(ThumbnailError, match="모르는 골격"):
+        build_html("기미", "", Brand(name=CLIENT), Fonts(), skeleton="없는골격")

@@ -81,3 +81,23 @@ def test_design_yields_brand_and_fonts(tmp_path):
 def test_path_traversal_in_a_client_name_is_stripped():
     assert "/" not in safe_name("../../etc/passwd")
     assert ".." not in safe_name("..")
+
+
+def test_skeleton_and_size_survive_a_round_trip(tmp_path):
+    """골격과 규격이 고객사마다 다르므로 파일에 함께 굳힙니다."""
+    save(design(skeleton="minimal", width=1920, height=1080), tmp_path)
+    back = load("어떤의원", tmp_path)
+    assert (back.skeleton, back.width, back.height) == ("minimal", 1920, 1080)
+
+
+def test_older_files_without_a_skeleton_default_to_band(tmp_path):
+    import json
+    save(design(), tmp_path)
+    path = path_for("어떤의원", tmp_path)
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    for key in ("skeleton", "width", "height"):
+        raw.pop(key, None)
+    path.write_text(json.dumps(raw, ensure_ascii=False), encoding="utf-8")
+
+    back = load("어떤의원", tmp_path)
+    assert (back.skeleton, back.width, back.height) == ("band", 1200, 630)
