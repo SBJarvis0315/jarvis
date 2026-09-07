@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "soha-ai": {
+      "type": "http",
+      "url": "https://www.soha-ai.com/api/mcp?features=account%2Cinsights%2Csites%2Cprompts%2Canalysis%2Ckeywords%2Ccontent%2Cagents"
+    }
+  }
+}
