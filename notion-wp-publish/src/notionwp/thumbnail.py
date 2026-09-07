@@ -177,6 +177,19 @@ class Palette:
         )
 
 
+#: 저장소에 담아 둔 폰트. 실행할 때 인터넷에서 받아오지 않습니다.
+FONT_DIR = Path(__file__).resolve().parents[2] / "assets" / "fonts"
+
+
+def _font_format(blob: bytes) -> tuple[str, str]:
+    """폰트 바이트에서 형식을 알아냅니다. (mime, CSS format 이름)"""
+    if blob[:4] == b"wOF2":
+        return "font/woff2", "woff2"
+    if blob[:4] == b"wOFF":
+        return "font/woff", "woff"
+    return "font/ttf", "truetype"
+
+
 @dataclass
 class Fonts:
     """조판에 쓸 폰트. 라틴과 한글이 다른 파일이라 둘 다 받습니다."""
@@ -186,6 +199,24 @@ class Fonts:
     hangul_bold: bytes = b""
     hangul_semibold: bytes = b""
 
+    @classmethod
+    def bundled(cls, latin: str = "NataSans", hangul: str = "NotoSansKR") -> Fonts:
+        """저장소에 담아 둔 폰트를 읽습니다. 고객사마다 다른 서체를 고를 수 있습니다."""
+
+        def read(family: str, weight: int) -> bytes:
+            for ext in ("woff2", "woff", "ttf"):
+                path = FONT_DIR / f"{family}-{weight}.{ext}"
+                if path.exists():
+                    return path.read_bytes()
+            raise ThumbnailError(f"폰트를 찾지 못했습니다: {FONT_DIR}/{family}-{weight}")
+
+        return cls(
+            latin_bold=read(latin, 700),
+            latin_semibold=read(latin, 600),
+            hangul_bold=read(hangul, 700),
+            hangul_semibold=read(hangul, 600),
+        )
+
     def faces(self) -> str:
         pairs = [
             ("Latin", 700, self.latin_bold),
@@ -193,12 +224,17 @@ class Fonts:
             ("Hangul", 700, self.hangul_bold),
             ("Hangul", 600, self.hangul_semibold),
         ]
-        return "".join(
-            "@font-face{font-family:'%s';font-weight:%d;"
-            "src:url(data:font/ttf;base64,%s);}" % (fam, w, base64.b64encode(b).decode())
-            for fam, w, b in pairs
-            if b
-        )
+        out = []
+        for fam, weight, blob in pairs:
+            if not blob:
+                continue
+            mime, fmt = _font_format(blob)
+            out.append(
+                "@font-face{font-family:'%s';font-weight:%d;"
+                "src:url(data:%s;base64,%s) format('%s');}"
+                % (fam, weight, mime, base64.b64encode(blob).decode(), fmt)
+            )
+        return "".join(out)
 
 
 def split_title(title: str, client: str = "") -> tuple[str, str]:
