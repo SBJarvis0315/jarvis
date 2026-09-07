@@ -13,11 +13,14 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+import time
+from dataclasses import replace
 from pathlib import Path
 
 from .config import Config, ConfigError, load_secrets
 from .publish import Publisher, summarize
 from .registry import load_clients
+from .runlog import RunLogger
 from . import thumbnails as thumbs
 from .notion_api import NotionClient
 
@@ -34,6 +37,7 @@ def run_thumbnails(configs, secrets, *, dry_run: bool = False) -> int:
             print()
             print(f"━━━ {cfg.client} ━━━")
 
+        started = time.monotonic()
         notion = NotionClient(secrets.notion_token, cfg.notion)
         report = thumbs.run(cfg, notion, dry_run=dry_run)
 
@@ -51,6 +55,15 @@ def run_thumbnails(configs, secrets, *, dry_run: bool = False) -> int:
         made = len(report.made)
         waiting = sum(1 for o in report.outcomes if o.skipped.startswith("미리보기"))
         print(f"  썸네일 {made}건" + (f" · 미리보기 {waiting}건" if waiting else ""))
+
+        # 미리보기는 아무것도 바꾸지 않았으므로 로그도 남기지 않습니다.
+        if not dry_run:
+            log_cfg = replace(cfg.run_log, stage="썸네일 생성")
+            RunLogger(log_cfg, cfg.client, notion).write(
+                report.outcomes,
+                summary=report.summarize(),
+                duration_min=(time.monotonic() - started) / 60,
+            )
 
     return 1 if failed else 0
 

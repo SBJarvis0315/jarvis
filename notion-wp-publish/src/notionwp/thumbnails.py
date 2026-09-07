@@ -26,6 +26,7 @@ from .config import Config
 from .designs import Design
 from .designs import load as load_design
 from .notion_api import NotionClient
+from .runlog import Summary
 from .thumbnail import badge_text, render, split_title
 
 log = logging.getLogger(__name__)
@@ -60,6 +61,27 @@ class Report:
     @property
     def failed(self) -> list[Outcome]:
         return [o for o in self.outcomes if o.error]
+
+    def summarize(self) -> Summary:
+        """실행 로그 한 줄에 담을 요약. 발행 단계와 결과 모양이 달라 따로 만듭니다."""
+        made, failed = self.made, self.failed
+
+        if failed and made:
+            result = "부분 성공"
+        elif failed:
+            result = "실패"
+        elif made:
+            result = "성공"
+        else:
+            result = "대상 없음"
+
+        lines = [f"썸네일 {len(made)}건 · 실패 {len(failed)}건"]
+        for o in made:
+            lines.append(f"✅ {o.title[:60]}")
+        for o in failed:
+            lines.append(f"❌ {o.title[:60] or '(제목 없음)'} — {o.error[:200]}")
+
+        return Summary(result=result, count=len(made), detail="\n".join(lines))
 
 
 def has_file(prop: dict[str, Any] | None) -> bool:
