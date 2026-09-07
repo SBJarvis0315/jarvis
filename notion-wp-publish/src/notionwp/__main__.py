@@ -18,8 +18,41 @@ from pathlib import Path
 from .config import Config, ConfigError, load_secrets
 from .publish import Publisher, summarize
 from .registry import load_clients
+from . import thumbnails as thumbs
+from .notion_api import NotionClient
 
 log = logging.getLogger(__name__)
+
+
+
+def run_thumbnails(configs, secrets, *, dry_run: bool = False) -> int:
+    """썸네일 단계. 각 고객사 플래너를 훑어 빈 썸네일 칸을 채웁니다."""
+    failed = False
+
+    for cfg in configs:
+        if len(configs) > 1:
+            print()
+            print(f"━━━ {cfg.client} ━━━")
+
+        notion = NotionClient(secrets.notion_token, cfg.notion)
+        report = thumbs.run(cfg, notion, dry_run=dry_run)
+
+        for outcome in report.made:
+            print(f"  ✅ {outcome.title[:60]}")
+        for outcome in report.failed:
+            print(f"  ❌ {outcome.title[:60] or '(제목 없음)'} — {outcome.error}")
+            failed = True
+
+        if dry_run:
+            for outcome in report.outcomes:
+                if outcome.skipped.startswith("미리보기"):
+                    print(f"  · {outcome.title[:60]} — {outcome.skipped}")
+
+        made = len(report.made)
+        waiting = sum(1 for o in report.outcomes if o.skipped.startswith("미리보기"))
+        print(f"  썸네일 {made}건" + (f" · 미리보기 {waiting}건" if waiting else ""))
+
+    return 1 if failed else 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -72,6 +105,22 @@ def main(argv: list[str] | None = None) -> int:
             "검수된 ALT와 배치가 그대로 적용됩니다."
         ),
     )
+    parser.add_argument(
+        "--thumbnails",
+        action="store_true",
+        help=(
+            "발행하지 않고 썸네일만 만듭니다. 제목이 있고 썸네일이 비어 있는 행에 "
+            "고객사 확정 디자인으로 만들어 붙입니다. 워드프레스를 건드리지 않으므로 "
+            "원고 생성 전용 고객사도 함께 처리합니다."
+        ),
+    )
+    parser.add_argument(
+        "--skip",
+        action="append",
+        default=[],
+        metavar="고객사",
+        help="이름에 이 문자열이 든 고객사를 건너뜁니다. 여러 번 쓸 수 있습니다.",
+    )
     parser.add_argument("--verbose", "-v", action="store_true", help="자세한 로그")
     args = parser.parse_args(argv)
 
@@ -87,6 +136,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.prepare and (args.plan or args.draft or args.dry_run):
         print("--prepare 는 단독으로 실행하세요.", file=sys.stderr)
         return 2
+    if args.thumbnails and (args.prepare or args.plan or args.draft):
+        print("--thumbnails 는 발행 옵션과 함께 쓸 수 없습니다.", file=sys.stderr)
+        return 2
 
     try:
         secrets = load_secrets()
@@ -94,7 +146,12 @@ def main(argv: list[str] | None = None) -> int:
             configs = [Config.load(Path(args.config))]
         else:
             configs = load_clients(
-                secrets.notion_token, defaults_path=args.defaults, only=args.client
+                secrets.notion_token,
+                defaults_path=args.defaults,
+                only=args.client,
+                # 썸네일은 워드프레스를 건드리지 않으므로 주소가 없는 고객사도 대상입니다.
+                require_wordpress=not args.thumbnails,
+                skip=args.skip,
             )
     except ConfigError as exc:
         print(f"설정 오류\n{exc}", file=sys.stderr)
@@ -105,8 +162,14 @@ def main(argv: list[str] | None = None) -> int:
 
     if not configs:
         print()
-        print("발행 대상 고객사가 없습니다. 설정표의 상태·워드프레스 주소를 확인하세요.")
+        if args.thumbnails:
+            print("대상 고객사가 없습니다. 설정표의 상태를 확인하세요.")
+        else:
+            print("발행 대상 고객사가 없습니다. 설정표의 상태·워드프레스 주소를 확인하세요.")
         return 0
+
+    if args.thumbnails:
+        return run_thumbnails(configs, secrets, dry_run=args.dry_run)
 
     failed = False
     for cfg in configs:

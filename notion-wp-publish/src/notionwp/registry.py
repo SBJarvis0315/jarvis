@@ -14,6 +14,7 @@ import logging
 import re
 from dataclasses import replace
 from pathlib import Path
+from collections.abc import Sequence
 from typing import Any
 
 from . import notion_api as napi
@@ -42,8 +43,14 @@ def load_defaults(path: str | Path | None = None) -> Config:
     return Config.load(Path(path) if path else DEFAULTS_PATH)
 
 
-def build_config(defaults: Config, row: dict[str, Any]) -> tuple[Config | None, str]:
-    """설정표 행 하나 → 발행 설정. 발행 대상이 아니면 (None, 사유)."""
+def build_config(
+    defaults: Config, row: dict[str, Any], *, require_wordpress: bool = True
+) -> tuple[Config | None, str]:
+    """설정표 행 하나 → 고객사 설정. 대상이 아니면 (None, 사유).
+
+    `require_wordpress` 를 끄면 워드프레스 주소가 없는 고객사도 돌려줍니다.
+    썸네일 생성처럼 워드프레스를 건드리지 않는 단계에서 씁니다.
+    """
     rc = defaults.registry
     props = row.get("properties") or {}
 
@@ -63,10 +70,10 @@ def build_config(defaults: Config, row: dict[str, Any]) -> tuple[Config | None, 
         return None, "플래너 DB ID가 비었거나 형식이 맞지 않음"
 
     wp_url = text("wp_url")
-    if not wp_url:
+    if not wp_url and require_wordpress:
         # 원고 생성만 하는 고객사입니다. 오류가 아니라 정상 상태입니다.
         return None, "워드프레스 주소 없음 (원고 생성 전용)"
-    if not wp_url.startswith("http"):
+    if wp_url and not wp_url.startswith("http"):
         wp_url = "https://" + wp_url
 
     notion = replace(
@@ -92,8 +99,14 @@ def load_clients(
     defaults_path: str | Path | None = None,
     only: str = "",
     notion: NotionClient | None = None,
+    require_wordpress: bool = True,
+    skip: Sequence[str] = (),
 ) -> list[Config]:
-    """설정표에서 발행 대상 고객사 설정을 모두 읽어옵니다."""
+    """설정표에서 대상 고객사 설정을 모두 읽어옵니다.
+
+    `skip` 에 든 이름이 고객사명에 들어가면 건너뜁니다. 단계별로 일부 고객사를
+    잠시 빼 둘 때 씁니다.
+    """
     defaults = load_defaults(defaults_path)
     if not defaults.registry.database_id:
         raise ConfigError("defaults.json 에 registry.database_id 가 없습니다.")
@@ -105,7 +118,7 @@ def load_clients(
 
     configs: list[Config] = []
     for row in rows:
-        cfg, reason = build_config(defaults, row)
+        cfg, reason = build_config(defaults, row, require_wordpress=require_wordpress)
         if cfg is None:
             # '일시중지'는 의도된 상태라 조용히 넘기고, 그 외에는 눈에 띄게 남깁니다.
             # 활성인데 발행 대상에서 빠지는 일이 조용히 지나가면 안 됩니다.
@@ -117,8 +130,12 @@ def load_clients(
             continue
         if only and only not in cfg.client:
             continue
+        excluded = next((s for s in skip if s and s in cfg.client), "")
+        if excluded:
+            log.info("이번 단계에서 제외 [%s]: 제외 목록에 '%s'", cfg.client, excluded)
+            continue
         configs.append(cfg)
 
-    log.info("설정표에서 발행 대상 %d개 고객사를 읽었습니다: %s",
+    log.info("설정표에서 대상 %d개 고객사를 읽었습니다: %s",
              len(configs), ", ".join(c.client for c in configs) or "없음")
     return configs

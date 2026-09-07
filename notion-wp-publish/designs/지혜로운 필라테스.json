@@ -1,0 +1,20 @@
+{
+  "client": "지혜로운 필라테스",
+  "name_en": "WISELY PILATES",
+  "domain": "peakpilateskr.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "palette": {
+    "background": "#22302C",
+    "accent": "#8FBBA3",
+    "title": "#F4F1EA",
+    "sub": "#B7C7BE",
+    "pill_bg": "#2E3E38",
+    "pill_fg": "#9CC5AE",
+    "brand": "#F4F1EA",
+    "muted": "#8C9E95",
+    "rule": "#3B4B44",
+    "ornament": "#27352F"
+  },
+  "note": "홈페이지(peakpilateskr.com)가 허용 도메인에 없어 접근하지 못해, 참고자료의 브랜드 정의로 정했습니다. 클래식 필라테스·역삼·30~50대 전문직 대상이고 '안정감 있는 톤, 세일즈 톤 지양'이 명시되어 있어 차분한 딥그린으로 잡았습니다. 로고는 확보하지 못해 워드마크로 대신합니다. 2026-09-07 확정."
+}
