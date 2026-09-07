@@ -90,11 +90,22 @@ class RunLogger:
     def enabled(self) -> bool:
         return bool(self.cfg.database_id)
 
-    def write(self, outcomes: list[Any], *, note: str = "") -> None:
+    def write(
+        self,
+        outcomes: list[Any],
+        *,
+        note: str = "",
+        summary: Summary | None = None,
+        duration_min: float | None = None,
+    ) -> None:
+        """실행 결과 한 줄. `summary` 를 넘기면 그것을 그대로 씁니다.
+
+        썸네일처럼 결과 모양이 다른 단계는 자기 요약을 만들어 넘깁니다.
+        """
         if not self.enabled:
             return
 
-        summary = summarize_for_log(outcomes)
+        summary = summary or summarize_for_log(outcomes)
         detail = f"{note}\n{summary.detail}" if note else summary.detail
         now = datetime.now(KST).replace(microsecond=0)
 
@@ -122,6 +133,12 @@ class RunLogger:
         stage_prop = self.cfg.properties.get("stage")
         if stage_prop:
             properties[stage_prop] = {"select": {"name": self.cfg.stage}}
+
+        # 토큰·비용은 에이전트만 알 수 있는 값이라 스크립트는 채우지 않습니다.
+        # 시간은 여기서 잴 수 있으므로 남깁니다.
+        duration_prop = self.cfg.properties.get("duration")
+        if duration_prop and duration_min is not None:
+            properties[duration_prop] = {"number": round(duration_min, 2)}
 
         try:
             self.notion.create_page(self.cfg.database_id, properties)

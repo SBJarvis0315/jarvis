@@ -101,6 +101,9 @@ class RunLogConfig:
             "result": "결과",
             "detail": "상세",
             "stage": "단계",
+            "duration": "소요 시간(분)",
+            "tokens": "사용 토큰",
+            "cost": "비용(USD)",
         }
     )
 

@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import logging
+import time
 import posixpath
 import re
 from dataclasses import dataclass, field
@@ -219,6 +220,7 @@ class Publisher:
     # -------------------------------------------------------------------- 실행
 
     def run(self) -> list[Outcome]:
+        started = time.monotonic()
         self.wp.bridge_ping()
 
         on = today_kst()
@@ -260,7 +262,9 @@ class Publisher:
         # --dry-run 은 아무것도 하지 않았고, --draft 는 공개하지도 노션을 건드리지도
         # 않았으므로 운영 로그에 남기지 않습니다.
         if not self.dry_run and not self.draft:
-            self.runlog.write(outcomes)
+            self.runlog.write(
+                outcomes, duration_min=(time.monotonic() - started) / 60
+            )
 
         return outcomes
 
