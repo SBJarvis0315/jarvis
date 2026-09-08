@@ -17,12 +17,14 @@ import time
 from dataclasses import replace
 from pathlib import Path
 
-from .config import Config, ConfigError, load_secrets
+from . import thumbnails as thumbs
+from .board import BoardClient, BoardError, BoardProfile
+from .board_publish import BoardPublisher
+from .config import Config, ConfigError, board_credentials, load_secrets
+from .notion_api import NotionClient
 from .publish import Publisher, summarize
 from .registry import load_clients
 from .runlog import RunLogger
-from . import thumbnails as thumbs
-from .notion_api import NotionClient
 
 log = logging.getLogger(__name__)
 
@@ -64,6 +66,49 @@ def run_thumbnails(configs, secrets, *, dry_run: bool = False) -> int:
                 summary=report.summarize(),
                 duration_min=(time.monotonic() - started) / 60,
             )
+
+    return 1 if failed else 0
+
+
+def run_board(configs, secrets, args) -> int:
+    """자체 게시판 발행. 워드프레스 대신 관리자 화면을 브라우저로 조작합니다."""
+    failed = False
+    for cfg in configs:
+        if len(configs) > 1:
+            print()
+            print(f"━━━ {cfg.client} ━━━")
+
+        try:
+            if args.board_inspect:
+                out_dir = Path(args.board_inspect) / cfg.client
+                profile = BoardProfile.load(cfg.board.admin_url)
+                user, password = board_credentials(cfg.board.admin_url)
+                with BoardClient(profile, user, password, artifacts=out_dir) as client:
+                    report = client.inspect(out_dir)
+                print(f"  관리자 화면을 떠 두었습니다: {report}")
+                continue
+
+            publisher = BoardPublisher(
+                cfg,
+                secrets,
+                dry_run=args.dry_run,
+                plan_root=Path(args.plan) if args.plan else None,
+            )
+            outcomes = (
+                publisher.prepare(Path(args.prepare)) if args.prepare else publisher.run()
+            )
+        except (BoardError, ConfigError) as exc:
+            print(f"[{cfg.client}] {exc}", file=sys.stderr)
+            failed = True
+            continue
+        except Exception as exc:
+            print(f"[{cfg.client}] 실행 중단: {exc}", file=sys.stderr)
+            failed = True
+            continue
+
+        print()
+        print(summarize(outcomes))
+        failed = failed or any(o.error for o in outcomes)
 
     return 1 if failed else 0
 
@@ -128,6 +173,23 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     parser.add_argument(
+        "--board",
+        action="store_true",
+        help=(
+            "워드프레스가 아니라 자체 홈페이지 게시판에 발행합니다. 설정표에 '게시판 주소'가 "
+            "적힌 고객사만 대상이며, 브라우저로 관리자 화면에 로그인해 글을 올립니다. "
+            "--dry-run · --prepare · --plan 과 함께 씁니다."
+        ),
+    )
+    parser.add_argument(
+        "--board-inspect",
+        metavar="DIR",
+        help=(
+            "게시판 관리자에 로그인해 목록·글쓰기 화면의 스크린샷과 폼 구조를 DIR 에 떠 둡니다. "
+            "새 사이트의 프로파일(boards/<호스트>.json)을 만들거나 고칠 때 씁니다. 발행하지 않습니다."
+        ),
+    )
+    parser.add_argument(
         "--skip",
         action="append",
         default=[],
@@ -152,6 +214,23 @@ def main(argv: list[str] | None = None) -> int:
     if args.thumbnails and (args.prepare or args.plan or args.draft):
         print("--thumbnails 는 발행 옵션과 함께 쓸 수 없습니다.", file=sys.stderr)
         return 2
+    if args.board_inspect:
+        args.board = True
+    if args.board and args.draft:
+        print(
+            "자체 게시판에는 임시저장이 없습니다. --board 는 --draft 와 함께 쓸 수 없습니다.",
+            file=sys.stderr,
+        )
+        return 2
+    if args.board and args.thumbnails:
+        print("--board 와 --thumbnails 는 함께 쓸 수 없습니다.", file=sys.stderr)
+        return 2
+
+    platform: str | None = "wordpress"
+    if args.thumbnails:
+        platform = None  # 노션만 건드리므로 발행처를 따지지 않습니다.
+    elif args.board:
+        platform = "board"
 
     try:
         secrets = load_secrets()
@@ -162,8 +241,7 @@ def main(argv: list[str] | None = None) -> int:
                 secrets.notion_token,
                 defaults_path=args.defaults,
                 only=args.client,
-                # 썸네일은 워드프레스를 건드리지 않으므로 주소가 없는 고객사도 대상입니다.
-                require_wordpress=not args.thumbnails,
+                platform=platform,
                 skip=args.skip,
             )
     except ConfigError as exc:
@@ -177,12 +255,16 @@ def main(argv: list[str] | None = None) -> int:
         print()
         if args.thumbnails:
             print("대상 고객사가 없습니다. 설정표의 상태를 확인하세요.")
+        elif args.board:
+            print("게시판 발행 대상 고객사가 없습니다. 설정표의 상태·게시판 주소를 확인하세요.")
         else:
             print("발행 대상 고객사가 없습니다. 설정표의 상태·워드프레스 주소를 확인하세요.")
         return 0
 
     if args.thumbnails:
         return run_thumbnails(configs, secrets, dry_run=args.dry_run)
+    if args.board:
+        return run_board(configs, secrets, args)
 
     failed = False
     for cfg in configs:

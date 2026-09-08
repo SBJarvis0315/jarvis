@@ -1,2 +1,4 @@
 requests>=2.31
 Pillow>=10.0
+# 자체 게시판 발행(--board)에만 필요합니다. 브라우저는 환경의 Chromium 을 씁니다.
+playwright>=1.45

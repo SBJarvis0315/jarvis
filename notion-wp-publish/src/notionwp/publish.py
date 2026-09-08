@@ -14,9 +14,10 @@
 from __future__ import annotations
 
 import logging
-import time
 import posixpath
 import re
+import time
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
@@ -120,8 +121,14 @@ def uses_hero_image(cfg: Config, props: dict[str, Any]) -> bool:
     return napi.read_select((props or {}).get(cfg.notion.prop("type"))) in types
 
 
-def check_properties(cfg: Config, page: dict[str, Any], *, on: date) -> Candidate:
-    """블록을 내려받기 전에, 속성만으로 판별할 수 있는 조건을 먼저 봅니다."""
+def check_properties(
+    cfg: Config, page: dict[str, Any], *, on: date, require_slug: bool = True
+) -> Candidate:
+    """블록을 내려받기 전에, 속성만으로 판별할 수 있는 조건을 먼저 봅니다.
+
+    `require_slug` 는 워드프레스에만 해당합니다. 자체 게시판은 글 번호로 주소가
+    정해지므로 슬러그가 없어도 발행합니다.
+    """
     nc = cfg.notion
     props = page.get("properties") or {}
 
@@ -160,11 +167,10 @@ def check_properties(cfg: Config, page: dict[str, Any], *, on: date) -> Candidat
     if not iter_files(prop("body_images")) and not uses_hero_image(cfg, props):
         cand.reasons.append("본문 이미지가 비어 있음")
 
-    for key, label in (
-        ("meta_title", "메타타이틀"),
-        ("meta_description", "메타디스크립션"),
-        ("slug", "슬러그"),
-    ):
+    required = [("meta_title", "메타타이틀"), ("meta_description", "메타디스크립션")]
+    if require_slug:
+        required.append(("slug", "슬러그"))
+    for key, label in required:
         if not napi.read_text(prop(key)).strip():
             cand.reasons.append(f"{label}이(가) 비어 있음")
 
@@ -177,6 +183,215 @@ def check_body(cand: Candidate, blocks: list[dict[str, Any]]) -> Candidate:
     if cand.extracted.is_empty:
         cand.reasons.append("페이지에 발행할 원고가 없음 (콘텐츠 가이드·검수용 섹션 제외 후 비어 있음)")
     return cand
+
+
+def iter_candidates(
+    cfg: Config, notion: Any, *, on: date, require_slug: bool = True
+) -> Iterator[Candidate]:
+    """플래너의 모든 행을 게이트에 통과시켜 차례로 돌려줍니다.
+
+    속성 조건에 걸린 행은 본문을 내려받지 않습니다. 통과한 행만 블록을 받아
+    본문 유무까지 봅니다. 워드프레스·자체 게시판 발행이 같은 게이트를 씁니다.
+    """
+    for page in notion.query_planner():
+        cand = check_properties(cfg, page, on=on, require_slug=require_slug)
+        if not cand.ok:
+            log.debug("건너뜀 [%s] %s", cand.title[:30], "; ".join(cand.reasons))
+            yield cand
+            continue
+
+        cand = check_body(cand, notion.fetch_blocks(cand.page_id))
+        if not cand.ok:
+            log.info("건너뜀 [%s] %s", cand.title[:30], "; ".join(cand.reasons))
+        yield cand
+
+
+def skipped_outcome(cand: Candidate) -> Outcome:
+    return Outcome(page_id=cand.page_id, title=cand.title, skipped=True, reasons=list(cand.reasons))
+
+
+# ------------------------------------------------------------- 준비 (plan.json)
+
+
+def prepare_page(
+    cfg: Config,
+    cand: Candidate,
+    root: Path,
+    *,
+    video_candidates: Sequence[VideoCandidate] = (),
+) -> Outcome:
+    """원고 한 편의 이미지를 내려받고 plan.json 을 만듭니다.
+
+    스크립트는 이미지를 볼 수 없으므로, 여기까지만 하고 ALT 는 비워 둡니다.
+    이어서 사람이나 루틴 안의 Claude 가 이미지를 보고 채웁니다.
+    """
+    nc = cfg.notion
+    assert cand.extracted is not None
+
+    def prop(key: str) -> dict[str, Any] | None:
+        return cand.props.get(nc.prop(key))
+
+    slug = napi.read_text(prop("slug")).strip()
+    directory = plan_dir_for(root, cand.page_id)
+    (directory / "images").mkdir(parents=True, exist_ok=True)
+
+    body_files = iter_files(prop("body_images"))
+    thumb_files = iter_files(prop("thumbnail"))
+
+    # 원고에 `::IMG-01::` 마커가 있으면 글쓴이가 정한 그 자리를 씁니다.
+    # 없으면 H2/H3 구간에 고르게 배분합니다.
+    body_markers = [m for m in cand.extracted.markers if not m.is_thumbnail]
+    if body_markers:
+        ordered = sorted(body_markers, key=lambda m: (m.number or 0, m.index))
+        anchors = [m.index for m in ordered]
+        hints = [m.alt_hint or m.note for m in ordered]
+        log.info("본문 마커 %d개를 배치 기준으로 씁니다", len(anchors))
+    else:
+        anchors = spread_evenly(cand.extracted.body, len(body_files))
+        hints = []
+
+    page_plan = PagePlan(
+        page_id=cand.page_id,
+        title=cand.title,
+        slug=slug,
+        sections=outline(cand.extracted.body),
+        video_candidates=list(video_candidates),
+    )
+
+    # 썸네일
+    thumb_path = Path("images") / f"thumbnail{_suffix(thumb_files[0].url, thumb_files[0].name)}"
+    (directory / thumb_path).write_bytes(download(thumb_files[0].url))
+    page_plan.thumbnail = str(thumb_path)
+    thumb_marker = next((m for m in cand.extracted.markers if m.is_thumbnail), None)
+    if thumb_marker:
+        page_plan.thumbnail_hint = thumb_marker.alt_hint or thumb_marker.note
+    preview = Path("images") / "thumbnail-preview.jpg"
+    if make_preview(directory / thumb_path, directory / preview):
+        page_plan.thumbnail_preview = str(preview)
+
+    # 본문 이미지
+    for n, file in enumerate(body_files, start=1):
+        original = Path("images") / f"{n}{_suffix(file.url, file.name)}"
+        (directory / original).write_bytes(download(file.url))
+
+        preview = Path("images") / f"{n}-preview.jpg"
+        has_preview = make_preview(directory / original, directory / preview)
+
+        page_plan.images.append(
+            PlannedImage(
+                n=n,
+                original=str(original),
+                preview=str(preview) if has_preview else str(original),
+                anchor=anchors[n - 1] if n - 1 < len(anchors) else len(cand.extracted.body),
+                alt="",
+                source_name=file.name,
+                hint=hints[n - 1] if n - 1 < len(hints) else "",
+            )
+        )
+
+    path = page_plan.save(directory)
+    log.info("준비 완료: %s → %s (이미지 %d장)", cand.title[:40], path, len(body_files))
+
+    return Outcome(page_id=cand.page_id, title=cand.title, prepared=True, plan_path=str(path))
+
+
+def load_plan(plan_root: Path | None, page_id: str) -> PagePlan | None:
+    """검수된 plan.json. 없으면 None (원고의 ALT 가이드로 진행), ALT 가 비면 오류."""
+    if not plan_root:
+        return None
+    directory = plan_dir_for(plan_root, page_id)
+    if not (directory / PLAN_FILENAME).exists():
+        log.warning("plan.json 이 없어 원고의 ALT 가이드로 진행합니다: %s", directory)
+        return None
+
+    plan = PagePlan.load(directory)
+    if plan.missing_alts:
+        raise PublishError(
+            f"plan.json 의 ALT가 비어 있습니다 (이미지 {plan.missing_alts}). "
+            "이미지를 확인하고 alt 를 채운 뒤 다시 실행해 주세요."
+        )
+    return plan
+
+
+def thumbnail_source(
+    prop_value: dict[str, Any] | None,
+    plan: PagePlan | None,
+    plan_root: Path | None,
+    slug: str,
+    default_alt: str,
+) -> tuple[str, bytes, str]:
+    """썸네일 파일 (이름, 바이트, ALT). plan.json 이 있으면 그 파일과 ALT 를 씁니다."""
+    if plan and plan.thumbnail:
+        path = plan_dir_for(plan_root, plan.page_id) / plan.thumbnail  # type: ignore[arg-type]
+        return (
+            target_filename(slug, None, path.name),
+            path.read_bytes(),
+            plan.thumbnail_alt or default_alt,
+        )
+
+    files = iter_files(prop_value)
+    return (
+        target_filename(slug, None, files[0].url, files[0].name),
+        download(files[0].url),
+        default_alt,
+    )
+
+
+def body_image_sources(
+    prop_value: dict[str, Any] | None,
+    plan: PagePlan | None,
+    plan_root: Path | None,
+    cand: Candidate,
+    slug: str,
+) -> list[tuple[str, bytes, Placement]]:
+    """본문 이미지들 (이름, 바이트, 배치). 배치 순서대로 정렬되어 나옵니다."""
+    assert cand.extracted is not None
+
+    if plan and plan.images:
+        out = []
+        for img in sorted(plan.images, key=lambda i: (i.anchor, i.n)):
+            path = plan_dir_for(plan_root, plan.page_id) / img.original  # type: ignore[arg-type]
+            out.append(
+                (
+                    target_filename(slug, img.n, path.name),
+                    path.read_bytes(),
+                    Placement(index=img.anchor, alt=img.alt),
+                )
+            )
+        return out
+
+    files = iter_files(prop_value)
+    placements = plan_placements(
+        cand.extracted.body,
+        cand.extracted.image_hints,
+        image_count=len(files),
+        fallback_alt_prefix=cand.title,
+    )
+    return [
+        (target_filename(slug, n, f.url, f.name), download(f.url), p)
+        for n, (f, p) in enumerate(zip(files, placements, strict=True), start=1)
+    ]
+
+
+def mark_error(cfg: Config, notion: Any, page_id: str) -> None:
+    """실패한 행을 '발행 오류'로 표시합니다. 상태 옵션이 없으면 조용히 넘어갑니다."""
+    if not cfg.notion.status_error:
+        return
+    try:
+        notion.update_page(
+            page_id,
+            {cfg.notion.prop("status"): napi.write_status(cfg.notion.status_error)},
+        )
+    except Exception as exc:
+        log.warning(
+            "'%s' 상태로 바꾸지 못했습니다. 플래너 진행 상황에 해당 옵션이 있는지 확인해 주세요: %s",
+            cfg.notion.status_error,
+            exc,
+        )
+
+
+class PublishError(RuntimeError):
+    """발행처와 무관한 발행 단계 오류 (plan.json 누락 등)."""
 
 
 # ------------------------------------------------------------------ 오케스트레이터
@@ -227,36 +442,10 @@ class Publisher:
         log.info("기준 날짜 %s (Asia/Seoul) · 대상 플래너 %s", on, self.cfg.client)
 
         outcomes: list[Outcome] = []
-        for page in self.notion.query_planner():
-            cand = check_properties(self.cfg, page, on=on)
-
+        for cand in iter_candidates(self.cfg, self.notion, on=on):
             if not cand.ok:
-                log.debug("건너뜀 [%s] %s", cand.title[:30], "; ".join(cand.reasons))
-                outcomes.append(
-                    Outcome(
-                        page_id=cand.page_id,
-                        title=cand.title,
-                        skipped=True,
-                        reasons=cand.reasons,
-                    )
-                )
+                outcomes.append(skipped_outcome(cand))
                 continue
-
-            blocks = self.notion.fetch_blocks(cand.page_id)
-            cand = check_body(cand, blocks)
-
-            if not cand.ok:
-                log.info("건너뜀 [%s] %s", cand.title[:30], "; ".join(cand.reasons))
-                outcomes.append(
-                    Outcome(
-                        page_id=cand.page_id,
-                        title=cand.title,
-                        skipped=True,
-                        reasons=cand.reasons,
-                    )
-                )
-                continue
-
             outcomes.append(self._publish(cand))
 
         # --dry-run 은 아무것도 하지 않았고, --draft 는 공개하지도 노션을 건드리지도
@@ -280,23 +469,16 @@ class Publisher:
         log.info("준비 · 기준 날짜 %s (Asia/Seoul) · %s", on, self.cfg.client)
 
         outcomes: list[Outcome] = []
-        for page in self.notion.query_planner():
-            cand = check_properties(self.cfg, page, on=on)
+        videos = None
+        for cand in iter_candidates(self.cfg, self.notion, on=on):
             if not cand.ok:
-                outcomes.append(
-                    Outcome(page_id=cand.page_id, title=cand.title, skipped=True, reasons=cand.reasons)
-                )
-                continue
-
-            cand = check_body(cand, self.notion.fetch_blocks(cand.page_id))
-            if not cand.ok:
-                outcomes.append(
-                    Outcome(page_id=cand.page_id, title=cand.title, skipped=True, reasons=cand.reasons)
-                )
+                outcomes.append(skipped_outcome(cand))
                 continue
 
             try:
-                outcomes.append(self._prepare_one(cand, root))
+                if videos is None:
+                    videos = self._video_candidates()
+                outcomes.append(prepare_page(self.cfg, cand, root, video_candidates=videos))
             except Exception as exc:
                 log.error("준비 실패 [%s] %s", cand.title[:40], exc)
                 outcomes.append(
@@ -309,81 +491,6 @@ class Publisher:
             self.runlog.write(outcomes, note="준비 단계에서 발행 대상 없음")
 
         return outcomes
-
-    def _prepare_one(self, cand: Candidate, root: Path) -> Outcome:
-        nc = self.cfg.notion
-        assert cand.extracted is not None
-
-        def prop(key: str) -> dict[str, Any] | None:
-            return cand.props.get(nc.prop(key))
-
-        slug = napi.read_text(prop("slug")).strip()
-        directory = plan_dir_for(root, cand.page_id)
-        (directory / "images").mkdir(parents=True, exist_ok=True)
-
-        body_files = iter_files(prop("body_images"))
-        thumb_files = iter_files(prop("thumbnail"))
-
-        # 원고에 `::IMG-01::` 마커가 있으면 글쓴이가 정한 그 자리를 씁니다.
-        # 없으면 H2/H3 구간에 고르게 배분합니다.
-        body_markers = [m for m in cand.extracted.markers if not m.is_thumbnail]
-        if body_markers:
-            ordered = sorted(body_markers, key=lambda m: (m.number or 0, m.index))
-            anchors = [m.index for m in ordered]
-            hints = [m.alt_hint or m.note for m in ordered]
-            log.info("본문 마커 %d개를 배치 기준으로 씁니다", len(anchors))
-        else:
-            anchors = spread_evenly(cand.extracted.body, len(body_files))
-            hints = []
-
-        page_plan = PagePlan(
-            page_id=cand.page_id,
-            title=cand.title,
-            slug=slug,
-            sections=outline(cand.extracted.body),
-            video_candidates=self._video_candidates(),
-        )
-
-        # 썸네일
-        thumb_path = Path("images") / f"thumbnail{_suffix(thumb_files[0].url, thumb_files[0].name)}"
-        (directory / thumb_path).write_bytes(download(thumb_files[0].url))
-        page_plan.thumbnail = str(thumb_path)
-        thumb_marker = next((m for m in cand.extracted.markers if m.is_thumbnail), None)
-        if thumb_marker:
-            page_plan.thumbnail_hint = thumb_marker.alt_hint or thumb_marker.note
-        preview = Path("images") / "thumbnail-preview.jpg"
-        if make_preview(directory / thumb_path, directory / preview):
-            page_plan.thumbnail_preview = str(preview)
-
-        # 본문 이미지
-        for n, file in enumerate(body_files, start=1):
-            original = Path("images") / f"{n}{_suffix(file.url, file.name)}"
-            (directory / original).write_bytes(download(file.url))
-
-            preview = Path("images") / f"{n}-preview.jpg"
-            has_preview = make_preview(directory / original, directory / preview)
-
-            page_plan.images.append(
-                PlannedImage(
-                    n=n,
-                    original=str(original),
-                    preview=str(preview) if has_preview else str(original),
-                    anchor=anchors[n - 1] if n - 1 < len(anchors) else len(cand.extracted.body),
-                    alt="",
-                    source_name=file.name,
-                    hint=hints[n - 1] if n - 1 < len(hints) else "",
-                )
-            )
-
-        path = page_plan.save(directory)
-        log.info("준비 완료: %s → %s (이미지 %d장)", cand.title[:40], path, len(body_files))
-
-        return Outcome(
-            page_id=cand.page_id,
-            title=cand.title,
-            prepared=True,
-            plan_path=str(path),
-        )
 
     # ------------------------------------------------------------------ 단건 발행
 
@@ -613,94 +720,22 @@ class Publisher:
         return [VideoCandidate(title=v.title, url=v.url, published=v.published) for v in videos]
 
     def _load_plan(self, page_id: str) -> PagePlan | None:
-        if not self.plan_root:
-            return None
-        directory = plan_dir_for(self.plan_root, page_id)
-        if not (directory / PLAN_FILENAME).exists():
-            log.warning("plan.json 이 없어 원고의 ALT 가이드로 진행합니다: %s", directory)
-            return None
+        try:
+            return load_plan(self.plan_root, page_id)
+        except PublishError as exc:
+            raise WordPressError(str(exc)) from exc
 
-        plan = PagePlan.load(directory)
-        if plan.missing_alts:
-            raise WordPressError(
-                f"plan.json 의 ALT가 비어 있습니다 (이미지 {plan.missing_alts}). "
-                "이미지를 확인하고 alt 를 채운 뒤 다시 실행해 주세요."
-            )
-        return plan
+    def _thumbnail_source(self, prop_value, plan, slug, default_alt):
+        return thumbnail_source(prop_value, plan, self.plan_root, slug, default_alt)
 
-    def _thumbnail_source(
-        self,
-        prop_value: dict[str, Any] | None,
-        plan: PagePlan | None,
-        slug: str,
-        default_alt: str,
-    ) -> tuple[str, bytes, str]:
-        if plan and plan.thumbnail:
-            path = plan_dir_for(self.plan_root, plan.page_id) / plan.thumbnail  # type: ignore[arg-type]
-            return (
-                target_filename(slug, None, path.name),
-                path.read_bytes(),
-                plan.thumbnail_alt or default_alt,
-            )
-
-        files = iter_files(prop_value)
-        return (
-            target_filename(slug, None, files[0].url, files[0].name),
-            download(files[0].url),
-            default_alt,
-        )
-
-    def _body_image_sources(
-        self,
-        prop_value: dict[str, Any] | None,
-        plan: PagePlan | None,
-        cand: Candidate,
-        slug: str,
-    ) -> list[tuple[str, bytes, Placement]]:
-        assert cand.extracted is not None
-        root = self.plan_root
-
-        if plan and plan.images:
-            out = []
-            for img in sorted(plan.images, key=lambda i: (i.anchor, i.n)):
-                path = plan_dir_for(root, plan.page_id) / img.original  # type: ignore[arg-type]
-                out.append(
-                    (
-                        target_filename(slug, img.n, path.name),
-                        path.read_bytes(),
-                        Placement(index=img.anchor, alt=img.alt),
-                    )
-                )
-            return out
-
-        files = iter_files(prop_value)
-        placements = plan_placements(
-            cand.extracted.body,
-            cand.extracted.image_hints,
-            image_count=len(files),
-            fallback_alt_prefix=cand.title,
-        )
-        return [
-            (target_filename(slug, n, f.url, f.name), download(f.url), p)
-            for n, (f, p) in enumerate(zip(files, placements, strict=True), start=1)
-        ]
+    def _body_image_sources(self, prop_value, plan, cand, slug):
+        return body_image_sources(prop_value, plan, self.plan_root, cand, slug)
 
     def _mark_error(self, page_id: str) -> None:
-        """실패한 행을 '발행 오류'로 표시합니다. 상태 옵션이 없으면 조용히 넘어갑니다."""
         # 임시저장 테스트는 노션을 일절 건드리지 않습니다.
-        if self.dry_run or self.draft or not self.cfg.notion.status_error:
+        if self.dry_run or self.draft:
             return
-        try:
-            self.notion.update_page(
-                page_id,
-                {self.cfg.notion.prop("status"): napi.write_status(self.cfg.notion.status_error)},
-            )
-        except Exception as exc:
-            log.warning(
-                "'%s' 상태로 바꾸지 못했습니다. 플래너 진행 상황에 해당 옵션이 있는지 확인해 주세요: %s",
-                self.cfg.notion.status_error,
-                exc,
-            )
+        mark_error(self.cfg, self.notion, page_id)
 
 
 def summarize(outcomes: list[Outcome]) -> str:

@@ -7,7 +7,8 @@
       "planner": "플래너 DB ID",
       "types": "대상 유형",
       "wp_url": "워드프레스 주소",
-      "youtube": "유튜브 채널"
+      "youtube": "유튜브 채널",
+      "board_url": "게시판 주소"
     },
     "state_active": "활성"
   },

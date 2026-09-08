@@ -1,0 +1,20 @@
+{
+  "host": "www.zeroclinic1.com",
+  "admin_url": "https://www.zeroclinic1.com/admin/board/main.php",
+  "login_url": "",
+  "public_url": "https://www.zeroclinic1.com/htm/boardseo_read.php?id={id}",
+  "tab": "블로그",
+  "write_button": "글쓰기",
+  "submit_buttons": ["등록", "저장", "확인", "완료"],
+  "id_param": "id",
+  "labels": {
+    "title": "제목",
+    "hit": "조회수",
+    "content": "내용",
+    "html": "HTML"
+  },
+  "html_mode": "HTML",
+  "hit_min": 500,
+  "hit_max": 1100,
+  "note": "제로클리닉(나우메디 제작). 게시판관리 › 블로그 탭. 에디터는 서머노트, 팀은 </> 코드 보기에 HTML 을 붙여 올렸음. 공개 글 주소는 목록 '수정' 링크의 id 값과 같음. 2026-09-08 스크린샷·팀원 스레드 기준으로 작성했고 실제 화면으로 검증은 --board-inspect 로 한 번 해야 함."
+}

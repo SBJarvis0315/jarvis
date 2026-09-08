@@ -12,9 +12,9 @@ from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Sequence
 from dataclasses import replace
 from pathlib import Path
-from collections.abc import Sequence
 from typing import Any
 
 from . import notion_api as napi
@@ -43,14 +43,30 @@ def load_defaults(path: str | Path | None = None) -> Config:
     return Config.load(Path(path) if path else DEFAULTS_PATH)
 
 
+#: 발행 단계가 고르는 대상. None 은 '발행처를 따지지 않음' (썸네일 등).
+PLATFORMS = ("wordpress", "board")
+
+
 def build_config(
-    defaults: Config, row: dict[str, Any], *, require_wordpress: bool = True
+    defaults: Config,
+    row: dict[str, Any],
+    *,
+    require_wordpress: bool = True,
+    platform: str | None = "wordpress",
 ) -> tuple[Config | None, str]:
     """설정표 행 하나 → 고객사 설정. 대상이 아니면 (None, 사유).
 
-    `require_wordpress` 를 끄면 워드프레스 주소가 없는 고객사도 돌려줍니다.
-    썸네일 생성처럼 워드프레스를 건드리지 않는 단계에서 씁니다.
+    `platform` 이 이 단계가 다루는 발행처입니다.
+        "wordpress"  워드프레스 주소가 있는 고객사만
+        "board"      게시판 주소가 있는 고객사만 (자체 홈페이지)
+        None         발행처를 따지지 않음 — 썸네일처럼 노션만 건드리는 단계
+
+    `require_wordpress=False` 는 예전 이름이며 `platform=None` 과 같습니다.
     """
+    if not require_wordpress:
+        platform = None
+    if platform is not None and platform not in PLATFORMS:
+        raise ConfigError(f"모르는 발행처입니다: {platform} (쓸 수 있는 것: {', '.join(PLATFORMS)})")
     rc = defaults.registry
     props = row.get("properties") or {}
 
@@ -69,12 +85,22 @@ def build_config(
     if not planner:
         return None, "플래너 DB ID가 비었거나 형식이 맞지 않음"
 
-    wp_url = text("wp_url")
-    if not wp_url and require_wordpress:
+    wp_url = _with_scheme(text("wp_url"))
+    # 설정표에 컬럼이 아직 없어도 돌아가야 하므로 이름을 찾지 못하면 빈 값으로 봅니다.
+    board_url = _with_scheme(text("board_url")) if rc.properties.get("board_url") else ""
+
+    if platform == "wordpress" and not wp_url:
+        if board_url:
+            return None, "자체 게시판 고객사 (워드프레스 아님)"
         # 원고 생성만 하는 고객사입니다. 오류가 아니라 정상 상태입니다.
         return None, "워드프레스 주소 없음 (원고 생성 전용)"
-    if wp_url and not wp_url.startswith("http"):
-        wp_url = "https://" + wp_url
+    if platform == "board" and not board_url:
+        if wp_url:
+            return None, "워드프레스 고객사 (자체 게시판 아님)"
+        return None, "게시판 주소 없음 (원고 생성 전용)"
+    if wp_url and board_url:
+        # 두 곳에 같은 글이 나가면 중복 콘텐츠가 됩니다. 사람이 하나를 지워야 합니다.
+        return None, "워드프레스 주소와 게시판 주소가 둘 다 적혀 있음 — 하나만 남겨 주세요"
 
     notion = replace(
         defaults.notion,
@@ -90,7 +116,16 @@ def build_config(
         brand_suffix=defaults.wordpress.brand_suffix or client,
     )
 
-    return replace(defaults, client=client, notion=notion, wordpress=wordpress), ""
+    board = replace(defaults.board, admin_url=board_url)
+
+    return replace(defaults, client=client, notion=notion, wordpress=wordpress, board=board), ""
+
+
+def _with_scheme(url: str) -> str:
+    url = (url or "").strip()
+    if url and not url.startswith("http"):
+        url = "https://" + url
+    return url.rstrip("/")
 
 
 def load_clients(
@@ -101,11 +136,12 @@ def load_clients(
     notion: NotionClient | None = None,
     require_wordpress: bool = True,
     skip: Sequence[str] = (),
+    platform: str | None = "wordpress",
 ) -> list[Config]:
     """설정표에서 대상 고객사 설정을 모두 읽어옵니다.
 
-    `skip` 에 든 이름이 고객사명에 들어가면 건너뜁니다. 단계별로 일부 고객사를
-    잠시 빼 둘 때 씁니다.
+    `platform` 은 build_config 와 같습니다. `skip` 에 든 이름이 고객사명에
+    들어가면 건너뜁니다 — 단계별로 일부 고객사를 잠시 빼 둘 때 씁니다.
     """
     defaults = load_defaults(defaults_path)
     if not defaults.registry.database_id:
@@ -118,7 +154,9 @@ def load_clients(
 
     configs: list[Config] = []
     for row in rows:
-        cfg, reason = build_config(defaults, row, require_wordpress=require_wordpress)
+        cfg, reason = build_config(
+            defaults, row, require_wordpress=require_wordpress, platform=platform
+        )
         if cfg is None:
             # '일시중지'는 의도된 상태라 조용히 넘기고, 그 외에는 눈에 띄게 남깁니다.
             # 활성인데 발행 대상에서 빠지는 일이 조용히 지나가면 안 됩니다.

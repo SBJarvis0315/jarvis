@@ -51,6 +51,22 @@ class WordPressConfig:
 
 
 @dataclass
+class BoardConfig:
+    """자체 홈페이지 게시판(워드프레스가 아닌 곳)에 발행하는 고객사용.
+
+    설정표에서 오는 값은 관리자 주소 하나입니다. 로그인 폼·글쓰기 폼이 어떻게
+    생겼는지는 사이트마다 다르므로, 저장소의 `boards/<호스트>.json` 프로파일이
+    나머지를 맡습니다 (board.py 참고).
+    """
+
+    admin_url: str = ""
+
+    @property
+    def enabled(self) -> bool:
+        return bool(self.admin_url)
+
+
+@dataclass
 class RenderConfig:
     spacer_height: int = 20
     spacer_before_headings: bool = True
@@ -75,6 +91,8 @@ class RegistryConfig:
             "types": "대상 유형",
             "wp_url": "워드프레스 주소",
             "youtube": "유튜브 채널",
+            # 워드프레스가 아닌 자체 홈페이지 게시판. 관리자 목록 화면 주소를 적습니다.
+            "board_url": "게시판 주소",
         }
     )
 
@@ -130,6 +148,16 @@ class Config:
     render: RenderConfig = field(default_factory=RenderConfig)
     run_log: RunLogConfig = field(default_factory=RunLogConfig)
     registry: RegistryConfig = field(default_factory=RegistryConfig)
+    board: BoardConfig = field(default_factory=BoardConfig)
+
+    @property
+    def platform(self) -> str:
+        """어디에 발행하는 고객사인가: 'wordpress' · 'board' · '' (원고 생성 전용)."""
+        if self.board.enabled:
+            return "board"
+        if self.wordpress.base_url:
+            return "wordpress"
+        return ""
 
     @classmethod
     def load(cls, path: str | Path) -> Config:
@@ -142,6 +170,7 @@ class Config:
                 render=RenderConfig(**raw.get("render", {})),
                 run_log=RunLogConfig(**raw.get("run_log", {})),
                 registry=RegistryConfig(**raw.get("registry", {})),
+                board=BoardConfig(**raw.get("board", {})),
             )
         except (KeyError, TypeError) as exc:
             raise ConfigError(f"설정 파일을 읽지 못했습니다 ({path}): {exc}") from exc
@@ -205,6 +234,36 @@ def wp_credentials(
         f"    WP_USER_{key}=워드프레스 사용자명\n"
         f"    WP_APP_PASSWORD_{key}=응용 프로그램 비밀번호\n"
         f"  (고객사가 한 곳뿐이면 WP_USER · WP_APP_PASSWORD 로 넣어도 됩니다)"
+    )
+
+
+def board_credentials(
+    admin_url: str, env: dict[str, str] | None = None
+) -> tuple[str, str]:
+    """자체 게시판 관리자 계정. 워드프레스와 같은 규칙으로 주소에서 키를 뽑습니다.
+
+        https://www.zeroclinic1.com/admin/board/main.php
+            →  BOARD_USER_ZEROCLINIC1 / BOARD_PASSWORD_ZEROCLINIC1
+
+    워드프레스와 달리 공용 값은 없습니다. 게시판은 사이트마다 계정이 다르고,
+    실수로 다른 고객사 관리자에 로그인하는 일이 있어서는 안 됩니다.
+    """
+    src: Any = env if env is not None else os.environ
+    key = credential_key(admin_url)
+    if not key:
+        raise ConfigError(f"게시판 주소에서 고객사 키를 뽑지 못했습니다: {admin_url!r}")
+
+    user = (src.get(f"BOARD_USER_{key}") or "").strip()
+    password = (src.get(f"BOARD_PASSWORD_{key}") or "").strip()
+
+    if user and password:
+        return user, password
+
+    raise ConfigError(
+        f"'{admin_url}' 관리자 계정이 {'반쪽만 있습니다' if (user or password) else '없습니다'}.\n"
+        f"  환경변수에 아래 두 개를 넣어 주세요:\n"
+        f"    BOARD_USER_{key}=관리자 아이디\n"
+        f"    BOARD_PASSWORD_{key}=관리자 비밀번호"
     )
 
 

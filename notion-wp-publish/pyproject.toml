@@ -18,3 +18,5 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["RUF059"]
+# 가짜 관리자 화면의 HTML 은 한 줄이 길어야 실제 폼과 대조하기 쉽습니다.
+"tests/fake_board_site.py" = ["E501"]
