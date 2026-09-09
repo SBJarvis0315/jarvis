@@ -158,8 +158,8 @@ LOGIN_PAGE = """<!doctype html><html><head><meta charset=utf-8><title>로그인<
 <form method=post action='/admin/login.php'>
   <input type=hidden name=ret value='/admin/board/main.php'>
   <p>아이디 <input type=text name=id></p>
-  <p>비밀번호 <input type=password name=pw></p>
-  <input type=submit value=로그인>
+  <p>비밀번호 <input type=password name=pw onkeydown="if(event.key==='Enter'){event.preventDefault();}"></p>
+  <button type=button onclick="this.form.submit()">로그인</button>
 </form></body></html>"""
 
 

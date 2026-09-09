@@ -83,7 +83,11 @@ class BoardProfile:
         if not host:
             raise BoardError(f"게시판 주소가 올바르지 않습니다: {admin_url!r}")
 
-        path = (directory or PROFILES_DIR) / f"{host}.json"
+        # www 가 있든 없든 같은 사이트입니다. 설정표에 어느 쪽으로 적혀도 찾습니다.
+        root = directory or PROFILES_DIR
+        alternates = [host, host.removeprefix("www."), f"www.{host.removeprefix('www.')}"]
+        path = next((root / f"{h}.json" for h in dict.fromkeys(alternates) if (root / f"{h}.json").exists()),
+                    root / f"{host}.json")
         if not path.exists():
             raise BoardError(
                 f"'{host}' 게시판 프로파일이 없습니다 ({path}).\n"
@@ -243,8 +247,30 @@ class BoardClient:
         self._settle()
 
         if page.locator("input[type=password]").count() and not self._looks_logged_in():
+            # 엔터로 제출되지 않는 폼도 있습니다 (버튼이 스크립트로만 동작하는 경우).
+            # 그때는 사람처럼 '로그인' 버튼을 직접 누릅니다.
+            button = self._login_button(scope)
+            if button is not None:
+                button.click()
+                self._settle()
+
+        if page.locator("input[type=password]").count() and not self._looks_logged_in():
             raise self._fail("로그인에 실패했습니다. 아이디·비밀번호를 확인해 주세요", "login-failed")
         log.info("관리자 로그인 완료: %s", self.profile.host)
+
+    def _login_button(self, scope: Any) -> Any:
+        for selector in (
+            "input[type=submit]",
+            "button[type=submit]",
+            "button:has-text('로그인')",
+            "a:has-text('로그인')",
+            "input[value*='로그인']",
+            "button:has-text('LOGIN')",
+        ):
+            found = scope.locator(selector)
+            if found.count():
+                return found.first
+        return None
 
     def _looks_logged_in(self) -> bool:
         page = self.page

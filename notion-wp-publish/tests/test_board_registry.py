@@ -175,3 +175,10 @@ def test_profile_round_trips(tmp_path):
     assert loaded.tab == "공지"
     # 설정표의 주소가 프로파일 파일의 값보다 우선합니다.
     assert loaded.admin_url == "https://a.example/admin/list.php"
+
+
+def test_profile_is_found_with_or_without_www():
+    """설정표에 www 를 빼고 적어도 같은 프로파일을 찾습니다."""
+    profile = BoardProfile.load("https://zeroclinic1.com/admin/board/main.php")
+    assert profile.host == "www.zeroclinic1.com"
+    assert profile.login_url.endswith("/admin/Login.php")
