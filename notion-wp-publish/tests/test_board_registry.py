@@ -17,7 +17,7 @@ from notionwp.registry import build_config, load_clients
 from test_gate_schema import DEFAULTS, TODAY, complete_page, text_prop
 from test_registry import FakeNotion
 
-ADMIN = "https://www.zeroclinic1.com/admin/board/main.php"
+ADMIN = "https://www.zeroclinic1.com/admin/board/boardseo_list.php"
 
 
 def board_row(**overrides) -> dict:
@@ -155,12 +155,28 @@ def test_board_gate_still_needs_meta_description():
 # ------------------------------------------------------------------ 프로파일
 
 
-def test_zeroclinic_profile_is_checked_in():
+def test_zeroclinic_profile_matches_the_real_admin():
+    """2026-09-09 실제 관리자에서 확인한 값입니다 (boards/inspect/zeroclinic/NOTES.md)."""
     profile = BoardProfile.load(ADMIN)
     assert profile.host == "www.zeroclinic1.com"
-    assert profile.tab == "블로그"
+    # 블로그 게시판은 대시보드(main.php)가 아니라 boardseo_list.php 입니다.
+    assert profile.admin_url.endswith("/admin/board/boardseo_list.php")
+    assert profile.login_url.endswith("/admin/Login.php")
+    # 등록 버튼이 그림이라 글자로는 못 찾습니다.
+    assert profile.submit_selector == "a[href*='checkForm']"
+    assert profile.html_mode_value == "Y"
     assert profile.public_link("161") == "https://www.zeroclinic1.com/htm/boardseo_read.php?id=161"
     assert 0 < profile.hit_min < profile.hit_max
+
+
+def test_site_root_falls_back_to_the_profile_board_url():
+    """설정표에 사이트 주소만 적어도 프로파일이 아는 목록 화면을 씁니다."""
+    for value in ("https://www.zeroclinic1.com", "https://www.zeroclinic1.com/"):
+        assert BoardProfile.load(value).admin_url.endswith("/admin/board/boardseo_list.php")
+
+    # 경로를 적었으면 그 값이 우선입니다.
+    other = "https://www.zeroclinic1.com/admin/board/notice_list.php"
+    assert BoardProfile.load(other).admin_url == other
 
 
 def test_missing_profile_points_at_inspect(tmp_path):

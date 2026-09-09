@@ -64,7 +64,10 @@ class BoardProfile:
     #: 목록 화면에서 눌러야 하는 게시판 탭의 글자 (예: 블로그). 비우면 누르지 않습니다.
     tab: str = ""
     write_button: str = "글쓰기"
-    #: 등록 버튼 후보. 앞에서부터 찾아 처음 보이는 것을 누릅니다.
+    #: 등록 버튼을 곧바로 집는 CSS 셀렉터. 글자가 아니라 그림으로 된 버튼에 씁니다.
+    #: (제로클리닉의 등록은 <a href="javascript:checkForm();"><img alt="글쓰기"></a> 입니다)
+    submit_selector: str = ""
+    #: 셀렉터가 없을 때 쓰는 글자 후보. 앞에서부터 찾아 처음 보이는 것을 누릅니다.
     submit_buttons: list[str] = field(default_factory=lambda: ["등록", "저장", "확인", "완료"])
     #: 목록의 글 링크에서 글 번호를 읽어낼 쿼리 파라미터 이름.
     id_param: str = "id"
@@ -72,8 +75,10 @@ class BoardProfile:
     labels: dict[str, str] = field(
         default_factory=lambda: {"title": "제목", "hit": "조회수", "content": "내용", "html": "HTML"}
     )
-    #: 'HTML' 라디오 중 골라야 하는 항목의 글자.
+    #: 'HTML' 라디오 중 골라야 하는 항목의 글자. 값으로 고를 수 있으면 아래를 씁니다.
     html_mode: str = "HTML"
+    #: HTML 라디오의 value. 글자로 더듬는 것보다 확실하므로 있으면 이쪽이 우선입니다.
+    html_mode_value: str = ""
     #: 조회수 칸에 넣을 임의의 값 범위. 팀이 손으로 올릴 때 쓰던 관행입니다.
     hit_min: int = 500
     hit_max: int = 1100
@@ -100,7 +105,11 @@ class BoardProfile:
         raw = json.loads(path.read_text(encoding="utf-8"))
         raw.setdefault("host", host)
         profile = cls(**raw)
-        if admin_url:
+
+        # 설정표에 적힌 주소가 우선입니다. 다만 사이트 주소만 적어 둔 경우
+        # (경로가 없거나 '/')에는 프로파일이 아는 목록 화면 주소를 그대로 씁니다 —
+        # 목록이 어느 파일인지는 사람이 외울 값이 아닙니다.
+        if admin_url and urlparse(admin_url).path.strip("/"):
             profile.admin_url = admin_url
         return profile
 
@@ -393,7 +402,9 @@ class BoardClient:
         # 표가 아닌 폼에 대비한 폴백. name 에 흔히 쓰는 이름이 들어 있으면 그것을 씁니다.
         names = {
             "title": "input[name*=subject], input[name*=title], input[name*=subj]",
-            "hit": "input[name*=hit], input[name*=view], input[name*=count]",
+            "hit": (
+                "input[name*=hit], input[name*=visited], input[name*=view], input[name*=count]"
+            ),
         }
         selector = names.get(key)
         return self.page.locator(selector) if selector else self.page.locator("__none__")
@@ -420,6 +431,16 @@ class BoardClient:
         radios = row.first.locator("input[type=radio]")
         if radios.count() == 0:
             return
+
+        # 값으로 고를 수 있으면 그쪽이 확실합니다. 라디오 옆 글자는 마크업에 따라
+        # 세 개가 한 덩어리로 읽혀서 엉뚱한 것을 고를 수 있습니다.
+        if self.profile.html_mode_value:
+            picked = row.first.locator(
+                f"input[type=radio][value={json.dumps(self.profile.html_mode_value)}]"
+            )
+            if picked.count():
+                picked.first.check()
+                return
 
         wanted = _norm(self.profile.html_mode)
         for radio in radios.all():
@@ -595,11 +616,17 @@ class BoardClient:
         page = self.page
         button = None
 
-        for selector in ("form input[type=submit]", "form button[type=submit]"):
-            found = page.locator(selector)
+        if self.profile.submit_selector:
+            found = page.locator(self.profile.submit_selector)
             if found.count():
                 button = found.first
-                break
+
+        if button is None:
+            for selector in ("form input[type=submit]", "form button[type=submit]"):
+                found = page.locator(selector)
+                if found.count():
+                    button = found.first
+                    break
 
         if button is None:
             for text in self.profile.submit_buttons:
@@ -617,8 +644,16 @@ class BoardClient:
         if button is None:
             raise self._fail("등록 버튼을 찾지 못했습니다", "submit")
 
-        button.click()
-        self._settle()
+        # 등록은 스크립트가 검사한 뒤 폼을 보냅니다. 이동이 끝날 때까지 기다려야
+        # 다음 단계(목록에서 글 번호 확인)가 새 화면을 봅니다.
+        try:
+            with page.expect_navigation(timeout=NAV_TIMEOUT_MS):
+                button.click()
+        except Exception as exc:
+            log.debug("등록 후 이동을 기다리지 못했습니다: %s", exc)
+            self._settle()
+        else:
+            self._settle()
 
     # ----------------------------------------------------------- 한 편 올리기
 

@@ -1,15 +1,15 @@
 {
   "host": "www.zeroclinic1.com",
-  "admin_url": "https://www.zeroclinic1.com/admin/board/main.php",
+  "admin_url": "https://www.zeroclinic1.com/admin/board/boardseo_list.php",
   "login_url": "https://www.zeroclinic1.com/admin/Login.php",
   "public_url": "https://www.zeroclinic1.com/htm/boardseo_read.php?id={id}",
-  "tab": "블로그",
+  "tab": "",
   "write_button": "글쓰기",
   "submit_buttons": [
+    "글쓰기",
     "등록",
     "저장",
-    "확인",
-    "완료"
+    "확인"
   ],
   "id_param": "id",
   "labels": {
@@ -21,5 +21,7 @@
   "html_mode": "HTML",
   "hit_min": 500,
   "hit_max": 1100,
-  "note": "제로클리닉(나우메디 제작). 게시판관리 › 블로그 탭. 에디터는 서머노트, 팀은 </> 코드 보기에 HTML 을 붙여 올렸음. 공개 글 주소는 목록 '수정' 링크의 id 값과 같음. 2026-09-08 스크린샷·팀원 스레드 기준으로 작성했고 실제 화면으로 검증은 --board-inspect 로 한 번 해야 함. 로그인 화면은 /admin/Login.php (L 대문자) — 아이디·비밀번호 칸 두 개와 '로그인' 버튼. 로그인 폼: POST /admin/LoginPost.php, 필드 id·Pwd, 숨은 mode=emp_check, 클라이언트 해시 없음, '로그인'은 a href=javascript:fnlogin(). 2026-09-09 --board-inspect 2차: 환경 문제(TLS 1.2·code.jquery.com)는 해소되어 로그인 페이지는 정상 렌더/jQuery 동작하나, 서버가 비밀번호를 '패스워드가 틀립니다.'로 계속 거부(이번엔 값이 잘리지 않은 온전한 7자인데도 거부 → 값 자체가 현재 관리자 비번과 불일치). 캡차·잠금 없음. 로그인 뒤 화면(탭·글쓰기·에디터·labels·id_param·submit)은 여전히 미검증이라 데이터 필드는 그대로 두고 note 만 갱신. 비번 갱신 후 재정찰 필요. 상세 boards/inspect/zeroclinic/NOTES.md."
+  "note": "제로클리닉(나우디자인 제작). 2026-09-09 실제 관리자에 로그인해 확인함. 블로그 게시판은 게시판관리 › 블로그 = /admin/board/boardseo_list.php (dbtable=boardseo). 같은 이름의 blog_list.php 도 있으나 비어 있는 다른 게시판이니 쓰지 말 것. 글쓰기 폼 boardseo_write.php → action boardseo_write_ok.php (multipart). 칸 이름: subject(제목) · visited(조회수) · udate(작성일, 기본값 채워져 있음) · isnoti(공지 N/Y) · ishtml(Y=HTML, YB=HTML+BR, N=텍스트) · contents1(서머노트가 붙는 textarea #summernote) · contents(#editorcontent, 등록 시 채워짐) · attach1~3(별도 첨부, 본문 이미지에는 쓰지 않음). 등록 버튼은 글자가 아니라 그림입니다: a href=javascript:checkForm() 안의 img alt=글쓰기. checkForm() 이 제목·본문 빈 값을 검사하고 서머노트 code 를 contents 로 옮긴 뒤 제출합니다. 에디터는 서머노트 0.8.18(사이트 자체 호스팅), jQuery 3.5.1 은 code.jquery.com. 본문 이미지는 에디터 그림 버튼 → /summernote-0.8.18-dist/file_uploader.php 로 multipart 업로드. 목록 검색칸 name=keyword. 글 링크는 boardseo_read.php?id=<진짜ID>&fakeid=<화면번호> 이며 공개 글 주소도 진짜 ID 를 씁니다. 자세한 내용 boards/inspect/zeroclinic/NOTES.md.",
+  "submit_selector": "a[href*='checkForm']",
+  "html_mode_value": "Y"
 }
