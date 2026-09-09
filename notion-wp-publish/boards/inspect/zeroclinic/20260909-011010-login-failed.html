@@ -1,0 +1,153 @@
+<!DOCTYPE html><html lang="en"><head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>::: 제로클리닉 관리자페이지 :::</title><link rel="stylesheet" type="text/css" href="/css/font.css?1788916242">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@100;200;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="/css/s-core-dream.css">
+<link rel="stylesheet" type="text/css" href="/css/common3.css?1788916242">
+<link rel="stylesheet" type="text/css" href="/css/board.css?1788916242">
+<link rel="stylesheet" type="text/css" href="/css/member.css?1788916242">
+<script src="//code.jquery.com/jquery-latest.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+<script language="JavaScript" src="./script/common.js"></script>
+</head>
+
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" onload="javascript:document.Login.id.focus();">
+<style>
+	#login { top:300px; left:0px; position:fixed; width:100vw; height:100vh; z-index:100 }
+	
+	.common_board { width:100%; height:100% }
+	
+	
+	#member_login { top:100px; max-width:600px; margin:-380px auto 0 auto; background:rgba(255,255,255,1); position:relative; line-height:1; padding:20px 40px; border:1px solid rgba(0,0,0,0); border-radius:10px }
+	/* title */
+	#member_login .title { height:250px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:20px }
+	#member_login .title p:nth-child(1) { font-family:'Barlow Condensed'; font-weight:300; font-size:11px; letter-spacing:3px; color:#333 }
+	#member_login .title p:nth-child(2) { font-family:'GloberThin'; font-size:50px; color:#333; letter-spacing:-1px }
+	#member_login .title p:nth-child(3) { font-family:'nsk-black'; font-size:30px; color:#333; letter-spacing:-1px; margin-top:-20px }
+	#member_login .title p:nth-child(4) { font-family:'nsk-regular'; font-size:16px; color:#333; letter-spacing:-.5px }
+	
+	#member_login .loginnotice { text-align:center; font-size:13px; color:#f00; line-height:1.3; padding:0px 0 20px 0 }
+	#member_login .loginnotice .br_mobile { display:none }
+	/* contents */
+	#member_login .contents { /*display:flex; justify-content:space-between;*/ padding:20px 0; border-top:1px solid #ddd; border-bottom:1px solid #fff; margin-top:20px }
+	#member_login .contents .box { /*width:50%; background:#fff; position:relative*/ }
+	#member_login .contents .box1 { }
+	#member_login .contents .box2 { padding-top:20px; margin-top:20px; border-top:1px dashed #aaa }
+	#member_login .box1 { display:flex }
+	#member_login .box1 ._box:nth-child(1) { width:100%; display:flex; flex-direction:column; justify-content:space-between }
+	#member_login .box1 ._box:nth-child(1) .input_wrap { width:calc(100% - 20px) }
+	#member_login .box1 ._box:nth-child(2) { width:200px }
+	#member_login .box1 ._box:nth-child(2) .btn_hover { width:100%; height:100px; background:var(--color-dark); border-radius:5px; transition:all ease-out .3s }
+	#member_login .box1 ._box:nth-child(2) .btn_hover.active { background:#000 }
+	#member_login .box1 ._box:nth-child(2) .btn_hover p { font-family:var(--font-sp1); font-size:24px; letter-spacing:-1px; color:#fff }
+	#member_login .box2 { display:flex; flex-direction:column; justify-content:space-between; gap:10px }
+	#member_login .box2 ._box { width:100%; display:flex; justify-content:space-between; align-items:center }
+	#member_login .box2 ._box > p { font-family:var(--font-sp1); font-size:18px; letter-spacing:-1px; color:var(--color-dark); text-align:left }
+	#member_login .box2 ._box > div { width:200px }
+	#member_login .box2 ._box .btn_hover { width:100%; height:45px; background:var(--color-dark); border-radius:5px; transition:all ease-out .3s }
+	#member_login .box2 ._box .btn_hover.active { background:#000 }
+	#member_login .box2 ._box .btn_hover > p { font-family:var(--font-sp1); font-size:16px; letter-spacing:-1px; color:#fff }
+
+</style>
+<div id="login">
+	<div class="wrap">
+        <div class="common_board">
+            <div id="member_login">
+                <div class="title">
+                    <p></p>
+                    <p>Admin</p>
+                    <p>로그인</p>
+                    <p>웹사이트 운영을 위한 관리자 모드입니다.</p>
+                </div>
+                <form name="Login" id="Login" method="post" action="/admin/LoginPost.php" onsubmit="return fnlogin();">
+                <input type="hidden" value="emp_check" name="mode" style="">
+                <input type="hidden" name="frompage" style="">
+                <div class="contents">
+                    <div class="box box1">
+                        <div class="_box">
+                            <div class="input_wrap"><input type="text" class="objinput" placeholder="아이디를 입력해 주세요." id="loginid" name="id" value="" onkeydown="if(event.keyCode==13){return fnlogin();}" style=""></div>
+                            <div class="input_wrap"><input type="password" class="objinput" placeholder="비밀번호를 입력해 주세요." id="loginpw" name="Pwd" value="" onkeydown="if(event.keyCode==13){return fnlogin();}" style=""></div>
+                        </div>
+                        <div class="_box">
+                            <a href="javascript:fnlogin();">
+                                <div class="centerBox btn_hover">
+                                    <p>로그인</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+//$(function(){
+	function popup_login_on(){
+		$("#login").css({top:0});
+		$("#login .wrap").css({transform:'scale(1)', opacity:1});
+		var temp=setTimeout(function(){
+			$("#login .icon_wrap").addClass('on');
+		},300);
+	}
+	function popup_login_off(){
+		$("#login .icon_wrap").removeClass('on');
+		$("#login .wrap").css({transform:'scale(.9)', opacity:0});
+		var _timer=setTimeout(function(){
+			$("#login").css({top:"1000%"});
+		},500);
+	}
+	$("#login .btn_close").on({
+		mouseenter : function(){
+			$(this).find('.icon').addClass('on');
+		},
+		mouseleave : function(){
+			$(this).find('.icon').removeClass('on');
+		},
+		click : function(){
+			popup_login_off();
+		}
+	});
+	$("#login .pop_close").on({
+		click : function(){
+			$("#login .btn_close").trigger('click');
+		}
+	});
+//});
+</script>
+<script language="javascript">
+function goLoginclose()
+{
+	$("#login .btn_close").trigger('click');
+}
+function fnlogin()
+{
+	if($('#loginid').val()=="")
+	{
+		alert("아이디를 입력하세요.");	
+		$('#loginid').focus();
+		return false;
+	}
+	if($('#loginpw').val()=="")
+	{
+		alert("비밀번호를 입력하세요.");	
+		$('#loginpw').focus();
+		return false;
+	}
+	
+	document.Login.submit();
+	//return true;
+
+}
+</script>
+
+
+
+</body></html>
