@@ -125,9 +125,9 @@ def build_config(
 def _is_board_site(url: str) -> bool:
     """저장소에 이 사이트의 게시판 프로파일이 있으면 자체 게시판 고객사입니다."""
     # board 모듈은 브라우저 쪽 의존성을 끌고 오므로 필요할 때만 불러옵니다.
-    from .board import profile_exists
+    from .board import has_profile
 
-    return profile_exists(url)
+    return has_profile(url)
 
 
 def _with_scheme(url: str) -> str:

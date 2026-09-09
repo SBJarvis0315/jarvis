@@ -50,6 +50,33 @@ class BoardError(RuntimeError):
 # ---------------------------------------------------------------- 프로파일
 
 
+def profile_path(admin_url: str, directory: Path | None = None) -> Path | None:
+    """이 주소의 사이트에 굳혀 둔 프로파일 파일. 없으면 None.
+
+    www 가 있든 없든 같은 사이트입니다. 설정표에 어느 쪽으로 적혀도 찾습니다.
+    """
+    host = urlparse(admin_url).netloc.lower()
+    if not host:
+        return None
+    root = directory or PROFILES_DIR
+    bare = host.removeprefix("www.")
+    for name in dict.fromkeys([host, bare, f"www.{bare}"]):
+        path = root / f"{name}.json"
+        if path.exists():
+            return path
+    return None
+
+
+def has_profile(admin_url: str, directory: Path | None = None) -> bool:
+    """자체 게시판을 쓰는 고객사인지.
+
+    설정표의 주소 칸은 하나뿐이라, 그 주소가 워드프레스인지 자체 개발 사이트인지는
+    우리가 정찰해 프로파일을 굳혀 두었는지로 가릅니다. 프로파일이 있다 = 그 사이트의
+    관리자 화면을 우리가 안다 = 게시판 발행 대상입니다.
+    """
+    return profile_path(admin_url, directory) is not None
+
+
 @dataclass
 class BoardProfile:
     """사이트 하나의 관리자 화면 생김새. `boards/<호스트>.json` 에 굳혀 둡니다."""
@@ -90,11 +117,8 @@ class BoardProfile:
         if not host:
             raise BoardError(f"게시판 주소가 올바르지 않습니다: {admin_url!r}")
 
-        # www 가 있든 없든 같은 사이트입니다. 설정표에 어느 쪽으로 적혀도 찾습니다.
         root = directory or PROFILES_DIR
-        alternates = [host, host.removeprefix("www."), f"www.{host.removeprefix('www.')}"]
-        path = next((root / f"{h}.json" for h in dict.fromkeys(alternates) if (root / f"{h}.json").exists()),
-                    root / f"{host}.json")
+        path = profile_path(admin_url, directory) or root / f"{host}.json"
         if not path.exists():
             raise BoardError(
                 f"'{host}' 게시판 프로파일이 없습니다 ({path}).\n"
@@ -124,20 +148,6 @@ class BoardProfile:
         if not self.public_url or not post_id:
             return ""
         return self.public_url.replace("{id}", str(post_id))
-
-
-def profile_exists(url: str, directory: Path | None = None) -> bool:
-    """이 주소가 '자체 게시판' 고객사인지. 프로파일 파일이 있으면 그렇습니다.
-
-    설정표에는 발행 주소 칸이 하나뿐이고, 워드프레스인지 자체 게시판인지는 저장소가
-    압니다 — 그 사이트의 관리자 화면을 아는 프로파일이 있으면 자체 게시판입니다.
-    """
-    host = urlparse(url or "").netloc.lower()
-    if not host:
-        return False
-    root = directory or PROFILES_DIR
-    bare = host.removeprefix("www.")
-    return any((root / f"{h}.json").exists() for h in (host, bare, f"www.{bare}"))
 
 
 @dataclass
