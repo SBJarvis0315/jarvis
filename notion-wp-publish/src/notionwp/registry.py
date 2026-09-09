@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any
 
 from . import notion_api as napi
+from .board import has_profile
 from .config import Config, ConfigError, NotionConfig
 from .notion_api import NotionClient
 
@@ -88,6 +89,13 @@ def build_config(
     wp_url = _with_scheme(text("wp_url"))
     # 설정표에 컬럼이 아직 없어도 돌아가야 하므로 이름을 찾지 못하면 빈 값으로 봅니다.
     board_url = _with_scheme(text("board_url")) if rc.properties.get("board_url") else ""
+
+    # 주소 칸은 하나로 씁니다. 워드프레스가 아니라 자체 개발 사이트를 쓰는 고객사
+    # (제로클리닉 등)도 같은 칸에 관리자 주소를 적고, 그 호스트의 게시판 프로파일
+    # (boards/<호스트>.json)이 있는지로 가려냅니다. 사람이 칸을 나눠 적을 필요가
+    # 없고, 프로파일이 없으면 지금까지처럼 워드프레스 고객사로 봅니다.
+    if wp_url and not board_url and has_profile(wp_url):
+        wp_url, board_url = "", wp_url
 
     if platform == "wordpress" and not wp_url:
         if board_url:

@@ -10,7 +10,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from notionwp.board import BoardError, BoardProfile
+from notionwp.board import BoardError, BoardProfile, has_profile
 from notionwp.config import ConfigError, board_credentials, credential_key
 from notionwp.publish import check_properties
 from notionwp.registry import build_config, load_clients
@@ -81,6 +81,58 @@ def test_both_addresses_is_an_error_not_a_double_publish():
     )
     assert cfg is None
     assert "둘 다" in reason
+
+
+# ------------------------------- 주소 칸 하나로 워드프레스 / 자체 게시판 가르기
+
+
+def one_column_row(**overrides) -> dict:
+    """주소 칸을 하나만 쓰는 행. 자체 게시판 주소도 '워드프레스 주소' 칸에 적습니다."""
+    values = {"게시판 주소": "", "워드프레스 주소": ADMIN}
+    values.update(overrides)
+    return board_row(**values)
+
+
+def test_self_built_site_in_the_wordpress_column_is_a_board_client():
+    """설정표에 주소 칸을 따로 만들지 않습니다. 프로파일이 있으면 자체 게시판입니다."""
+    cfg, reason = build_config(DEFAULTS, one_column_row(), platform="board")
+    assert reason == ""
+    assert cfg.board.admin_url == ADMIN
+    # 워드프레스 쪽으로는 새어 나가면 안 됩니다 — mu-plugin 오류로 넘어집니다.
+    assert cfg.wordpress.base_url == ""
+
+
+def test_self_built_site_in_the_wordpress_column_skips_the_wordpress_stage():
+    cfg, reason = build_config(DEFAULTS, one_column_row())
+    assert cfg is None
+    assert "자체 게시판" in reason
+
+
+def test_a_real_wordpress_address_stays_wordpress():
+    """프로파일이 없는 주소는 지금까지처럼 워드프레스 고객사입니다."""
+    row = one_column_row(**{"워드프레스 주소": "https://blog.example.com"})
+    cfg, _ = build_config(DEFAULTS, row)
+    assert cfg is not None and cfg.wordpress.base_url == "https://blog.example.com"
+    assert cfg.board.admin_url == ""
+
+    cfg, reason = build_config(DEFAULTS, row, platform="board")
+    assert cfg is None and "워드프레스 고객사" in reason
+
+
+def test_site_root_in_the_one_column_is_also_recognised():
+    """관리자 경로까지 안 적고 사이트 주소만 적어도 게시판 고객사로 봅니다."""
+    cfg, reason = build_config(
+        DEFAULTS, one_column_row(**{"워드프레스 주소": "www.zeroclinic1.com"}), platform="board"
+    )
+    assert reason == ""
+    assert cfg.board.admin_url == "https://www.zeroclinic1.com"
+
+
+def test_has_profile_tells_the_two_apart():
+    assert has_profile(ADMIN)
+    assert has_profile("https://zeroclinic1.com")  # www 가 없어도 같은 사이트
+    assert not has_profile("https://blog.example.com")
+    assert not has_profile("")
 
 
 def test_thumbnail_stage_takes_board_clients_too():
