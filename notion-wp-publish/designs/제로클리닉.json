@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "www.zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#FFFFFF",
+    "accent": "#2B2B2B",
+    "title": "#2B2B2B",
+    "sub": "#6B6B6B",
+    "pill_bg": "#F0F0F0",
+    "pill_fg": "#4C4C4C",
+    "brand": "#2B2B2B",
+    "muted": "#A0A0A0",
+    "rule": "#E5E5E5",
+    "ornament": "#F7F7F7"
+  },
+  "note": "홈페이지(www.zeroclinic1.com) GNB 다크 로고(/images/gnb/logo_dark.png)를 직접 받아 픽셀 색을 확인함 — 로고 글자색 #4C4C4C(다크 차콜). 사이트 전체가 검정/흰색 고대비 미니멀 톤(지방분해주사·다이어트 전문, \"나에게 불필요한 지방 Zero!\")이라 흰 바탕 + 짙은 차콜/블랙 제목의 무채색 미니멀 구성(skeleton=minimal)으로 잡음. 색을 쓰지 않는 브랜드라 accent도 로고와 같은 계열의 짙은 회색으로 통일. 2026-09-09 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}
