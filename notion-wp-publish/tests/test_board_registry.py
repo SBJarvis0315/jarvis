@@ -195,3 +195,16 @@ def test_chromium_pins_tls12_only_behind_a_proxy(monkeypatch):
     monkeypatch.setenv("HTTPS_PROXY", "http://127.0.0.1:1")
     monkeypatch.setenv("BOARD_CHROMIUM_ARGS", "--lang=ko-KR --foo=bar")
     assert chromium_args() == ["--ssl-version-max=tls1.2", "--lang=ko-KR", "--foo=bar"]
+
+
+def test_quoted_password_keeps_a_trailing_hash():
+    """`#` 이 든 비밀번호는 따옴표로 감싸 넣습니다. 따옴표는 벗기고 `#` 은 살립니다."""
+    env = {"BOARD_USER_ZEROCLINIC1": "admin", "BOARD_PASSWORD_ZEROCLINIC1": '"abcdefg#"'}
+    assert board_credentials(ADMIN, env) == ("admin", "abcdefg#")
+    env["BOARD_PASSWORD_ZEROCLINIC1"] = "'abcdefg#'"
+    assert board_credentials(ADMIN, env)[1] == "abcdefg#"
+
+
+def test_unquoted_password_is_untouched():
+    env = {"BOARD_USER_ZEROCLINIC1": "admin", "BOARD_PASSWORD_ZEROCLINIC1": "plain"}
+    assert board_credentials(ADMIN, env) == ("admin", "plain")

@@ -237,6 +237,19 @@ def wp_credentials(
     )
 
 
+def _unquote(value: str | None) -> str:
+    """환경변수 값을 감싼 따옴표 한 겹을 벗깁니다.
+
+    환경변수 입력칸은 .env 형식이라 `#` 뒤를 주석으로 잘라냅니다. 비밀번호에 `#` 이
+    들어 있으면 `"abc#"` 처럼 따옴표로 감싸 넣어야 하는데, 입력칸이 따옴표를 그대로
+    값에 포함시키는 경우가 있어 여기서 벗겨 줍니다. 따옴표가 없으면 그대로입니다.
+    """
+    text = (value or "").strip()
+    if len(text) >= 2 and text[0] == text[-1] and text[0] in "\"'":
+        return text[1:-1]
+    return text
+
+
 def board_credentials(
     admin_url: str, env: dict[str, str] | None = None
 ) -> tuple[str, str]:
@@ -253,8 +266,8 @@ def board_credentials(
     if not key:
         raise ConfigError(f"게시판 주소에서 고객사 키를 뽑지 못했습니다: {admin_url!r}")
 
-    user = (src.get(f"BOARD_USER_{key}") or "").strip()
-    password = (src.get(f"BOARD_PASSWORD_{key}") or "").strip()
+    user = _unquote(src.get(f"BOARD_USER_{key}"))
+    password = _unquote(src.get(f"BOARD_PASSWORD_{key}"))
 
     if user and password:
         return user, password
