@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import re
@@ -250,6 +251,27 @@ def _unquote(value: str | None) -> str:
     return text
 
 
+def _read_secret(src: Any, name: str) -> str:
+    """환경변수 하나를 읽습니다. `<이름>_B64` 가 있으면 그쪽이 우선입니다.
+
+    환경변수 입력칸이 `.env` 형식이라 `#` 뒤를 주석으로 버리고, 따옴표나 다른 기호도
+    입력 경로에 따라 상하는 일이 있습니다. 비밀번호가 기호로 끝나는 계정에서 이것 때문에
+    로그인이 조용히 실패했습니다. Base64 로 넣으면 어떤 기호도 상하지 않습니다.
+
+        BOARD_PASSWORD_ZEROCLINIC1_B64=UDMzMzchQCM=
+    """
+    encoded = (src.get(f"{name}_B64") or "").strip().strip("\"'")
+    if encoded:
+        try:
+            return base64.b64decode(encoded, validate=True).decode("utf-8")
+        except (ValueError, UnicodeDecodeError) as exc:  # binascii.Error 는 ValueError
+            raise ConfigError(
+                f"{name}_B64 값을 Base64 로 읽지 못했습니다: {exc}\n"
+                f"  값을 그대로 넣지 말고 Base64 로 바꿔 넣어 주세요."
+            ) from exc
+    return _unquote(src.get(name))
+
+
 def board_credentials(
     admin_url: str, env: dict[str, str] | None = None
 ) -> tuple[str, str]:
@@ -266,8 +288,8 @@ def board_credentials(
     if not key:
         raise ConfigError(f"게시판 주소에서 고객사 키를 뽑지 못했습니다: {admin_url!r}")
 
-    user = _unquote(src.get(f"BOARD_USER_{key}"))
-    password = _unquote(src.get(f"BOARD_PASSWORD_{key}"))
+    user = _read_secret(src, f"BOARD_USER_{key}")
+    password = _read_secret(src, f"BOARD_PASSWORD_{key}")
 
     if user and password:
         return user, password
@@ -276,7 +298,9 @@ def board_credentials(
         f"'{admin_url}' 관리자 계정이 {'반쪽만 있습니다' if (user or password) else '없습니다'}.\n"
         f"  환경변수에 아래 두 개를 넣어 주세요:\n"
         f"    BOARD_USER_{key}=관리자 아이디\n"
-        f"    BOARD_PASSWORD_{key}=관리자 비밀번호"
+        f"    BOARD_PASSWORD_{key}=관리자 비밀번호\n"
+        f"  비밀번호에 # 같은 기호가 있어 값이 상한다면 Base64 로 넣어도 됩니다:\n"
+        f"    BOARD_PASSWORD_{key}_B64=<비밀번호를 Base64 로 바꾼 값>"
     )
 
 

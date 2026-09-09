@@ -224,3 +224,35 @@ def test_quoted_password_keeps_a_trailing_hash():
 def test_unquoted_password_is_untouched():
     env = {"BOARD_USER_ZEROCLINIC1": "admin", "BOARD_PASSWORD_ZEROCLINIC1": "plain"}
     assert board_credentials(ADMIN, env) == ("admin", "plain")
+
+
+def test_base64_password_survives_any_symbol():
+    """환경변수 칸이 # 이나 @ 를 먹어치울 때 쓰는 탈출구입니다."""
+    import base64
+
+    secret = "P!@#$%^&*"
+    env = {
+        "BOARD_USER_ZEROCLINIC1": "admin",
+        "BOARD_PASSWORD_ZEROCLINIC1_B64": base64.b64encode(secret.encode()).decode(),
+    }
+    assert board_credentials(ADMIN, env) == ("admin", secret)
+
+
+def test_base64_wins_over_a_damaged_plain_value():
+    import base64
+
+    env = {
+        "BOARD_USER_ZEROCLINIC1": "admin",
+        "BOARD_PASSWORD_ZEROCLINIC1": "잘린값",
+        "BOARD_PASSWORD_ZEROCLINIC1_B64": base64.b64encode("온전한값".encode()).decode(),
+    }
+    assert board_credentials(ADMIN, env)[1] == "온전한값"
+
+
+def test_broken_base64_is_reported_not_silently_used():
+    env = {
+        "BOARD_USER_ZEROCLINIC1": "admin",
+        "BOARD_PASSWORD_ZEROCLINIC1_B64": "이건 Base64 가 아닙니다",
+    }
+    with pytest.raises(ConfigError, match="Base64"):
+        board_credentials(ADMIN, env)

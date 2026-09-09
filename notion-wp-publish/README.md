@@ -408,8 +408,15 @@ PYTHONPATH=src python3 -m notionwp --board-inspect work/inspect   # 관리자 �
 
 계정 키는 워드프레스와 같은 규칙으로 주소에서 뽑습니다:
 `https://www.zeroclinic1.com` → `BOARD_USER_ZEROCLINIC1` / `BOARD_PASSWORD_ZEROCLINIC1`.
-비밀번호에 `#` 이 들어 있으면 **따옴표로 감싸 넣으세요.** 환경변수 칸이 `.env` 형식이라
-`#` 뒤를 주석으로 버립니다. 감싼 따옴표는 코드가 벗겨 냅니다.
+비밀번호에 `#` 이나 `@` 같은 기호가 들어 있으면 환경변수 칸을 지나며 값이 상할 수 있습니다
+(`.env` 형식이라 `#` 뒤가 잘리고, 입력 경로에 따라 다른 기호도 사라집니다). 그럴 때는
+**Base64 로 넣으세요.** `_B64` 가 붙은 이름이 있으면 그쪽을 먼저 씁니다.
+
+```
+BOARD_PASSWORD_ZEROCLINIC1_B64=<비밀번호를 Base64 로 바꾼 값>
+```
+
+바꾸는 법: `python3 -c "import base64;print(base64.b64encode('비밀번호'.encode()).decode())"`
 그 사이트 호스트가 환경의 **네트워크 허용 목록**에도 있어야 합니다.
 
 **사이트 프로파일** — 관리자 화면은 제작사마다 달라 `boards/<호스트>.json` 에 생김새를
