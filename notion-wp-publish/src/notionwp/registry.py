@@ -56,9 +56,13 @@ def build_config(
 ) -> tuple[Config | None, str]:
     """설정표 행 하나 → 고객사 설정. 대상이 아니면 (None, 사유).
 
+    설정표의 발행 주소 칸은 '워드프레스 주소' 하나뿐입니다. 워드프레스인지 자체 게시판인지는
+    저장소에 그 사이트의 게시판 프로파일이 있는지로 가립니다 — 사람이 한 칸에 주소만 적으면
+    되고, 어느 쪽인지 고르지 않아도 됩니다.
+
     `platform` 이 이 단계가 다루는 발행처입니다.
-        "wordpress"  워드프레스 주소가 있는 고객사만
-        "board"      게시판 주소가 있는 고객사만 (자체 홈페이지)
+        "wordpress"  워드프레스 고객사만
+        "board"      자체 게시판 고객사만
         None         발행처를 따지지 않음 — 썸네일처럼 노션만 건드리는 단계
 
     `require_wordpress=False` 는 예전 이름이며 `platform=None` 과 같습니다.
@@ -85,22 +89,19 @@ def build_config(
     if not planner:
         return None, "플래너 DB ID가 비었거나 형식이 맞지 않음"
 
-    wp_url = _with_scheme(text("wp_url"))
-    # 설정표에 컬럼이 아직 없어도 돌아가야 하므로 이름을 찾지 못하면 빈 값으로 봅니다.
-    board_url = _with_scheme(text("board_url")) if rc.properties.get("board_url") else ""
-
-    if platform == "wordpress" and not wp_url:
-        if board_url:
-            return None, "자체 게시판 고객사 (워드프레스 아님)"
+    url = _with_scheme(text("wp_url"))
+    if not url and platform is not None:
         # 원고 생성만 하는 고객사입니다. 오류가 아니라 정상 상태입니다.
-        return None, "워드프레스 주소 없음 (원고 생성 전용)"
-    if platform == "board" and not board_url:
-        if wp_url:
-            return None, "워드프레스 고객사 (자체 게시판 아님)"
-        return None, "게시판 주소 없음 (원고 생성 전용)"
-    if wp_url and board_url:
-        # 두 곳에 같은 글이 나가면 중복 콘텐츠가 됩니다. 사람이 하나를 지워야 합니다.
-        return None, "워드프레스 주소와 게시판 주소가 둘 다 적혀 있음 — 하나만 남겨 주세요"
+        return None, "발행 주소 없음 (원고 생성 전용)"
+
+    # 주소가 없으면 발행처도 없습니다. 썸네일처럼 발행처를 따지지 않는 단계는 그래도 대상입니다.
+    kind = ("board" if _is_board_site(url) else "wordpress") if url else ""
+    if platform is not None and platform != kind:
+        label = "자체 게시판" if kind == "board" else "워드프레스"
+        return None, f"{label} 고객사 (이번 단계 대상 아님)"
+
+    wp_url = url if kind == "wordpress" else ""
+    board_url = url if kind == "board" else ""
 
     notion = replace(
         defaults.notion,
@@ -119,6 +120,14 @@ def build_config(
     board = replace(defaults.board, admin_url=board_url)
 
     return replace(defaults, client=client, notion=notion, wordpress=wordpress, board=board), ""
+
+
+def _is_board_site(url: str) -> bool:
+    """저장소에 이 사이트의 게시판 프로파일이 있으면 자체 게시판 고객사입니다."""
+    # board 모듈은 브라우저 쪽 의존성을 끌고 오므로 필요할 때만 불러옵니다.
+    from .board import profile_exists
+
+    return profile_exists(url)
 
 
 def _with_scheme(url: str) -> str:
@@ -148,7 +157,10 @@ def load_clients(
         raise ConfigError("defaults.json 에 registry.database_id 가 없습니다.")
 
     client = notion or NotionClient(
-        token, NotionConfig(database_id=defaults.registry.database_id, api_version=defaults.notion.api_version)
+        token,
+        NotionConfig(
+            database_id=defaults.registry.database_id, api_version=defaults.notion.api_version
+        ),
     )
     rows = client.query_database(defaults.registry.database_id)
 

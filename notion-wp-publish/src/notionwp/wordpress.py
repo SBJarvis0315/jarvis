@@ -116,6 +116,8 @@ class WordPressClient:
                 "Notion Publish Bridge mu-plugin 을 찾을 수 없습니다.\n"
                 "  wp-mu-plugin/notion-publish-bridge.php 를 "
                 "wp-content/mu-plugins/ 에 업로드해 주세요.\n"
+                "  이 사이트가 워드프레스가 아니라 자체 홈페이지 게시판이라면, "
+                "boards/<호스트>.json 프로파일을 만들어야 게시판 발행이 집어갑니다.\n"
                 f"  (원본 오류: {exc})"
             ) from exc
 

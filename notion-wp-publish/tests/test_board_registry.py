@@ -17,26 +17,32 @@ from notionwp.registry import build_config, load_clients
 from test_gate_schema import DEFAULTS, TODAY, complete_page, text_prop
 from test_registry import FakeNotion
 
+#: 설정표에 적는 값. 사이트 주소만 적으면 됩니다.
+SITE = "https://www.zeroclinic1.com"
+#: 프로파일이 아는 실제 목록 화면.
 ADMIN = "https://www.zeroclinic1.com/admin/board/boardseo_list.php"
 
 
 def board_row(**overrides) -> dict:
-    """설정표의 제로클리닉 행. 워드프레스 주소는 비고 게시판 주소만 있습니다."""
+    """설정표의 제로클리닉 행.
+
+    발행 주소 칸은 워드프레스와 같은 '워드프레스 주소' 하나입니다. 자체 게시판인지는
+    저장소에 그 사이트의 프로파일이 있는지로 가립니다.
+    """
     values = {
         "고객사": "제로클리닉",
         "상태": "활성",
         "플래너 DB ID": "97668fa206ff837f90b80140f63456e4",
         "대상 유형": "롱폼, 숏폼",
-        "워드프레스 주소": "",
+        "워드프레스 주소": SITE,
         "유튜브 채널": "",
-        "게시판 주소": ADMIN,
     }
     values.update(overrides)
     props: dict = {
         "고객사": {"type": "title", "title": [{"plain_text": values["고객사"], "annotations": {}}]},
         "상태": {"type": "select", "select": {"name": values["상태"]}},
     }
-    for key in ("플래너 DB ID", "대상 유형", "워드프레스 주소", "유튜브 채널", "게시판 주소"):
+    for key in ("플래너 DB ID", "대상 유형", "워드프레스 주소", "유튜브 채널"):
         props[key] = {"type": "rich_text", "rich_text": [{"plain_text": values[key], "annotations": {}}]}
     return {"id": "row", "properties": props}
 
@@ -45,10 +51,12 @@ def board_row(**overrides) -> dict:
 
 
 def test_board_row_is_a_board_client():
+    """같은 칸에 주소만 적었는데 자체 게시판으로 잡혀야 합니다 (프로파일이 있으므로)."""
     cfg, reason = build_config(DEFAULTS, board_row(), platform="board")
     assert reason == ""
     assert cfg.platform == "board"
-    assert cfg.board.admin_url == ADMIN
+    assert cfg.board.admin_url == SITE
+    # 게시판 고객사는 워드프레스 주소를 갖지 않습니다 — 워드프레스 발행이 집어가면 안 됩니다.
     assert cfg.wordpress.base_url == ""
 
 
@@ -60,27 +68,18 @@ def test_board_row_is_excluded_from_the_wordpress_stage():
 
 
 def test_wordpress_row_is_excluded_from_the_board_stage():
-    cfg, reason = build_config(
-        DEFAULTS,
-        board_row(**{"게시판 주소": "", "워드프레스 주소": "https://blog.example.com"}),
-        platform="board",
-    )
+    """프로파일이 없는 사이트는 워드프레스로 봅니다."""
+    row = board_row(**{"워드프레스 주소": "https://blog.example.com"})
+    cfg, reason = build_config(DEFAULTS, row, platform="board")
     assert cfg is None
     assert "워드프레스 고객사" in reason
 
 
 def test_generation_only_row_has_no_platform():
-    cfg, reason = build_config(DEFAULTS, board_row(**{"게시판 주소": ""}), platform="board")
-    assert cfg is None
-    assert "원고 생성 전용" in reason
-
-
-def test_both_addresses_is_an_error_not_a_double_publish():
-    cfg, reason = build_config(
-        DEFAULTS, board_row(**{"워드프레스 주소": "https://blog.example.com"}), platform="board"
-    )
-    assert cfg is None
-    assert "둘 다" in reason
+    for platform in ("board", "wordpress"):
+        cfg, reason = build_config(DEFAULTS, board_row(**{"워드프레스 주소": ""}), platform=platform)
+        assert cfg is None
+        assert "원고 생성 전용" in reason
 
 
 def test_thumbnail_stage_takes_board_clients_too():
@@ -89,9 +88,9 @@ def test_thumbnail_stage_takes_board_clients_too():
 
 
 def test_bare_admin_host_gets_https():
-    row = board_row(**{"게시판 주소": "www.zeroclinic1.com/admin/board/main.php/"})
+    row = board_row(**{"워드프레스 주소": "www.zeroclinic1.com/"})
     cfg, _ = build_config(DEFAULTS, row, platform="board")
-    assert cfg.board.admin_url == "https://www.zeroclinic1.com/admin/board/main.php"
+    assert cfg.board.admin_url == "https://www.zeroclinic1.com"
 
 
 def test_unknown_platform_is_rejected():
@@ -116,7 +115,8 @@ def test_load_clients_filters_by_platform():
 
 
 def test_credential_key_from_admin_url():
-    assert credential_key(ADMIN) == "ZEROCLINIC1"
+    # 사이트 주소만 적어도, 경로까지 적어도 같은 환경변수 이름이 나옵니다.
+    assert credential_key(SITE) == credential_key(ADMIN) == "ZEROCLINIC1"
 
 
 def test_board_credentials_come_from_client_specific_env():
@@ -256,3 +256,12 @@ def test_broken_base64_is_reported_not_silently_used():
     }
     with pytest.raises(ConfigError, match="Base64"):
         board_credentials(ADMIN, env)
+
+
+def test_one_column_decides_the_platform_by_profile():
+    """설정표에 발행 주소 칸은 하나뿐이고, 어느 쪽인지는 저장소가 압니다."""
+    from test_gate_schema import registry_row
+
+    notion = FakeNotion([registry_row(), board_row()])
+    assert [c.client for c in load_clients("tok", notion=notion, platform="wordpress")] == ["클리어톤의원"]
+    assert [c.client for c in load_clients("tok", notion=notion, platform="board")] == ["제로클리닉"]

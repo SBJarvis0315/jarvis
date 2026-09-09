@@ -7,8 +7,7 @@
       "planner": "플래너 DB ID",
       "types": "대상 유형",
       "wp_url": "워드프레스 주소",
-      "youtube": "유튜브 채널",
-      "board_url": "게시판 주소"
+      "youtube": "유튜브 채널"
     },
     "state_active": "활성"
   },
@@ -49,6 +48,8 @@
     "spacer_height": 20,
     "spacer_before_headings": true,
     "center_tables": true,
-    "hero_image_types": ["숏폼"]
+    "hero_image_types": [
+      "숏폼"
+    ]
   }
 }

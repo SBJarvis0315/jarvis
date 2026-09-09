@@ -24,8 +24,10 @@ pip install -q playwright        # 이미 있으면 바로 끝납니다. 브라�
 PYTHONPATH=src python3 -m notionwp --board --prepare work/
 ```
 
-대상 고객사는 노션 '고객사 설정표'에서 **상태가 활성이고 '게시판 주소'가 적힌** 곳입니다.
-워드프레스 주소가 적힌 고객사는 이 명령에 걸리지 않습니다(그쪽은 `/wp-publish`).
+대상 고객사는 노션 '고객사 설정표'에서 상태가 활성이고, **'워드프레스 주소' 칸에 적힌 사이트의
+게시판 프로파일이 저장소에 있는** 곳입니다. 설정표의 발행 주소 칸은 워드프레스와 **같은 칸
+하나**이고, 어느 쪽인지는 `boards/<호스트>.json` 이 있는지로 갈립니다. 프로파일이 없는
+사이트는 워드프레스로 보고 `/wp-publish` 가 가져갑니다.
 
 | 플래그 | 동작 |
 |---|---|
@@ -116,7 +118,12 @@ PYTHONPATH=src python3 -m notionwp --board --plan work/
 
 `'○○' 게시판 프로파일이 없습니다` 오류가 나면:
 
-1. `PYTHONPATH=src python3 -m notionwp --board-inspect work/inspect --client ○○` 를 돌립니다.
+**프로파일이 없으면 그 고객사는 아예 이 단계에 잡히지 않습니다** (워드프레스로 분류되어
+`/wp-publish` 에서 mu-plugin 오류가 납니다). 새 자체 게시판 고객사가 생기면 프로파일부터
+만들어야 합니다.
+
+1. 설정표의 '워드프레스 주소' 를 `--board-inspect` 에 쓰기 위해 `--client ○○` 로 지정하고
+   `PYTHONPATH=src python3 -m notionwp --board-inspect work/inspect --client ○○` 를 돌립니다.
    `work/inspect/<고객사>/inspect.json` 에 폼 필드 목록(이름·행 머리글), 에디터 종류,
    목록 링크가 담기고 스크린샷이 함께 남습니다. Read 도구로 스크린샷을 직접 보세요.
 2. `boards/www.zeroclinic1.com.json` 을 복사해 그 사이트에 맞게 고칩니다. 대개 `public_url`,

@@ -126,6 +126,20 @@ class BoardProfile:
         return self.public_url.replace("{id}", str(post_id))
 
 
+def profile_exists(url: str, directory: Path | None = None) -> bool:
+    """이 주소가 '자체 게시판' 고객사인지. 프로파일 파일이 있으면 그렇습니다.
+
+    설정표에는 발행 주소 칸이 하나뿐이고, 워드프레스인지 자체 게시판인지는 저장소가
+    압니다 — 그 사이트의 관리자 화면을 아는 프로파일이 있으면 자체 게시판입니다.
+    """
+    host = urlparse(url or "").netloc.lower()
+    if not host:
+        return False
+    root = directory or PROFILES_DIR
+    bare = host.removeprefix("www.")
+    return any((root / f"{h}.json").exists() for h in (host, bare, f"www.{bare}"))
+
+
 @dataclass
 class BoardPost:
     id: str
