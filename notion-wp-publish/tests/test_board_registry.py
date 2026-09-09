@@ -182,3 +182,16 @@ def test_profile_is_found_with_or_without_www():
     profile = BoardProfile.load("https://zeroclinic1.com/admin/board/main.php")
     assert profile.host == "www.zeroclinic1.com"
     assert profile.login_url.endswith("/admin/Login.php")
+
+
+def test_chromium_pins_tls12_only_behind_a_proxy(monkeypatch):
+    from notionwp.board import chromium_args
+
+    monkeypatch.delenv("HTTPS_PROXY", raising=False)
+    monkeypatch.delenv("https_proxy", raising=False)
+    monkeypatch.delenv("BOARD_CHROMIUM_ARGS", raising=False)
+    assert chromium_args() == []
+
+    monkeypatch.setenv("HTTPS_PROXY", "http://127.0.0.1:1")
+    monkeypatch.setenv("BOARD_CHROMIUM_ARGS", "--lang=ko-KR --foo=bar")
+    assert chromium_args() == ["--ssl-version-max=tls1.2", "--lang=ko-KR", "--foo=bar"]

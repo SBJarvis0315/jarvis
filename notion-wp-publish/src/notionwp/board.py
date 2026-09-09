@@ -20,7 +20,9 @@ from __future__ import annotations
 import json
 import logging
 import mimetypes
+import os
 import re
+import shlex
 import time
 from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass, field
@@ -159,7 +161,7 @@ class BoardClient:
 
         self._pw = sync_playwright().start()
         self._browser = self._pw.chromium.launch(
-            executable_path=find_chromium(), headless=self.headless
+            executable_path=find_chromium(), headless=self.headless, args=chromium_args()
         )
         context = self._browser.new_context(
             viewport={"width": 1400, "height": 1000},
@@ -253,6 +255,21 @@ class BoardClient:
             if button is not None:
                 button.click()
                 self._settle()
+
+        if page.locator("input[type=password]").count() and not self._looks_logged_in():
+            # 페이지 스크립트(CDN 의 jQuery 등)가 막혀 버튼이 죽어 있는 환경도 있습니다.
+            # 그때는 폼 자체를 제출합니다. 값은 이미 채워져 있습니다.
+            try:
+                # 제출 직후에는 아직 이동이 시작되지 않아 networkidle 이 곧바로 통과합니다.
+                # 이동이 실제로 끝날 때까지 기다려야 다음 판정이 새 화면을 봅니다.
+                with page.expect_navigation(timeout=15_000):
+                    password.evaluate(
+                        "el => { const f = el.form || el.closest('form'); "
+                        "if (f) HTMLFormElement.prototype.submit.call(f); }"
+                    )
+                self._settle()
+            except Exception as exc:
+                log.debug("폼 직접 제출 실패: %s", exc)
 
         if page.locator("input[type=password]").count() and not self._looks_logged_in():
             raise self._fail("로그인에 실패했습니다. 아이디·비밀번호를 확인해 주세요", "login-failed")
@@ -647,8 +664,16 @@ class BoardClient:
         out_dir.mkdir(parents=True, exist_ok=True)
         self.artifacts = out_dir
         report: dict[str, Any] = {"host": self.profile.host, "steps": []}
+        path = out_dir / "inspect.json"
 
-        self.login()
+        try:
+            self.login()
+        except BoardError as exc:
+            # 로그인에서 막혀도 리포트는 남겨야 다음 사람이 어디서 막혔는지 봅니다.
+            report["login_error"] = str(exc)
+            report["dialogs"] = list(self.dialogs)
+            path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+            raise
         report["steps"].append(
             {"step": "login", "url": self.page.url, "shot": self.snapshot("inspect-login")}
         )
@@ -686,9 +711,23 @@ class BoardClient:
                 "jquery": self.page.evaluate("() => !!(window.jQuery && window.jQuery.fn.summernote)"),
             }
 
-        path = out_dir / "inspect.json"
+        report["dialogs"] = list(self.dialogs)
         path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
         return path
+
+
+def chromium_args() -> list[str]:
+    """브라우저 실행 인자.
+
+    루틴이 도는 원격 환경의 이그레스 프록시는 TLS 1.3 핸드셰이크를 끊습니다. curl 은
+    1.2 로 알아서 내려가지만 Chromium 은 내려가지 않아 사이트에 아예 닿지 못합니다.
+    프록시 뒤에 있을 때만 1.2 로 고정합니다. `BOARD_CHROMIUM_ARGS` 로 더 붙일 수 있습니다.
+    """
+    args: list[str] = []
+    if os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy"):
+        args.append("--ssl-version-max=tls1.2")
+    args.extend(shlex.split(os.environ.get("BOARD_CHROMIUM_ARGS", "")))
+    return args
 
 
 def _norm(text: str) -> str:

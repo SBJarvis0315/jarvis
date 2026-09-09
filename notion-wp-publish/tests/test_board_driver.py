@@ -125,3 +125,15 @@ def test_inspect_dumps_the_form(site, tmp_path):
     assert "codeview" in report["editor"]["toolbar_buttons"]
     assert (tmp_path / "inspect.json").exists()
     assert any(step["step"] == "write" for step in report["steps"])
+
+
+def test_inspect_still_writes_a_report_when_login_fails(site, tmp_path):
+    import json
+
+    with BoardClient(profile_for(site), USER, "wrong") as client:
+        with pytest.raises(BoardError):
+            client.inspect(tmp_path)
+
+    report = json.loads((tmp_path / "inspect.json").read_text(encoding="utf-8"))
+    assert "로그인에 실패" in report["login_error"]
+    assert report["steps"] == []
