@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "www.zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#1E1409",
+    "accent": "#FCA73F",
+    "title": "#F8E7C0",
+    "sub": "#C9A876",
+    "pill_bg": "#3A2814",
+    "pill_fg": "#FCA73F",
+    "brand": "#F3E2BC",
+    "muted": "#8C7355",
+    "rule": "#3E2C17",
+    "ornament": "#2A1C0E"
+  },
+  "note": [
+    "노션 참고자료의 '제로클리닉 - 참고자료' 페이지 첨부 PDF로 근거를 잡았습니다. 홈페이지(www.zeroclinic1.com)는 허용 도메인에 없어 HTML을 보지 못했습니다. 브랜드 아이덴티티 PDF의 인테리어 사진(로비·복도)에서 실제 매장 로고 'ZERO CLINIC'가 어두운 웜톤 벽에 흰색/크림색으로 걸려 있는 미니멀 프리미엄 톤을 확인했고, 같은 PDF 안의 자체 제작 홍보 그래픽(특허증·상표권 확보 배너)에서 실제 브랜드가 쓰는 짙은 에스프레소 브라운 배경 + 골드오렌지 포인트 + 크림색 글자 조합을 픽셀로 추출해 그대로 팔레트에 옮겼습니다(배경 #1E1409대, 포인트 #FCA73F, 제목 #F8E7C0 — 배너의 실측값). 로고 원본 파일은 확보하지 못해 워드마크로 대신합니다. 2026-09-10 확정."
+  ]
+}
