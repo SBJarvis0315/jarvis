@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#211C17",
+    "accent": "#D9A44A",
+    "title": "#F5F0E6",
+    "sub": "#B7AA98",
+    "pill_bg": "#332B22",
+    "pill_fg": "#E3B968",
+    "brand": "#F5F0E6",
+    "muted": "#8C8172",
+    "rule": "#3D352A",
+    "ornament": "#2A2419"
+  },
+  "note": "홈페이지(zeroclinic1.com) GNB 로고는 밝은 배경용 차콜색(#4C4C4C) 워드마크이고, 푸터 로고가 같은 마크의 흰색 버전이라 이걸 그대로 썼습니다. 노션 참고자료의 브랜드 전략 문서(프리미엄 다이어트 전문 의원 포지셔닝)와 \"특허증·상표권 확보\" 홍보 배너가 짙은 브라운·블랙 배경에 금색 강조를 쓰고, 매장 인테리어 사진들도 따뜻한 베이지·우드톤 조명이라 그 톤을 살려 짙은 웜차콜 배경 + 금색(골드) 강조로 정했습니다. 로고가 흰색이라 배경을 어둡게 깔아야 그대로 얹을 수 있습니다. 2026-09-11 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}
