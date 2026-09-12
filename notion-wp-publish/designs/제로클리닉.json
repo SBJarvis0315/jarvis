@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#2A3438",
+    "accent": "#339ECC",
+    "title": "#EDF2F3",
+    "sub": "#AEBFC4",
+    "pill_bg": "#33454A",
+    "pill_fg": "#BFE6F0",
+    "brand": "#EDF2F3",
+    "muted": "#7E9296",
+    "rule": "#3B4A4F",
+    "ornament": "#303C40"
+  },
+  "note": "로고(홈페이지 /images/gnb/logo_dark.png)는 무채색 진회색(#4C4C4C) 워드마크라 색 근거가 되지 못해, 사이트 CSS의 브랜드 정의 변수 --color-key(#2a3438, 진한 차콜 틸)와 --color-key-bright(#314c58)를 근거로 삼았습니다. 이 변수는 카카오톡 버튼처럼 우연히 걸린 색이 아니라 헤드라인·CTA 버튼·테두리 전반에 일관되게 쓰이는 사이트의 명명된 핵심색입니다(common.css). 브랜드가 진한 색이므로 그 색을 배경에 깔고(#2A3438) 글씨는 밝게(#EDF2F3), accent는 그 색조(약 198° 시안-블루)를 살려 채도·명도를 올린 선명한 버전(#339ECC)으로 잡았습니다. 참고자료 페이지(브랜드 전략 문서)에는 색 정의가 없어 사이트 실측값을 썼습니다. 로고는 원본이 어두운 무채색이라 어두운 배경 위에서 묻혀, 같은 잉크색을 title 색(#EDF2F3)으로 치환한 밝은 버전을 만들어 썼습니다(원본 다운로드: logo_dark.png, 사이트 자체도 #gnb에서 이 로고를 다크/라이트로 바꿔 쓰는 filter:invert 규칙을 정의해 둠). 2026-09-12 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}
