@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#FFFFFF",
+    "accent": "#171717",
+    "title": "#171717",
+    "sub": "#5C5C5C",
+    "pill_bg": "#EFEFEF",
+    "pill_fg": "#2B2B2B",
+    "brand": "#171717",
+    "muted": "#9B9B9B",
+    "rule": "#E6E6E6",
+    "ornament": "#F6F6F6"
+  },
+  "note": "노션 '제로클리닉 - 참고자료' 페이지의 브랜드 문서(브랜드 전략 문서.pdf, [브랜드 엔티티] 문서)에는 색상 정의가 없어, 실제 홈페이지(zeroclinic1.com, 신사본점)의 GNB 로고와 og:image 대표 이미지를 직접 확인했습니다. 둘 다 흰 바탕에 검정에 가까운 잉크(#030207 근접)로만 그려진 순수 모노톤 워드마크였고, '( )' 괄호 두 개로 '0(제로)'를 표현한 마크입니다. 홈페이지 HTML에 있던 #cc3f6e/#93004e 그라데이션은 iScroll 모바일 스크롤바 라이브러리의 기본 CSS일 뿐 브랜드와 무관해 배제했습니다. 브랜드 자체가 진한 무채색(거의 검정)이라 규칙대로 그 색을 배경 아님 대신 accent/title에 진하게 쓰고, minimal 스켈레톤의 흰 배경 위에 검정 워드마크 톤을 그대로 살렸습니다(프리미엄 다이어트 의원 톤에 부합). 로고는 GNB용 반투명 PNG(logo_dark.png, 잉크 #4C4C4C)를 그대로 썼습니다. 2026-09-13 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}
