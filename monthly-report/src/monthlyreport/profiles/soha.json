@@ -1,0 +1,20 @@
+{
+  "_주의": "정찰(--inspect)로 실제 화면을 본 뒤에 채웁니다. 비어 있으면 수집은 돌지 않습니다.",
+  "login": {
+    "url": "https://www.soha-ai.com/login",
+    "user": "",
+    "password": "",
+    "submit": ""
+  },
+  "dashboard": {
+    "overview_url": "",
+    "overview_clip": "",
+    "brand_url": "",
+    "prompt_url": ""
+  },
+  "downloads": {
+    "prompts": "",
+    "brand": "",
+    "sources": ""
+  }
+}
