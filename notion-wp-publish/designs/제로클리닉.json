@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#1B1B1A",
+    "accent": "#EDEAE2",
+    "title": "#FFFFFF",
+    "sub": "#B7B4AC",
+    "pill_bg": "#2C2C2A",
+    "pill_fg": "#EDEAE2",
+    "brand": "#FFFFFF",
+    "muted": "#86837B",
+    "rule": "#333330",
+    "ornament": "#242422"
+  },
+  "note": "로고(www.zeroclinic1.com/images/gnb/logo_dark.png, 푸터 logo.png)가 컬러 없는 그레이스케일 워드마크(#4C4C4C)라 로고 자체에서 뽑을 색이 없음. 홈페이지 전체가 블랙앤화이트 미니멀 톤이고(지방분해 전문 '제로컷' 시술, \"불필요한 지방 Zero\" 컨셉으로 프리미엄·차분함을 강조), 이를 그대로 반영해 다크 차콜 배경 + 화이트 텍스트로 정함. 헤더용 다크 로고는 밝은 배경 전용이라 다크 배경에서는 대비가 나오지 않아, 원래 다크 배경용으로 쓰이던 푸터의 화이트 버전을 그대로 씀. 2026-09-14 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}
