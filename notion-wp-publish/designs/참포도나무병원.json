@@ -8,10 +8,10 @@
   "width": 1920,
   "height": 1080,
   "palette": {
-    "background": "#E3EFEA",
-    "accent": "#17795A",
-    "title": "#17795A",
-    "sub": "#17795A",
+    "background": "#E1F2EE",
+    "accent": "#00816C",
+    "title": "#00816C",
+    "sub": "#00816C",
     "pill_bg": "#CFE4D9",
     "pill_fg": "#14624A",
     "brand": "#4C5A54",
@@ -20,19 +20,20 @@
     "ornament": "#D8E9E1"
   },
   "layout": {
-    "pad_x": 124,
-    "pad_top": 116,
-    "pad_bottom": 120,
-    "logo_w": 1044,
-    "logo_h": 205,
-    "main_size": 158,
-    "main_min": 90,
-    "main_gap": 118,
-    "sub_size": 48,
-    "sub_gap": 200,
-    "main_track": 0.0
+    "pad_x": 129.1,
+    "pad_top": 123.5,
+    "pad_bottom": 120.0,
+    "logo_w": 1044.0,
+    "logo_h": 205.0,
+    "main_size": 170,
+    "main_min": 90.0,
+    "main_gap": 114.2,
+    "sub_size": 54,
+    "sub_gap": 171.9,
+    "main_track": 0.0,
+    "logo_shift": -22.2
   },
-  "note": "팀이 준 숏폼 썸네일 예시와 로고(가로-국문 1)를 그대로 옮겼습니다. 연한 민트 바탕에 로고를 왼쪽 위로 두고, 그 아래 진녹색 제목과 부제만 남기는 여백형 구성(skeleton=minimal). 서체는 팀 지정 Wanted Sans. layout 값은 예시를 1024폭으로 맞춰 놓고 로고·제목·부제의 위·아래·좌우 경계를 재서 넣었습니다 — 로고와 부제 위치는 예시와 몇 px 안쪽이고, 제목·부제의 가로 길이만 예시보다 5% 정도 짧습니다(예시를 만든 서체가 Wanted Sans 가 아니라서, 크기를 더 키우면 글자 높이가 예시보다 커집니다). 2026-09-15.",
+  "note": "팀이 준 숏폼 썸네일 예시(1024x576)와 로고(가로-국문 1, 1028x201)를 그대로 옮겼습니다. 연한 민트 바탕에 로고를 왼쪽 위로 두고 그 아래 진녹색 제목과 부제만 남기는 여백형 구성(skeleton=minimal). 서체는 팀 지정 Wanted Sans. 색은 예시 이미지에서 직접 뽑은 값입니다(바탕 #E1F2EE, 글자 #00816C). layout 값은 예시와 렌더 결과를 같은 1024폭에 놓고 로고·제목·부제의 상·하·좌·우 경계를 재서 차이가 1px 이내가 될 때까지 맞춘 것입니다. 로고가 글자보다 왼쪽에 걸리는 예시 구성이라 logo_shift 로 로고만 왼쪽으로 뺐습니다. 제목 자간은 예시가 좁히지 않아 main_track=0 입니다. 남는 차이는 글자 획 두께뿐인데, 예시를 만든 서체가 Wanted Sans 가 아니라서 생기는 것입니다. 전체 픽셀 대비 1.26%. 2026-09-15 확정.",
   "logo": "참포도나무병원.png",
   "logo_mime": "image/png"
 }
