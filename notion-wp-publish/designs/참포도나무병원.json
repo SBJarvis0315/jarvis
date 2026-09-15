@@ -1,0 +1,25 @@
+{
+  "client": "참포도나무병원",
+  "name_en": "CHAMPODONAMU HOSPITAL",
+  "domain": "champodonamu.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#E3EFEA",
+    "accent": "#17795A",
+    "title": "#17795A",
+    "sub": "#17795A",
+    "pill_bg": "#CFE4D9",
+    "pill_fg": "#14624A",
+    "brand": "#4C5A54",
+    "muted": "#7E948A",
+    "rule": "#C7DDD2",
+    "ornament": "#D8E9E1"
+  },
+  "note": "팀이 준 숏폼 썸네일 예시를 그대로 옮겼습니다. 연한 민트 바탕에 로고를 왼쪽 위로 두고, 그 아래 진녹색 제목과 같은 색 부제만 남기는 여백형 구성(skeleton=minimal). 색은 예시 이미지에서 읽었습니다 — 홈페이지(champodonamu.com)가 허용 도메인에 없어 로고 파일에서 직접 뽑지는 못했습니다. 로고 파일은 아직 없습니다. designs/logos/참포도나무병원.png 가 들어와야 예시와 같아지고, 그전까지는 로고 자리에 이름 워드마크가 대신 들어갑니다(실행 로그에 '로고 파일이 없습니다' 경고가 남습니다). 2026-09-15.",
+  "logo": "참포도나무병원.png",
+  "logo_mime": "image/png"
+}
