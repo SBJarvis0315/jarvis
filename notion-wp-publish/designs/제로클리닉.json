@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#181818",
+    "accent": "#FFFFFF",
+    "title": "#FFFFFF",
+    "sub": "#B0B0B0",
+    "pill_bg": "#2A2A2A",
+    "pill_fg": "#E7E7E7",
+    "brand": "#FFFFFF",
+    "muted": "#7A7A7A",
+    "rule": "#333333",
+    "ornament": "#202020"
+  },
+  "note": "홈페이지(zeroclinic1.com) footer 로고를 직접 열어 확인함: 순수 무채색 회색(#4C4C4C 계열, 흰 배경용은 흰색) 문자 로고이고 브랜드 고유색이 전혀 없음. 노션 참고자료의 '브랜드/제품/타겟 문서'에도 색 정의는 없고 제품·타겟·콘텐츠 전략만 있어, 로고가 유일한 근거. 로고 자체가 모노톤이므로 이를 그대로 살려 다크 차콜 배경 + 흰 로고(footer 흰색 버전)로 미니멀·프리미엄 의료 클리닉 톤을 잡음. 실제 사이트 관리자 로그인 화면도 흰 배경에 얇은 회색 선·세리프 'Admin' 제목으로 같은 절제된 톤을 씀. 2026-09-15 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}
