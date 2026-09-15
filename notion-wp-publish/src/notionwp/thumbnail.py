@@ -403,6 +403,7 @@ MINIMAL_LAYOUT = {
     "main_size": MINIMAL_MAX_MAIN,
     "main_min": MINIMAL_MIN_MAIN,
     "main_gap": 180,
+    "main_track": -0.03,  # em. 음수면 자간을 좁힙니다
     "sub_size": 40,
     "sub_gap": 110,
 }
@@ -453,7 +454,7 @@ body{{font-family:'Latin','Hangul',sans-serif}}
 .worden{{color:{p.sub};font-size:{px(26)};font-weight:600;letter-spacing:{px(9)};
   margin-top:{px(14)}}}
 .main{{color:{p.title};font-weight:700;font-size:{px(L["main_size"])};
-  line-height:1.24;letter-spacing:-0.03em;word-break:keep-all;
+  line-height:1.24;letter-spacing:{L["main_track"]}em;word-break:keep-all;
   margin-top:{px(L["main_gap"])}}}
 .sub{{color:{p.sub};font-weight:700;font-size:{px(L["sub_size"])};line-height:1.45;
   word-break:keep-all;margin-top:{px(L["sub_gap"])}}}
