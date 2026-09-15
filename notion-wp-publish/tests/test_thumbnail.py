@@ -184,3 +184,24 @@ def test_minimal_falls_back_to_a_wordmark_without_a_logo():
 def test_unknown_skeleton_is_rejected():
     with pytest.raises(ThumbnailError, match="모르는 골격"):
         build_html("기미", "", Brand(name=CLIENT), Fonts(), skeleton="없는골격")
+
+
+def test_minimal_layout_can_be_overridden_per_client():
+    """예시 디자인마다 로고 크기·여백이 달라 고객사별로 치수를 바꿉니다."""
+    from notionwp.thumbnail import MINIMAL_LAYOUT, build_html
+
+    brand = Brand(name="어떤의원", color="#17795A")
+    fonts = Fonts.bundled()
+    base = build_html("수핵이란?", "위치·구조·역할", brand, fonts,
+                      width=1920, height=1080, skeleton="minimal")
+    tuned = build_html("수핵이란?", "위치·구조·역할", brand, fonts,
+                       width=1920, height=1080, skeleton="minimal",
+                       layout={"pad_x": 128, "main_size": 155})
+
+    assert "128.00px" in tuned and "155.00px" in tuned
+    # 손대지 않은 항목은 기본값 그대로입니다.
+    assert f"{MINIMAL_LAYOUT['sub_size']:.2f}px" in tuned
+    # 덮어쓰지 않으면 예전 그대로여야 합니다 (클리어톤의원이 여기 걸립니다).
+    assert base == build_html("수핵이란?", "위치·구조·역할", brand, fonts,
+                              width=1920, height=1080, skeleton="minimal", layout={})
+    assert "175.00px" in base

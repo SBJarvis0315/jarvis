@@ -101,3 +101,15 @@ def test_older_files_without_a_skeleton_default_to_band(tmp_path):
 
     back = load("어떤의원", tmp_path)
     assert (back.skeleton, back.width, back.height) == ("band", 1200, 630)
+
+
+def test_layout_overrides_survive_a_round_trip(tmp_path):
+    """레퍼런스마다 로고 크기와 여백이 달라, 골격 치수를 고객사별로 굳힙니다."""
+    save(design(skeleton="minimal", layout={"pad_x": 128, "main_size": 155}), tmp_path)
+    back = load("어떤의원", tmp_path)
+    assert back.layout == {"pad_x": 128.0, "main_size": 155.0}
+
+
+def test_a_design_without_layout_keeps_the_skeleton_defaults(tmp_path):
+    save(design(skeleton="minimal"), tmp_path)
+    assert load("어떤의원", tmp_path).layout == {}

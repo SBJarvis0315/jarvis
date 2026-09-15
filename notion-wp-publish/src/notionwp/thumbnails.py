@@ -130,6 +130,7 @@ def make_for_row(
         skeleton=design.skeleton,
         width=design.width,
         height=design.height,
+        layout=design.layout,
     )
     slug = napi.read_text(props.get(name("slug"))).strip()
     return png, f"{slug or 'thumbnail'}.png"

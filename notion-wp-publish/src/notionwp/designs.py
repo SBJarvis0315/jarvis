@@ -64,6 +64,8 @@ class Design:
     skeleton: str = "band"
     width: int = 1200
     height: int = 630
+    #: 골격 기본 치수를 항목별로 덮어쓰는 값. minimal 골격만 씁니다.
+    layout: dict[str, float] = field(default_factory=dict)
     note: str = ""
 
     def brand(self) -> Brand:
@@ -122,6 +124,7 @@ def load(client: str, directory: Path | None = None) -> Design | None:
         skeleton=raw.get("skeleton", "band"),
         width=int(raw.get("width", 1200)),
         height=int(raw.get("height", 630)),
+        layout={k: float(v) for k, v in (raw.get("layout") or {}).items()},
         note=raw.get("note", ""),
     )
 
@@ -150,6 +153,9 @@ def save(design: Design, directory: Path | None = None, *, overwrite: bool = Fal
         "palette": {k: getattr(design.palette, k) for k in PALETTE_KEYS},
         "note": design.note,
     }
+
+    if design.layout:
+        body["layout"] = dict(design.layout)
 
     if design.logo:
         ext = {"image/png": "png", "image/svg+xml": "svg", "image/jpeg": "jpg"}.get(

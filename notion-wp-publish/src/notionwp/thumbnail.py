@@ -283,6 +283,7 @@ def build_html(
     height: int = HEIGHT,
     palette: Palette | None = None,
     skeleton: str = "band",
+    layout: dict[str, float] | None = None,
 ) -> str:
     """골격을 골라 조판합니다. 골격은 고객사 디자인 파일이 정합니다."""
     builder = SKELETONS.get(skeleton)
@@ -290,7 +291,7 @@ def build_html(
         raise ThumbnailError(
             f"모르는 골격입니다: {skeleton} (쓸 수 있는 것: {', '.join(SKELETONS)})"
         )
-    return builder(main, sub, brand, fonts, badge, width, height, palette)
+    return builder(main, sub, brand, fonts, badge, width, height, palette, layout)
 
 
 def _band_html(
@@ -302,6 +303,7 @@ def _band_html(
     width: int,
     height: int,
     palette: Palette | None,
+    layout: dict[str, float] | None = None,  # band 골격은 쓰지 않습니다
 ) -> str:
     """진한 바탕에 뱃지·하단 브랜드 바가 있는 골격. 1200x630 기준."""
     # 고객사 전용 디자인이 있으면 그 팔레트를 그대로 씁니다. 없을 때만 색을 파생합니다.
@@ -389,6 +391,22 @@ MINIMAL_HEIGHT = 1080
 MINIMAL_MIN_MAIN = 68
 MINIMAL_MAX_MAIN = 130
 
+#: minimal 골격의 기본 치수(1920x1080 기준, px).
+#: 고객사 디자인 파일의 `layout` 이 항목별로 덮어씁니다. 레퍼런스마다 로고
+#: 크기와 여백이 달라, 골격을 새로 만들지 않고 숫자만 갈아 끼웁니다.
+MINIMAL_LAYOUT = {
+    "pad_x": 175,
+    "pad_top": 160,
+    "pad_bottom": 120,
+    "logo_w": 600,
+    "logo_h": 155,
+    "main_size": MINIMAL_MAX_MAIN,
+    "main_min": MINIMAL_MIN_MAIN,
+    "main_gap": 180,
+    "sub_size": 40,
+    "sub_gap": 110,
+}
+
 
 def _minimal_html(
     main: str,
@@ -399,6 +417,7 @@ def _minimal_html(
     width: int,
     height: int,
     palette: Palette | None,
+    layout: dict[str, float] | None = None,
 ) -> str:
     """흰 바탕에 로고를 위에 크게 놓고 여백으로 버티는 골격. 1920x1080 기준.
 
@@ -407,6 +426,8 @@ def _minimal_html(
     """
     p = palette or Palette.derive(brand.color)
     u = width / MINIMAL_WIDTH
+    L = {**MINIMAL_LAYOUT, **{k: v for k, v in (layout or {}).items()
+                              if k in MINIMAL_LAYOUT}}
 
     def px(v: float) -> str:
         return f"{v * u:.2f}px"
@@ -425,16 +446,17 @@ def _minimal_html(
 *{{margin:0;padding:0;box-sizing:border-box}}
 body{{font-family:'Latin','Hangul',sans-serif}}
 .frame{{width:{width}px;height:{height}px;background:{p.background};
-  overflow:hidden;padding:{px(160)} {px(175)} {px(120)}}}
-.logo{{max-width:{px(600)};max-height:{px(155)};object-fit:contain;
+  overflow:hidden;padding:{px(L["pad_top"])} {px(L["pad_x"])} {px(L["pad_bottom"])}}}
+.logo{{max-width:{px(L["logo_w"])};max-height:{px(L["logo_h"])};object-fit:contain;
   object-position:left top;display:block}}
 .wordmark{{color:{p.title};font-size:{px(76)};font-weight:700;letter-spacing:{px(8)}}}
 .worden{{color:{p.sub};font-size:{px(26)};font-weight:600;letter-spacing:{px(9)};
   margin-top:{px(14)}}}
-.main{{color:{p.title};font-weight:700;font-size:{px(MINIMAL_MAX_MAIN)};
-  line-height:1.24;letter-spacing:-0.03em;word-break:keep-all;margin-top:{px(180)}}}
-.sub{{color:{p.sub};font-weight:700;font-size:{px(40)};line-height:1.45;
-  word-break:keep-all;margin-top:{px(110)}}}
+.main{{color:{p.title};font-weight:700;font-size:{px(L["main_size"])};
+  line-height:1.24;letter-spacing:-0.03em;word-break:keep-all;
+  margin-top:{px(L["main_gap"])}}}
+.sub{{color:{p.sub};font-weight:700;font-size:{px(L["sub_size"])};line-height:1.45;
+  word-break:keep-all;margin-top:{px(L["sub_gap"])}}}
 </style>
 <div class="frame">
   <div class="head">{mark}</div>
@@ -446,8 +468,8 @@ body{{font-family:'Latin','Hangul',sans-serif}}
 (function () {{
   const frame = document.querySelector('.frame');
   const main = document.querySelector('.main');
-  let size = {MINIMAL_MAX_MAIN} * {u:.5f};
-  const floor = {MINIMAL_MIN_MAIN} * {u:.5f};
+  let size = {L["main_size"]} * {u:.5f};
+  const floor = {L["main_min"]} * {u:.5f};
   const fits = () => frame.scrollHeight <= frame.clientHeight;
   while (!fits() && size > floor) {{
     size -= 2;
@@ -503,13 +525,15 @@ def render(
     timeout: int = 60,
     palette: Palette | None = None,
     skeleton: str = "band",
+    layout: dict[str, float] | None = None,
 ) -> bytes:
     """썸네일 한 장을 PNG 바이트로 돌려줍니다."""
     if not main.strip():
         raise ThumbnailError("썸네일에 넣을 제목이 없습니다.")
 
     html = build_html(main, sub, brand, fonts, badge=badge, width=width,
-                      height=height, palette=palette, skeleton=skeleton)
+                      height=height, palette=palette, skeleton=skeleton,
+                      layout=layout)
 
     with tempfile.TemporaryDirectory() as tmp:
         page, shot = Path(tmp, "page.html"), Path(tmp, "out.png")
