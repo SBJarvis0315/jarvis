@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#141414",
+    "accent": "#D9D9D9",
+    "title": "#F7F6F3",
+    "sub": "#B0AFAC",
+    "pill_bg": "#262626",
+    "pill_fg": "#F2F1EE",
+    "brand": "#F2F1EE",
+    "muted": "#8A8886",
+    "rule": "#333333",
+    "ornament": "#1D1D1D"
+  },
+  "note": "홈페이지(zeroclinic1.com)와 로고 모두 색이 전혀 없는 흑백 편집 화보 스타일입니다 (로고: 짙은 회색 워드마크, 홈페이지: 흑백 인물 사진 + 세리프 대형 타이포). 테마컬러 메타 태그도 흰색이고 참고자료 페이지에도 별도 브랜드 컬러 정의가 없어, 기계적으로 색을 뽑는 대신 무채색(그레이스케일) 자체를 브랜드 컬러로 판단해 정했습니다. 어두운 차콜 배경에 밝은 회백색 글씨를 올리고, 로고는 홈페이지 푸터에서 쓰는 흰색 버전을 그대로 썼습니다. 2026-09-16 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}
