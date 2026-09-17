@@ -1,0 +1,23 @@
+{
+  "client": "참포도나무병원",
+  "name_en": "Champodonamu Hospital",
+  "domain": "champodonamu.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#3B1220",
+    "accent": "#C6577A",
+    "title": "#F5E9E4",
+    "sub": "#D9B9C2",
+    "pill_bg": "#5A1F34",
+    "pill_fg": "#F0B8CB",
+    "brand": "#F5E9E4",
+    "muted": "#A9808C",
+    "rule": "#5C2436",
+    "ornament": "#45182A"
+  },
+  "note": "홈페이지(champodonamu.com, www.champodonamu.com)가 허용 도메인에 없어 접근하지 못해, 노션 참고자료 페이지의 브랜드 엔티티 원고만 근거로 정했습니다. 그 문서에 병원명의 유래가 직접 적혀 있습니다 — \"참포도나무\"는 요한복음 15장 \"나는 참포도나무요 너희는 가지라\" 구절에서 따온 이름으로, 지친 삶을 회복시키는 공간이라는 설립 취지를 담고 있습니다. 이름이 곧 \"포도\"를 가리키므로 임의의 의료 파랑 대신 짙은 와인(포도) 톤을 배경에 깔고, 회복·생명력을 뜻하는 로즈빛을 글씨와 뱃지에 얹었습니다. 로고는 구하지 못해 워드마크로 대신합니다. 2026-09-17 확정."
+}

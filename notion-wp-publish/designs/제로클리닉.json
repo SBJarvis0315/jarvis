@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#F3EFE9",
+    "accent": "#3D3D3D",
+    "title": "#262422",
+    "sub": "#57514A",
+    "pill_bg": "#E4DCCF",
+    "pill_fg": "#3D3D3D",
+    "brand": "#262422",
+    "muted": "#9C948A",
+    "rule": "#D9D0C2",
+    "ornament": "#EAE3D7"
+  },
+  "note": "로고(zeroclinic1.com/images/gnb/logo_dark.png)를 직접 열어 픽셀을 뽑아보니 잉크색이 채도 0인 순수 회색(#4C4C4C)이었습니다 — 의도된 무채색 브랜드입니다. CSS에서 뽑히는 파랑·초록 계열은 버튼·배경 유틸리티 색일 뿐이라 걸렀습니다. 참고자료 문서의 \"프리미엄 다이어트 전문 의원\", 서울대 출신 의료진, FDA 승인 약물 같은 표현이 절제되고 신뢰감 있는 톤을 가리켜, 순백 대신 따뜻한 스톤 톤 배경(#F3EFE9)에 로고와 같은 차콜(#262422/#3D3D3D)을 얹었습니다. 흰 배경 미니멀 골격을 쓰는 클리어톤의원과 구도가 겹치지 않도록 band 골격(뱃지+하단 바)을 그대로 썼습니다. 2026-09-17 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}
