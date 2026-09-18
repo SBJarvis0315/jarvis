@@ -41,7 +41,13 @@ def run_thumbnails(configs, secrets, *, dry_run: bool = False) -> int:
 
         started = time.monotonic()
         notion = NotionClient(secrets.notion_token, cfg.notion)
-        report = thumbs.run(cfg, notion, dry_run=dry_run)
+        try:
+            report = thumbs.run(cfg, notion, dry_run=dry_run)
+        except Exception as exc:
+            # 한 고객사가 실패해도(플래너 DB 공유 누락 등) 나머지 고객사는 계속 처리합니다.
+            print(f"  ❌ 실행 중단 — {exc}")
+            failed = True
+            continue
 
         for outcome in report.made:
             print(f"  ✅ {outcome.title[:60]}")

@@ -14,6 +14,7 @@ description: 노션 피드백 플래너에서 제목은 있는데 썸네일이 �
 
 ```bash
 cd notion-wp-publish
+pip install -q Pillow        # 이미 있으면 바로 끝납니다
 PYTHONPATH=src python3 -m notionwp --thumbnails
 ```
 
@@ -106,6 +107,7 @@ save(Design(
 | `폰트를 찾지 못했습니다` | `assets/fonts/` 누락 | 저장소가 제대로 받아졌는지 확인 |
 | `썸네일을 그릴 브라우저를 찾지 못했습니다` | Chromium 없음 | `CHROMIUM_PATH` 환경변수로 지정 |
 | `파일을 올리지 못했습니다` | 노션 업로드 실패 | 그대로 재실행. 반복되면 토큰 확인 |
+| `Could not find database with ID` / `object_not_found` | 그 고객사 플래너 DB가 노션 통합("노션-워드프레스 자동화")과 공유되지 않음 | 에이전트가 고칠 수 없음 — 사람이 노션에서 그 플래너 DB를 통합에 공유해야 함. 이 고객사만 실패로 남기고 나머지 고객사는 계속 처리됨 |
 
 한 행이 실패해도 나머지 행은 계속 처리합니다.
 
