@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#141210",
+    "accent": "#A79A7A",
+    "title": "#F6F2E9",
+    "sub": "#C4BEB0",
+    "pill_bg": "#2A2722",
+    "pill_fg": "#E7DFC9",
+    "brand": "#F6F2E9",
+    "muted": "#8A8272",
+    "rule": "#38352E",
+    "ornament": "#201E1A"
+  },
+  "note": "홈페이지(zeroclinic1.com)는 접근 가능해 로고를 직접 받아 확인했습니다. 실제 로고(og:image, footer 로고)는 괄호 기호(제로=0을 형상화)와 ZERO CLINIC 세리프 워드마크로 이뤄진 흑백 미니멀 디자인이며, 로고 잉크 실측값은 회색조(#4c4c4c 계열)로 색이 아예 없습니다. 페이지 CSS에 있던 핑크·마젠타 계열 색상(#cc3f6e 등)은 이벤트 배너·카카오상담 버튼 등 UI용 색이라 브랜드 정체성과 무관하다고 판단해 배제했습니다. 로고 자체가 무채색 미니멀이므로 배경도 로고 톤에 맞춘 짙은 잉크색(블랙에 가까운 웜그레이)으로 깔고, 포인트는 채도를 올리지 않은 웜그레이/브론즈 톤 하나만 써서 로고의 절제된 톤을 그대로 살렸습니다. 로고는 footer용 흰색 워드마크 파일을 그대로 씁니다. 2026-09-18 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}
