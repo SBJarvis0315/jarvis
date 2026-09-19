@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "www.zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#FFFFFF",
+    "accent": "#314C58",
+    "title": "#2A3438",
+    "sub": "#5C6B70",
+    "pill_bg": "#E4E8E9",
+    "pill_fg": "#2A3438",
+    "brand": "#2A3438",
+    "muted": "#9AA6A9",
+    "rule": "#E0E5E6",
+    "ornament": "#F3F5F5"
+  },
+  "note": "홈페이지(zeroclinic1.com) 접근 가능. 내비게이션에 실사용 중인 로고(/images/gnb/logo_dark.png)를 받아 픽셀을 직접 확인했더니 단색 차콜 그레이(#4C4C4C)의 무채색 마크였습니다. css/common.css 에 디자인 시스템 변수로 선언된--color-primary:#2a3438, --color-key-bright:#314c58 를 근거로 삼았습니다(카카오 상담 버튼이나 워드프레스 기본색 같은 우발적인 색이 아니라 이름 붙은브랜드 변수). 로고가 무채색인 '제로/미니멀' 컨셉과도 맞아 흰 배경에 로고를크게 두는 minimal 골격을 썼습니다(클리어톤의원과 같은 방식). 2026-09-19 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}
