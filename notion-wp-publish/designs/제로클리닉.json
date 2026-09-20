@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#1C1B1B",
+    "accent": "#B98876",
+    "title": "#F6F1EC",
+    "sub": "#BEB2AC",
+    "pill_bg": "#332E2C",
+    "pill_fg": "#D9B9A9",
+    "brand": "#F6F1EC",
+    "muted": "#8C8079",
+    "rule": "#3A3432",
+    "ornament": "#242020"
+  },
+  "note": "홈페이지(zeroclinic1.com)가 허용 도메인이라 실제 로고(흰색 워드마크, 상단 GNB·하단 푸터 공용)를 확보해 픽셀 확인함 — 로고 색은 순수 무채색(#4C4C4C 계열의 차콜, 배경에 따라 흰 버전 병용)으로 브랜드가 의도적으로 컬러를 쓰지 않는 절제된 프리미엄 노선임을 확인. HTML 안의 분홍 그라디언트(#cc3f6e 등)는 iScroll 스크롤바 라이브러리 기본 스킨이라 브랜드와 무관해 근거로 쓰지 않음. 노션 참고자료(브랜드 전략 문서)의 \"프리미엄 다이어트 전문 의원\", \"체성분 분석 기반 체형 설계\", 20~40대 여성 타겟이라는 정의를 반영해 실제 브랜드처럼 짙은 차콜(블랙에 가까움) 배경에 흰 워드마크를 그대로 쓰고, 여성 타겟·프리미엄 톤을 살리는 절제된 로즈베이지를 단일 포인트 색으로만 얹었다. 로고는 흰 버전(footer/logo.png)을 다크 배경용으로 사용. 2026-09-20 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

@@ -1,0 +1,23 @@
+{
+  "client": "참포도나무병원",
+  "name_en": "Champodonamu Hospital",
+  "domain": "champodonamu.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#16324F",
+    "accent": "#4C86B8",
+    "title": "#FFFFFF",
+    "sub": "#B7C2CE",
+    "pill_bg": "#2C4A66",
+    "pill_fg": "#8FC1E8",
+    "brand": "#FFFFFF",
+    "muted": "#8B99A8",
+    "rule": "#3E5872",
+    "ornament": "#21374F"
+  },
+  "note": "홈페이지(champodonamu.com)가 허용 도메인에 없어 접근하지 못해 로고를 확보하지 못함 — 워드마크로 대신함. 노션 참고자료(브랜드 엔티티 콘텐츠)를 근거로 정함: 척추·뇌·심장·관절을 다루는 6개 과 다학제 협진 종합병원, 2012년 개원, 세브란스·서울성모병원 협력, 국제 척추내시경 트레이닝 센터 운영 등 신뢰·전문성 중심의 정체성이 뚜렷해 의료기관에서 흔히 신뢰를 상징하는 짙은 네이비를 배경으로 깔고 하늘색 계열을 포인트로 얹음. 이미 제로클리닉에 와인/로즈 계열을 썼고 클리어톤(금)·필라테스(그린)와도 겹치지 않도록 네이비 계열로 구분함. 2026-09-20 확정."
+}
