@@ -240,9 +240,10 @@ class Fonts:
 def split_title(title: str, client: str = "") -> tuple[str, str]:
     """제목을 메인/서브로 가릅니다.
 
-        기미 레이저 가격 | 강남 기준 비용 정리  →  ('기미 레이저 가격', '강남 기준 비용 정리')
-        오타모반이란? 색소침착과 차이           →  ('오타모반이란?', '색소침착과 차이')
-        클리어톤의원은 어떤 곳인가요?            →  ('클리어톤의원은 어떤 곳인가요?', '클리어톤의원')
+        기미 레이저 가격 | 강남 기준 비용 정리       →  ('기미 레이저 가격', '강남 기준 비용 정리')
+        오타모반이란? 색소침착과 차이                →  ('오타모반이란?', '색소침착과 차이')
+        신경줄기검사(Myelo MR) 시기·목적 총 정리      →  ('신경줄기검사(Myelo MR)', '시기·목적 총 정리')
+        클리어톤의원은 어떤 곳인가요?                 →  ('클리어톤의원은 어떤 곳인가요?', '클리어톤의원')
 
     메인 키워드가 앞에 오도록 팀이 제목을 쓰고 있으므로, 앞토막을 그대로 큰 글씨로
     씁니다. 구분 기호가 없으면 제목 전체가 메인이고 서브는 고객사명으로 채웁니다.
@@ -258,6 +259,13 @@ def split_title(title: str, client: str = "") -> tuple[str, str]:
     ender = re.search(r"[" + re.escape(ENDERS) + r"]\s+", text)
     if ender:
         return text[: ender.end()].strip(), text[ender.end() :].strip()
+
+    # '검사명(영문 약어)' 처럼 괄호로 용어를 끝맺고 뒤에 설명이 붙는 제목입니다.
+    # 뒤에 남는 말이 있을 때만 자릅니다 — 괄호가 문장 끝에 있으면(뒤에 공백이
+    # 없으면) 건드리지 않습니다.
+    paren = re.search(r"\)\s+", text)
+    if paren:
+        return text[: paren.start() + 1].strip(), text[paren.end() :].strip()
 
     return text, client.strip()
 

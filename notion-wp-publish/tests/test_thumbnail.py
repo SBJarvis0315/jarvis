@@ -65,6 +65,20 @@ def test_trailing_question_mark_is_not_a_split():
     assert main == "검버섯일까요?"
 
 
+def test_closing_paren_is_a_boundary_when_something_follows():
+    """'검사명(영문 약어)' 뒤에 설명이 붙는 제목은 괄호 뒤에서 자릅니다."""
+    assert split_title("신경줄기검사(Myelo MR) 시기·목적 총 정리", CLIENT) == (
+        "신경줄기검사(Myelo MR)",
+        "시기·목적 총 정리",
+    )
+
+
+def test_trailing_paren_is_not_a_split():
+    """괄호가 문장 끝이면 뒤에 남는 게 없으므로 자르지 않습니다."""
+    main, _ = split_title("이 시술의 정식 명칭은 무엇인가(용어 정리)", CLIENT)
+    assert main == "이 시술의 정식 명칭은 무엇인가(용어 정리)"
+
+
 def test_whitespace_is_normalised():
     assert split_title("  기미   레이저  |   횟수  정리 ", CLIENT) == (
         "기미 레이저",
