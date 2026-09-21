@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#141414",
+    "accent": "#FFFFFF",
+    "title": "#FFFFFF",
+    "sub": "#C4C4C4",
+    "pill_bg": "#2A2A2A",
+    "pill_fg": "#FFFFFF",
+    "brand": "#FFFFFF",
+    "muted": "#8F8F8F",
+    "rule": "#333333",
+    "ornament": "#1E1E1E"
+  },
+  "note": "zeroclinic1.com 이 허용 도메인이라 직접 접속해 확인했습니다. 파비콘 픽셀을 전수 조사한 결과 채도 있는 색이 전혀 없는 완전한 무채색(회색조)이었고, 로고(/images/footer/logo.png, 흰 글자)와 메인 화면도 흑백 화보 톤의 에디토리얼 스타일이었습니다. 그래서 색을 새로 만들어 씌우지 않고 브랜드 그대로 블랙(#141414) 바탕 + 화이트 텍스트의 무채색 팔레트로 정했습니다. 로고가 흰색이라 진한 바탕이 필요해 band 골격을 씁니다. 2026-09-21 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

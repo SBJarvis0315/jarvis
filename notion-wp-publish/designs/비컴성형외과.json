@@ -1,0 +1,25 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#FBF7F2",
+    "accent": "#E08A1F",
+    "title": "#2A241F",
+    "sub": "#6B5D52",
+    "pill_bg": "#F0E1CC",
+    "pill_fg": "#8A5A2A",
+    "brand": "#2A241F",
+    "muted": "#A69686",
+    "rule": "#E8DCCD",
+    "ornament": "#F5EEE4"
+  },
+  "note": "becomeps.com 이 허용 도메인이라 직접 접속해 확인했습니다. 로고(/images/logo.png)는 짙은 차콜(#222) 단색 라인 마크라 밝은 바탕이 필요해 여백형(minimal)을 씁니다. 사이트의 실제 포인트 색은 상담예약 버튼(#FF9907 계열 앰버)과 활성 탭(#5C4433 에스프레소 브라운)에서 확인했고, 이를 바탕으로 짙은 에스프레소 제목 + 따뜻한 앰버 포인트로 정했습니다. 배경은 클리어톤의원과 같은 순백이 아니라 아이보리 톤(#FBF7F2)으로 살짝 데워 구분했습니다. 2026-09-21 확정.",
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}

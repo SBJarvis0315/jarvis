@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHESMEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#2E211A",
+    "accent": "#E36F24",
+    "title": "#FBF1E7",
+    "sub": "#D9C2AE",
+    "pill_bg": "#4A3323",
+    "pill_fg": "#F2924A",
+    "brand": "#FBF1E7",
+    "muted": "#A68A73",
+    "rule": "#4A3323",
+    "ornament": "#38281F"
+  },
+  "note": "공식 홈페이지(shesmedi.co.kr)는 허용 도메인 밖이라 접속하지 못했습니다. 대신 공식 네이버 블로그(blog.naver.com/shesmedi_hospital)는 접속이 되어 커버 이미지를 직접 열어 확인했습니다 — 로고의 소용돌이 마크와 하단 메뉴 바가 같은 오렌지 계열(픽셀 실측 RGB 약 227,111,36 ≈ #E36F24)이라 이 색을 브랜드 컬러로 확정했습니다. 로고 원본 파일은 구하지 못해 워드마크로 대신합니다. 참고자료 페이지의 브랜드 정의(난임·임신·분만·산후·소아를 잇는 여성·가족 생애주기 병원, 따뜻하고 신뢰감 있는 톤)에 맞춰 오렌지를 그대로 배경에 쓰지 않고 짙은 브라운(#2E211A) 바탕에 오렌지를 포인트로만 얹어 차분하게 눌렀습니다. 2026-09-21 확정."
+}
