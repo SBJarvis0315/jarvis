@@ -107,11 +107,20 @@ class WordPressClient:
 
     # ---------------------------------------------------------------- mu-plugin
 
-    def bridge_ping(self) -> dict[str, Any]:
-        """mu-plugin 설치 여부 확인. 없으면 명확한 안내와 함께 실패시킵니다."""
+    def bridge_ping(self, *, required: bool = True) -> dict[str, Any] | None:
+        """브리지 플러그인 설치 여부 확인.
+
+        `required=False` 면 없을 때 예외 대신 None 을 돌려줍니다. 고객사 서버의
+        웹방화벽이 플러그인 설치를 막아 브리지를 넣지 못하는 곳이 있어서,
+        발행 자체는 계속하고 브리지가 하던 일만 빼는 제한 모드로 넘어가기
+        위한 것입니다. 나중에 플러그인이 들어가면 저절로 원래대로 돌아옵니다.
+        """
         try:
             return self._request("GET", "/notion-bridge/v1/ping")
         except WordPressError as exc:
+            if not required:
+                log.warning("브리지 플러그인을 찾지 못했습니다. 제한 모드로 진행합니다: %s", exc)
+                return None
             raise WordPressError(
                 "Notion Publish Bridge mu-plugin 을 찾을 수 없습니다.\n"
                 "  wp-mu-plugin/notion-publish-bridge.php 를 "
@@ -125,6 +134,37 @@ class WordPressClient:
         return self._request(
             "GET", "/notion-bridge/v1/lookup", params={"notion_page_id": notion_page_id}
         )
+
+    def lookup_by_slug(self, slug: str) -> dict[str, Any]:
+        """브리지가 없을 때 쓰는 중복 확인. 워드프레스 기본 REST 만 씁니다.
+
+        노션 페이지 ID 를 글에 심어 두는 일이 브리지 몫이라, 브리지가 없으면
+        그 ID 로 찾을 수가 없습니다. 대신 슬러그로 찾습니다 — 우리가 플래너의
+        슬러그를 그대로 글 주소에 쓰므로 같은 원고면 같은 슬러그가 됩니다.
+        `lookup_by_notion_id` 와 같은 모양으로 돌려줍니다.
+        """
+        if not slug:
+            return {"found": False}
+
+        posts = self._request(
+            "GET",
+            "/wp/v2/posts",
+            params={
+                "slug": slug,
+                "status": "publish,draft,pending,future,private",
+                "per_page": 1,
+            },
+        )
+        if not posts:
+            return {"found": False}
+
+        post = posts[0]
+        return {
+            "found": True,
+            "post_id": post.get("id"),
+            "status": post.get("status", ""),
+            "link": post.get("link", ""),
+        }
 
     def apply_seo(self, post_id: int, payload: dict[str, Any]) -> dict[str, Any]:
         return self._request("POST", f"/notion-bridge/v1/seo/{post_id}", json=payload)

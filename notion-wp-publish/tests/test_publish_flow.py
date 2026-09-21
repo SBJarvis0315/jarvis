@@ -59,19 +59,30 @@ class FakeWordPress:
         self._existing = existing or {"found": False}
         self._fail_on = fail_on
         self._next_id = 100
+        #: 브리지가 없는 고객사(웹방화벽이 플러그인 설치를 막는 곳)를 흉내냅니다.
+        self.bridge_installed = True
+        self.by_slug: dict[str, dict] = {}
 
     def _maybe_fail(self, name: str):
         self.calls.append(name)
         if self._fail_on == name:
             raise WordPressError(f"의도적 실패: {name}")
 
-    def bridge_ping(self):
+    def bridge_ping(self, *, required=True):
         self._maybe_fail("ping")
+        if not self.bridge_installed:
+            if required:
+                raise WordPressError("브리지 없음")
+            return None
         return {"ok": True}
 
     def lookup_by_notion_id(self, notion_page_id):
         self._maybe_fail("lookup")
         return self._existing
+
+    def lookup_by_slug(self, slug):
+        self._maybe_fail("lookup_by_slug")
+        return self.by_slug.get(slug, {"found": False})
 
     def upload_media(self, filename, data, alt=""):
         self._maybe_fail("upload_media")
@@ -317,3 +328,59 @@ def test_slug_collision_is_reported_not_silently_suffixed():
 
     assert not outcomes[0].published
     assert "슬러그" in outcomes[0].error
+
+
+# ----------------------------------------------- 브리지 플러그인이 없는 고객사
+#
+# 고객사 서버의 웹방화벽이 플러그인 설치를 아예 막는 곳이 있습니다(쉬즈메디).
+# 그런 곳은 발행을 포기하는 대신, 브리지가 하던 일만 빼고 계속 돕니다.
+# 사람이 설정할 값은 없고, 사이트가 ping 에 답하는지로만 갈립니다.
+
+
+def test_a_site_without_the_bridge_still_publishes():
+    wp = FakeWordPress()
+    wp.bridge_installed = False
+    pub, _ = build(wp)
+
+    outcomes = pub.run()
+
+    assert [o.published for o in outcomes] == [True]
+    assert wp.posts, "글은 올라가야 합니다"
+
+
+def test_without_the_bridge_no_seo_is_written_and_it_is_reported():
+    wp = FakeWordPress()
+    wp.bridge_installed = False
+    pub, _ = build(wp)
+
+    outcomes = pub.run()
+
+    assert wp.seo == {}, "브리지가 없으면 SEO 기입을 시도조차 하지 않습니다"
+    # 조용히 빠지면 안 됩니다. 사람이 채워야 한다는 사실이 남아야 합니다.
+    assert any("Rank Math" in w for w in outcomes[0].warnings)
+
+
+def test_without_the_bridge_duplicates_are_caught_by_slug():
+    wp = FakeWordPress()
+    wp.bridge_installed = False
+    wp.by_slug["melasma-laser-sessions"] = {
+        "found": True, "status": "publish", "post_id": 7,
+        "link": f"{BASE}/melasma-laser-sessions/",
+    }
+    pub, _ = build(wp)
+
+    outcomes = pub.run()
+
+    assert outcomes[0].skipped
+    assert not wp.posts, "이미 있는 글을 또 만들면 안 됩니다"
+    assert "슬러그" in outcomes[0].reasons[0]
+
+
+def test_with_the_bridge_slug_lookup_is_not_used():
+    """브리지가 있는 고객사는 지금까지와 똑같이 노션 ID 로 찾습니다."""
+    wp = FakeWordPress()
+    pub, _ = build(wp)
+    pub.run()
+
+    assert "lookup" in wp.calls
+    assert "lookup_by_slug" not in wp.calls

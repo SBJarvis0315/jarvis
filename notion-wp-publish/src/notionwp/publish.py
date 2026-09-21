@@ -66,6 +66,14 @@ def _suffix(url: str, name: str = "") -> str:
 
 log = logging.getLogger(__name__)
 
+#: 브리지 플러그인이 없을 때 실행 로그 맨 앞에 붙는 줄. 조용히 넘어가면 안 되는
+#: 상태라, 매 회차 로그에 남겨 사람이 알아채게 합니다.
+BRIDGE_MISSING_NOTE = (
+    "브리지 플러그인 없음 — 제한 모드로 발행했습니다. "
+    "Rank Math 메타와 스키마는 기입되지 않았고, 중복 확인은 노션 페이지 ID 대신 "
+    "슬러그로 했습니다. 플러그인을 넣으면 다음 회차부터 저절로 원래대로 돌아갑니다."
+)
+
 KST = ZoneInfo("Asia/Seoul")
 
 
@@ -436,7 +444,13 @@ class Publisher:
 
     def run(self) -> list[Outcome]:
         started = time.monotonic()
-        self.wp.bridge_ping()
+
+        # 브리지가 없어도 발행은 계속합니다. 고객사 서버가 플러그인 설치를
+        # 막아 넣지 못하는 곳이 있어서, 그런 곳은 브리지가 하던 일만 빼고
+        # 돕니다. 사람이 설정할 값은 없습니다 — 사이트가 알려 주는 대로 갈립니다.
+        self.bridge = self.wp.bridge_ping(required=False) is not None
+        if not self.bridge:
+            log.warning("%s: %s", self.cfg.client, BRIDGE_MISSING_NOTE)
 
         on = today_kst()
         log.info("기준 날짜 %s (Asia/Seoul) · 대상 플래너 %s", on, self.cfg.client)
@@ -452,7 +466,9 @@ class Publisher:
         # 않았으므로 운영 로그에 남기지 않습니다.
         if not self.dry_run and not self.draft:
             self.runlog.write(
-                outcomes, duration_min=(time.monotonic() - started) / 60
+                outcomes,
+                note="" if self.bridge else BRIDGE_MISSING_NOTE,
+                duration_min=(time.monotonic() - started) / 60,
             )
 
         return outcomes
@@ -509,14 +525,23 @@ class Publisher:
 
         try:
             # 1) 이미 발행된 적이 있는지 — 하루 두 번 도는 구조라 중복 방지가 필수입니다.
-            existing = self.wp.lookup_by_notion_id(cand.page_id)
+            #    브리지가 없으면 노션 ID 를 글에 심어 둘 수 없으므로 슬러그로 찾습니다.
+            existing = (
+                self.wp.lookup_by_notion_id(cand.page_id)
+                if self.bridge
+                else self.wp.lookup_by_slug(slug)
+            )
             post_id: int | None = None
 
             if existing.get("found"):
                 if existing.get("status") == "publish":
                     log.info("이미 발행됨, 건너뜀: %s", cand.title[:40])
                     out.skipped = True
-                    out.reasons = ["이미 발행된 원고 (워드프레스에 노션 페이지 ID가 남아 있음)"]
+                    out.reasons = [
+                        "이미 발행된 원고 "
+                        + ("(워드프레스에 노션 페이지 ID가 남아 있음)" if self.bridge
+                           else "(같은 슬러그의 글이 워드프레스에 이미 있음)")
+                    ]
                     out.link = existing.get("link", "")
                     out.post_id = existing.get("post_id")
                     return out
@@ -611,7 +636,9 @@ class Publisher:
 
                 # 노션 페이지 ID를 곧바로 각인해 둡니다. 이후 단계가 실패해도
                 # 다음 회차가 이 초안을 찾아내 이어서 진행합니다.
-                self.wp.apply_seo(post_id, {"notion_page_id": cand.page_id})
+                # 브리지가 없으면 각인할 수 없고, 대신 슬러그가 그 몫을 합니다.
+                if self.bridge:
+                    self.wp.apply_seo(post_id, {"notion_page_id": cand.page_id})
             else:
                 out.post_id = post_id
                 self.wp.update_post(
@@ -661,7 +688,14 @@ class Publisher:
                 }
 
             # 5) Rank Math — 가이드 ⑤ 에 해당하는 부분. 공개 전에 채워둡니다.
-            self.wp.apply_seo(post_id, seo_payload(guessed_permalink))
+            if self.bridge:
+                self.wp.apply_seo(post_id, seo_payload(guessed_permalink))
+            else:
+                out.warnings.append(
+                    "브리지 플러그인이 없어 Rank Math 메타(메타타이틀·메타디스크립션·"
+                    "포커스 키워드)와 스키마를 기입하지 못했습니다. 워드프레스에서 "
+                    "직접 채워 주세요"
+                )
 
             out.edit_link = (
                 f"{self.cfg.wordpress.base_url.rstrip('/')}"
@@ -684,7 +718,11 @@ class Publisher:
             # 6b) 고유주소 설정에 따라 실제 주소가 추측과 다를 수 있습니다.
             #     그 경우 스키마의 @id·url 이 어긋나므로 진짜 주소로 다시 써줍니다.
             #     (mu-plugin 이 매번 기존 스키마를 비우고 다시 쓰므로 중복되지 않습니다.)
-            if out.link and out.link.rstrip("/") != guessed_permalink.rstrip("/"):
+            if (
+                self.bridge
+                and out.link
+                and out.link.rstrip("/") != guessed_permalink.rstrip("/")
+            ):
                 log.info("고유주소가 예상과 달라 스키마를 실제 주소로 보정합니다: %s", out.link)
                 self.wp.apply_seo(post_id, seo_payload(out.link))
 

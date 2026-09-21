@@ -142,3 +142,23 @@ def test_logger_is_silent_without_database_id():
     logger = RunLogger(RunLogConfig(), "고객사", notion=None)
     assert not logger.enabled
     logger.write([out(published=True)])  # notion 이 None 이어도 터지지 않습니다
+
+
+def test_missing_bridge_is_written_at_the_top_of_the_detail():
+    """제한 모드로 돈 회차는 로그만 봐도 알아야 합니다.
+
+    Rank Math 가 조용히 비어 있는 것이 제일 나쁜 결과라, 매 회차 남깁니다.
+    """
+    wp = FakeWordPress()
+    wp.bridge_installed = False
+    notion, _ = run(wp=wp)
+
+    detail = value(logged(notion), "상세")
+    assert detail.startswith("브리지 플러그인 없음")
+    assert "Rank Math" in detail
+    assert "슬러그" in detail
+
+
+def test_a_normal_run_says_nothing_about_the_bridge():
+    notion, _ = run()
+    assert "브리지" not in value(logged(notion), "상세")
