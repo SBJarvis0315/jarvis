@@ -47,6 +47,8 @@ from .plan import (
     plan_dir_for,
 )
 from .runlog import RunLogger
+from .tail import append as append_tail
+from .tail import load as load_tail
 from .schema import build_schemas, extract_faqs, has_faq_heading
 from .wordpress import WordPressClient, WordPressError, download
 from .youtube import api_key as youtube_key
@@ -439,6 +441,7 @@ class Publisher:
             wp = WordPressClient(cfg.wordpress, user, password)
         self.wp = wp
         self.runlog = RunLogger(cfg.run_log, cfg.client, self.notion)
+        self.tail = load_tail(cfg.client)
 
     # -------------------------------------------------------------------- 실행
 
@@ -607,6 +610,10 @@ class Publisher:
                     center_tables=self.cfg.render.center_tables,
                 ),
             )
+
+            # 고객사에 따라 글 맨 아래에 늘 같은 블록이 붙습니다(의료진 프로필 등).
+            # 원고와 무관한 것이라 원고 생성이 아니라 여기서 붙입니다.
+            content = append_tail(content, self.tail, napi.read_select(prop("type")))
 
             # 3) 슬러그 충돌 확인. 방치하면 워드프레스가 말없이 -2 를 붙입니다.
             if post_id is None and self.wp.slug_taken(slug):

@@ -1,0 +1,6 @@
+{
+  "client": "참포도나무병원",
+  "types": ["숏폼"],
+  "blocks": "<!-- wp:spacer {\"height\":\"50px\"} -->\n<div style=\"height:50px\" aria-hidden=\"true\" class=\"wp-block-spacer\"></div>\n<!-- /wp:spacer -->\n\n<!-- wp:separator {\"className\":\"is-style-dots\"} -->\n<hr class=\"wp-block-separator has-alpha-channel-opacity is-style-dots\"/>\n<!-- /wp:separator -->\n\n<!-- wp:block {\"ref\":2246} /-->",
+  "note": "숏폼 글 맨 아래 의료진 프로필. 팀이 워드프레스에서 /pattern 으로 넣던 것을 그대로 옮겼습니다. ref 2246 은 동기화된 패턴이라 워드프레스에서 패턴을 고치면 이미 발행된 글도 함께 바뀝니다. 앞의 여백 50px 과 점선 구분선도 팀이 쓰던 그대로입니다. 2026-09-21 확정."
+}

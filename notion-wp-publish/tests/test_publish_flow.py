@@ -384,3 +384,30 @@ def test_with_the_bridge_slug_lookup_is_not_used():
 
     assert "lookup" in wp.calls
     assert "lookup_by_slug" not in wp.calls
+
+
+def test_a_client_tail_is_appended_to_the_published_content():
+    """참포도나무병원 숏폼처럼 글 맨 아래에 늘 같은 블록이 붙는 고객사.
+
+    원고와 무관하게 발행이 붙입니다. 본문 마지막에, 원고 내용 뒤에 와야 합니다.
+    """
+    from notionwp.tail import Tail
+
+    wp = FakeWordPress()
+    pub, _ = build(wp)
+    pub.tail = Tail(client="어떤의원", types=["롱폼"],
+                    blocks='<!-- wp:block {"ref":2246} /-->')
+
+    pub.run()
+
+    content = next(iter(wp.posts.values()))["content"]
+    assert content.rstrip().endswith('<!-- wp:block {"ref":2246} /-->')
+    assert "&lt;!-- wp:block" not in content  # 이스케이프되면 안 됩니다
+
+
+def test_a_client_without_a_tail_publishes_unchanged():
+    wp = FakeWordPress()
+    pub, _ = build(wp)
+    assert pub.tail is None  # 클리어톤의원은 꼬리말 파일이 없습니다
+    pub.run()
+    assert "wp:block" not in next(iter(wp.posts.values()))["content"]
