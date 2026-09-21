@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#FFFFFF",
+    "accent": "#CC3F6E",
+    "title": "#93004E",
+    "sub": "#4A4A4A",
+    "pill_bg": "#EB97B4",
+    "pill_fg": "#7C2845",
+    "brand": "#4A4A4A",
+    "muted": "#8A8A8A",
+    "rule": "#E5E5E5",
+    "ornament": "#F7F7F7"
+  },
+  "note": "홈페이지(zeroclinic1.com)에서 로고와 CSS를 직접 확인해 정했습니다. 로고(gnb/logo_dark.png)는 투명 배경에 짙은 회색(#4c4c4c) 단색이라 색 근거가 되지 못해, 사이트 자체 CSS를 봤습니다. 모바일 내비게이션 스크롤바 인디케이터에 쓰인 그라디언트(#cc3f6e → #93004e)와 그 옆에 정의된 보더 컬러(#eb97b4·#7c2845)가 일관된 로즈·버건디 계열이고, 카카오/네이버 버튼 같은 범용 UI 기본색이 아니라 이 사이트만의 커스텀 지정값이라 브랜드 컬러로 판단했습니다. 로고가 투명 배경이라 흰 바탕에 얹었습니다. 진한 와인색(#93004e)을 타이틀에, 밝은 로즈(#cc3f6e)를 포인트 바에 썼습니다. 영문명은 로고에 적힌 'ZERO CLINIC' 그대로입니다. 2026-09-21 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

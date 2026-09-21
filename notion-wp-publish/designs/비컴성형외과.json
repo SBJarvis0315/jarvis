@@ -1,0 +1,25 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#FFFFFF",
+    "accent": "#5C4433",
+    "title": "#5C4433",
+    "sub": "#1C1C1C",
+    "pill_bg": "#EDE3D5",
+    "pill_fg": "#5C4433",
+    "brand": "#1C1C1C",
+    "muted": "#999999",
+    "rule": "#E9E9E9",
+    "ornament": "#FAFAFA"
+  },
+  "note": "홈페이지(becomeps.com)에서 로고와 사이트를 직접 확인해 정했습니다. 로고 자체는 흑백 선화 원형 마크 + 세리프 BECOME 워드마크로 무채색입니다. 사이트 CSS(default.css)에서 색상 토큰을 살펴보니 카카오 초록·워드프레스 파랑 같은 플러그인 기본색은 없었고, 팝업 탭의 active 상태 배경(#5c4433, 반복 사용)과 카드 영문 텍스트·박스에 쓰인 크림(#ede3d5)·연회색(#fafafa)·경계선(#e9e9e9)이 일관된 웜톤 뉴트럴 팔레트를 이룹니다. 이를 브랜드 톤(고급스러운 웜브라운 계열)으로 판단해 흰 바탕 + 브라운 타이틀 + 다크그레이 서브의 여백형 구성(minimal)으로 잡았습니다. 2026-09-21 확정.",
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}

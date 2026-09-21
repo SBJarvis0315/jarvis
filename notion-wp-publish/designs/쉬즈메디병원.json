@@ -1,0 +1,25 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHESMEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#FFFFFF",
+    "accent": "#FE7201",
+    "title": "#FE7201",
+    "sub": "#4C4B49",
+    "pill_bg": "#FDE4D2",
+    "pill_fg": "#B85400",
+    "brand": "#4C4B49",
+    "muted": "#9C867D",
+    "rule": "#E9E9E9",
+    "ornament": "#F7F3F2"
+  },
+  "note": "홈페이지(shesmedi.co.kr)에서 로고와 CSS를 직접 확인해 정했습니다. 로고의 꽃/리본 마크를 픽셀로 뽑아보니 채도가 가장 높은 값이 (245,123,56) 계열의 따뜻한 오렌지였고, 실제 style.css 에도 #fe7201·#f9730c·#f79f38 오렌지 계열이 10회 이상 반복 등장해(카카오 버튼·기본 UI색이 아닌 사이트 고유 포인트 컬러) 브랜드 컬러로 확정했습니다. 로고 배경이 순백(#fff)이라 배경을 흰색으로 맞춰 이음매가 보이지 않게 했습니다. 서브·뮤트·구분선 색은 같은 스타일시트의 다크그레이(#4c4b49)·웜톤 그레이(#9c867d)·경계선(#e9e9e9)에서 그대로 가져왔습니다. 영문명은 사이트 도메인(shesmedi.co.kr) 표기를 그대로 썼습니다. 2026-09-21 확정.",
+  "logo": "쉬즈메디병원.jpg",
+  "logo_mime": "image/jpeg"
+}
