@@ -36,12 +36,13 @@ def registry_row(**over) -> dict:
 CONFIG, _ = build_config(DEFAULTS, registry_row())
 
 
-def row(title="레이저토닝 | 관리 총정리", kind="숏폼", thumb=False, keywords="레이저토닝"):
+def row(title="레이저토닝 | 관리 총정리", kind="숏폼", thumb=False, keywords="레이저토닝", status="컨펌 진행 중"):
     props = {
         "제목": {"title": [{"plain_text": title}]} if title else {"title": []},
         "유형": {"select": {"name": kind}} if kind else {"select": None},
         "썸네일": {"files": [{"name": "a.png"}] if thumb else []},
         "키워드": {"rich_text": [{"plain_text": keywords}]} if keywords else {"rich_text": []},
+        "진행 상황": {"select": {"name": status}} if status else {"select": None},
     }
     return props
 
@@ -93,6 +94,12 @@ def test_missing_keywords_do_not_block_a_row():
     """뱃지가 비는 것뿐이라 썸네일은 만들 수 있습니다."""
     ok, _ = eligible(row(keywords=""), CONFIG)
     assert ok
+
+
+def test_a_row_already_marked_published_is_skipped():
+    """게재완료면 이미 발행된 글이라, 지금 썸네일을 붙여도 쓰일 곳이 없습니다."""
+    ok, reason = eligible(row(status="게재완료"), CONFIG)
+    assert not ok and "게재완료" in reason
 
 
 def test_has_file_reads_the_notion_shape():
