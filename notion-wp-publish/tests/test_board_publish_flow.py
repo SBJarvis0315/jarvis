@@ -290,3 +290,21 @@ def test_unfilled_plan_alts_block_publishing(tmp_path):
     outcomes = pub2.run()
     assert outcomes[0].error and "ALT" in outcomes[0].error
     assert "publish" not in board.calls
+
+
+def test_shortform_body_images_go_into_the_post_too():
+    """숏폼도 본문 이미지를 채워 두면 그대로 들어갑니다.
+
+    숏폼은 보통 썸네일 한 장으로 끝나지만, 본문 이미지를 넣어 둔 행이 있으면
+    버리지 않고 썸네일 뒤에 이어 붙입니다. 썸네일만 올라가는 일이 없어야 합니다.
+    """
+    board = FakeBoard()
+    page = complete_page(**{"유형": {"type": "select", "select": {"name": "숏폼"}}})
+    pub, _ = build(board, pages=[page])
+
+    outcomes = pub.run()
+
+    assert outcomes[0].published, outcomes[0].error
+    names = [name for name, _ in board.posts[0]["images"]]
+    assert len(names) == 3, names  # 썸네일 + 본문 2장
+    assert board.posts[0]["html"].count("<img") == 3
