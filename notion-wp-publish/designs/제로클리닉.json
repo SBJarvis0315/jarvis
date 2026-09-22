@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#FFFFFF",
+    "accent": "#121212",
+    "title": "#121212",
+    "sub": "#5C5C5C",
+    "pill_bg": "#EDEDED",
+    "pill_fg": "#262626",
+    "brand": "#121212",
+    "muted": "#9C9C9C",
+    "rule": "#E4E4E4",
+    "ornament": "#F6F6F6"
+  },
+  "note": "홈페이지(zeroclinic1.com) 로고(/images/gnb/logo_dark.png)와 대표 이미지(og:image)를 직접 열어 정했습니다. 'ZERO CLINIC'을 여는 괄호 '()' 마크와 세리프 워드마크가 흰 바탕 위 순검정으로만 구성된 완전 무채색 브랜드입니다. 색을 더하지 않고 그대로 흰 바탕+검정 글자로 잡았습니다. 같은 미니멀 계열인 비컴성형외과(따뜻한 아이보리+차콜)와 구분되도록 색온도를 전혀 넣지 않은 순백·순흑만 썼습니다. 2026-09-22 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

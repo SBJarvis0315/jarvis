@@ -1,0 +1,25 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#F5F1EA",
+    "accent": "#2A2622",
+    "title": "#2A2622",
+    "sub": "#6E6255",
+    "pill_bg": "#E8DFCF",
+    "pill_fg": "#453B30",
+    "brand": "#2A2622",
+    "muted": "#9C8F7C",
+    "rule": "#E2D8C7",
+    "ornament": "#EFE8DC"
+  },
+  "note": "홈페이지(becomeps.com) 로고(/images/logo.png)와 대표 사진(og-image)을 직접 열어 정했습니다. 로고 잉크는 순검정이 아니라 거의 무채색에 가까운 진한 차콜(#222 대)이고, 리셉션 사진도 따뜻한 베이지·크림 톤 스톤 마감에 차콜 글자를 얹은 미니멀 럭셔리 톤입니다. 카카오 상담 버튼이나 워드프레스 기본색이 아니라 이 두 자료에서 직접 본 색으로 배경은 따뜻한 아이보리, 제목·강조는 차콜로 잡았습니다. 같은 미니멀 계열인 클리어톤의원(흰 바탕+골드)과 구분되도록 무채색 차콜을 썼습니다. 2026-09-22 확정.",
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}
