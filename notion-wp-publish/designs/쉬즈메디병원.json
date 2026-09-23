@@ -1,0 +1,25 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHESMEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#8C3049",
+    "accent": "#E25077",
+    "title": "#FFFFFF",
+    "sub": "#D8B9C1",
+    "pill_bg": "#9A495F",
+    "pill_fg": "#EE96AD",
+    "brand": "#FFFFFF",
+    "muted": "#C698A4",
+    "rule": "#A3596D",
+    "ornament": "#964359"
+  },
+  "note": [
+    "홈페이지(shesmedi.co.kr)가 프록시에서 연결이 계속 끊겨(TLS 재설정) 열지 못했고, 네이버 블로그·페이스북도 막혀 있거나 프레임 셸만 내려와 로고·색 어느 쪽도 직접 확인하지 못했습니다. 참고자료 페이지의 브랜드 정의(난임·임신·분만·산후·소아·여성질환을 잇는 '여성·가족 생애주기 병원', '신뢰할 수 있는', 세일즈 톤이 아닌 판단 기준 제공)를 근거로, 여성병원에 흔한 밝은 핑크 대신 차분하고 신뢰감 있는 딥 로즈(#8C3049)를 브랜드 컬러로 정하고 Palette.derive 로 나머지를 파생시켰습니다. 로고를 구하지 못해 워드마크로 대신합니다(skeleton=band). 2026-09-23 확정."
+  ]
+}

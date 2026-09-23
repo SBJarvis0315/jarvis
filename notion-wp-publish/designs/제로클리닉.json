@@ -1,0 +1,27 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#FFFFFF",
+    "accent": "#2C5B6D",
+    "title": "#2C5B6D",
+    "sub": "#2A3438",
+    "pill_bg": "#E3ECEE",
+    "pill_fg": "#2C5B6D",
+    "brand": "#2A3438",
+    "muted": "#8FA0A6",
+    "rule": "#D9E3E5",
+    "ornament": "#F1F6F7"
+  },
+  "note": [
+    "홈페이지(zeroclinic1.com)가 허용 도메인이라 직접 열어 정했습니다. 로고(/images/gnb/logo_dark.png, og:image)는 무채색 세리프 워드마크라 색 근거가 되지 않아, 페이지 CSS의 --color-key(#2c5b6d)를 썼습니다 — 그누보드류 기본값이 아니라 이 사이트 전용 커스텀 변수이고, 헤더 메뉴 활성색부터 대부분의 섹션 타이틀·버튼 배경·플로팅 퀵메뉴까지 사이트 전역에서 실제로 쓰이는 색입니다. 본문 기본색인 --color-primary(#2a3438)를 sub·brand 에 맞춰 로고의 짙은 회색 톤과 맞췄습니다. 흰 바탕에 로고를 크게 두는 여백형 구성(skeleton=minimal)으로 정했습니다. 2026-09-23 확정."
+  ],
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

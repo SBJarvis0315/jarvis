@@ -1,0 +1,27 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#FFFFFF",
+    "accent": "#5C4433",
+    "title": "#5C4433",
+    "sub": "#6B5A4C",
+    "pill_bg": "#EDE3D5",
+    "pill_fg": "#5C4433",
+    "brand": "#3B2E22",
+    "muted": "#A79484",
+    "rule": "#E6DCC9",
+    "ornament": "#F5F0E8"
+  },
+  "note": [
+    "홈페이지(becomeps.com)가 허용 도메인이라 직접 열어 정했습니다. 로고(/images/logo.png)는 무채색 선화라 색 근거가 되지 않아, 실제 CSS에서 예약/오시는길처럼 핵심 UI에 쓰인 색만 썼습니다 — #5c4433(상단 텍스트·진료시간표 테두리·예약박스 상단선)과 #ede3d5(소개 박스 배경, 텍스트 #c3b6aa 계열). og:image 리셉션 사진도 같은 따뜻한 베이지·차콜 톤이라 근거가 겹칩니다. 검색창 포커스·체크박스에 쓰인 #ea185f 핫핑크는 그누보드 테마 기본색이라 제외했습니다(브랜드와 무관). 흰 바탕에 로고를 크게 두는 여백형 구성(skeleton=minimal)으로 정했습니다. 2026-09-23 확정."
+  ],
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}
