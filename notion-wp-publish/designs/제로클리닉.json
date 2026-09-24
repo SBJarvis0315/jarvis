@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#232B2E",
+    "accent": "#92A6A9",
+    "title": "#F6F3EC",
+    "sub": "#B9C2C2",
+    "pill_bg": "#E7E2D6",
+    "pill_fg": "#2A3438",
+    "brand": "#F6F3EC",
+    "muted": "#7E8B8D",
+    "rule": "#364447",
+    "ornament": "#2C3639"
+  },
+  "note": "본점(zeroclinic1.com, 강남 신사본점) 로고와 사이트의 배지 아이콘(icon_logo.png)을 직접 받아 정했습니다. 로고 자체는 무채색 회색(#4C4C4C) 워드마크이지만, 실제 사이트에서 쓰는 배지 아이콘의 배경이 짙은 차콜 슬레이트(#2A3438, 직접 픽셀 추출)였습니다. HTML CSS 값을 기계적으로 뽑지 않고, 이 배지처럼 실제로 쓰인 브랜드 그래픽에서 값을 가져왔습니다. '프리미엄 다이어트 클리닉' 포지셔닝에 맞춰 그 차콜을 배경에 깔고 글씨를 밝게 세우는 다크 구성으로 잡았습니다(지혜로운 필라테스의 딥그린 다크 구성과는 색 계열이 달라 겹치지 않습니다). 2026-09-24 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

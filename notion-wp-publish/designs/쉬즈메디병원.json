@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHESMEDI HOSPITAL",
+  "domain": "www.shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#FCF3F2",
+    "accent": "#B24A63",
+    "title": "#7C3247",
+    "sub": "#6B4A50",
+    "pill_bg": "#F4DCE0",
+    "pill_fg": "#7C3247",
+    "brand": "#5B3038",
+    "muted": "#BE939B",
+    "rule": "#EDD3D7",
+    "ornament": "#F8E7E8"
+  },
+  "note": "홈페이지(shesmedi.co.kr)가 접속 시 연결이 계속 끊겨(TLS 핸들셰이크 중 reset) 로고를 확보하지 못했고, 네이버 블로그·인스타그램 등 다른 채널도 같은 이유로 열지 못해 참고자료의 브랜드 정의로만 정했습니다. 쉬즈메디병원은 산부인과를 축으로 난임·임신·분만·산후·소아·여성질환을 한 병원 안에서 잇는 '여성·가족 생애주기 병원'입니다. 여성 의료 브랜드에 쓰이는 차분한 로즈·와인 톤으로 신뢰감과 따뜻함을 함께 잡았고, 이미 있는 금색(클리어톤)·민트(참포도나무)·딥그린(지혜로운 필라테스)과 겹치지 않습니다. 로고는 확보하지 못해 워드마크로 대신합니다. 2026-09-24 확정."
+}
