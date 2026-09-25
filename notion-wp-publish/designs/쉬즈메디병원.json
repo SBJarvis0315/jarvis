@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHESMEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#EDF1F3",
+    "accent": "#2F5D82",
+    "title": "#1C3A5E",
+    "sub": "#55636E",
+    "pill_bg": "#DCE6EC",
+    "pill_fg": "#1C3A5E",
+    "brand": "#1C3A5E",
+    "muted": "#8695A0",
+    "rule": "#DCE3E8",
+    "ornament": "#E7EDF0"
+  },
+  "note": "홈페이지(shesmedi.co.kr)와 관련 사이트(페이스북·hidoc 등)가 모두 허용 도메인 밖이라 접근하지 못했고 로고도 구하지 못해 워드마크로 대신합니다. 참고자료 페이지의 브랜드 정의만이 유일한 근거입니다 — '희망 브랜드 인식: 믿을 수 있는 병원', '전문성이 느껴지면서 친절하게 설명하는 어조', '20~40대 여성 독자에 맞는 안정감 있는 톤', '과도한 세일즈 톤 금지'. 산부인과·여성병원이라는 업종과 이 신뢰·안정 톤에 맞춰 차분한 네이비 계열로 정했습니다. 기존 확정 고객사(금색·민트그린·딥그린)와 겹치지 않는 색상군입니다. 2026-09-25 확정."
+}

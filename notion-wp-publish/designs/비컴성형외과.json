@@ -1,0 +1,25 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#F7F4EF",
+    "accent": "#222222",
+    "title": "#1E1E1E",
+    "sub": "#6B6560",
+    "pill_bg": "#222222",
+    "pill_fg": "#F7F4EF",
+    "brand": "#1E1E1E",
+    "muted": "#A79F94",
+    "rule": "#E6E0D6",
+    "ornament": "#EFEAE1"
+  },
+  "note": "홈페이지(becomeps.com) 헤더 로고(images/logo.png)를 그대로 열어 정했습니다. 로고 자체가 순수 무채색(#222222) 서체+원형 마크뿐이라 색이 없는 브랜드입니다. 참고자료의 '유행하는 눈보다 자기 얼굴에 어울리는 자연스러움', '공장식 병원에 거부감' 톤에 맞춰 화려한 색 대신 여백 많은 아이보리 바탕에 로고와 같은 차콜만 쓰는 미니멀 흑백 구성으로 잡았습니다. 2026-09-25 확정.",
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}

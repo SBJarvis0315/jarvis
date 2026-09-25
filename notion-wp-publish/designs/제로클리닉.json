@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "www.zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#232B2E",
+    "accent": "#7FA9A0",
+    "title": "#F5F5F3",
+    "sub": "#B9C2C2",
+    "pill_bg": "#F5F5F3",
+    "pill_fg": "#232B2E",
+    "brand": "#F5F5F3",
+    "muted": "#7C8A8C",
+    "rule": "#34403F",
+    "ornament": "#2A3538"
+  },
+  "note": "홈페이지(zeroclinic1.com) 상단 로고(images/skin/icon_logo.png)를 열어 정했습니다. 로고가 진한 차콜네이비(#2A3438) 알약 배지에 흰 글씨인 브랜드 마크라, 그 색을 그대로 배경에 깔아 로고와 같은 톤으로 맞췄습니다(HTML에서 기계적으로 뽑은 값이 아니라 로고 이미지 픽셀을 직접 추출). accent는 그 차콜의 색상 계열에서 밝기만 올린 세이지 톤을 썼습니다. 뱃지는 로고와 반대로 밝게 둬(흰 배지 + 어두운 글씨) 묻히지 않게 했습니다. 2026-09-25 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}
