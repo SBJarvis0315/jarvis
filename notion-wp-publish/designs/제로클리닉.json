@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#FFFFFF",
+    "accent": "#2A3438",
+    "title": "#2A3438",
+    "sub": "#6B7278",
+    "pill_bg": "#E7EBEC",
+    "pill_fg": "#2A3438",
+    "brand": "#2A3438",
+    "muted": "#9AA3A6",
+    "rule": "#DCE1E2",
+    "ornament": "#F2F4F5"
+  },
+  "note": "홈페이지(zeroclinic1.com)에서 로고(/images/gnb/logo_dark.png, 무채색 진회색)와 common.css 의 :root 변수를 확인해 정했습니다. 사이트 전역에 실제로 쓰이는 브랜드 변수는 --color-key:#2a3438(SELFIE·SIGNATURE 섹션 제목, 내비게이션 활성 상태, 상담신청 버튼)이고, 눈에 띄는 핑크색(#cc3f6e 계열)은 모바일 메뉴 스크롤바 플러그인의 기본 테마색이라 브랜드와 무관해 제외했습니다. 흰 바탕에 짙은 차콜 그레이만 쓰는 절제된 구성이라 minimal 골격을 씁니다. 로고 원본 해상도가 낮아(224x63) 확대 시 약간 무를 수 있으나 사이트에서 구할 수 있는 최고 해상도입니다. 2026-09-26 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

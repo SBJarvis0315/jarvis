@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHESMEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#6B4652",
+    "accent": "#E2507F",
+    "title": "#FFFFFF",
+    "sub": "#CDC0C4",
+    "pill_bg": "#7D5C67",
+    "pill_fg": "#F0A8BF",
+    "brand": "#FFFFFF",
+    "muted": "#B5A2A8",
+    "rule": "#896B75",
+    "ornament": "#785762"
+  },
+  "note": "홈페이지(shesmedi.co.kr)가 이 환경에서 거듭 접속에 실패하고(TLS 핸드셰이크 중단, 재시도 다수 실패), 네이버 블로그·인스타그램·페이스북·즐겨찾기 아이콘 등 대체 경로도 모두 접근하지 못해 로고를 구하지 못했습니다. 참고자료 페이지에도 색·톤 정의가 없어, 브랜드 성격(난임·임신·분만·산후·소아·여성질환을 잇는 여성·가족 생애주기 병원, 의료법 56조 준수를 강조하는 절제되고 과장 없는 톤, '세일즈 톤 지양')에 근거해 정했습니다. 여성병원다운 온기와 신뢰를 함께 주기 위해 채도를 낮춘 와인·모브 톤을 배경으로 깔고 포인트로만 로즈핑크를 씁니다. 로고를 확보하지 못해 워드마크로 대신합니다. 2026-09-26 확정."
+}
