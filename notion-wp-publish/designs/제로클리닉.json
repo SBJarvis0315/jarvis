@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#FFFFFF",
+    "accent": "#314C58",
+    "title": "#2A3438",
+    "sub": "#55636A",
+    "pill_bg": "#E7EBEC",
+    "pill_fg": "#2A3438",
+    "brand": "#2A3438",
+    "muted": "#8B979C",
+    "rule": "#DCE2E4",
+    "ornament": "#F2F4F5"
+  },
+  "note": "홈페이지(zeroclinic1.com) CSS(common.css)의 :root 선언에서 --color-primary·--color-key: #2A3438, --color-key-bright: #314C58 를 직접 확인했습니다. #2A3438 은 실제로 사이트 전체의 section-title·common 타이틀류 텍스트 색으로 쓰이고 있고(코드 곳곳의 color:var(--color-primary)), #314C58 은 버튼 hover 강조색입니다 — 이름이 명시된 브랜드 변수이므로 근거로 삼았습니다. 사이트 배경이 흰색이라 흰 바탕에 그 진한 슬레이트색 제목, 밝은 변형을 상단 강조색으로 쓰는 구성으로 정했습니다. 2026-09-27 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

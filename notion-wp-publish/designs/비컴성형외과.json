@@ -1,0 +1,25 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#FFFFFF",
+    "accent": "#222222",
+    "title": "#222222",
+    "sub": "#5C5C5C",
+    "pill_bg": "#EFEEEC",
+    "pill_fg": "#333333",
+    "brand": "#222222",
+    "muted": "#9B9691",
+    "rule": "#E5E3E0",
+    "ornament": "#F5F4F2"
+  },
+  "note": "홈페이지(becomeps.com) 로고(/images/logo.png)를 직접 받아 픽셀을 뽑아보니 순색 #222222(흑색) 하나뿐이었습니다. 사이트 CSS(common.css)에는 색이 몇 개 있었으나 파일 상단 주석에 '데이원의원 공통 헤더/푸터 스타일'이라 적혀 있어 이 병원과 무관한 다른 고객사용 공용 벤더 템플릿 변수임을 확인했고, 실제 페이지에도 쓰이지 않는 죽은 클래스들이었습니다. 그래서 그 값들은 버리고 로고 색만 근거로 삼았습니다. '정밀 계측·디자인 중심·트렌드+디테일'을 내세우는 프리미엄 눈성형 브랜드 톤에도 무채색 미니멀 구성이 맞아, 흰 배경에 로고와 같은 흑색(#222222) 제목만 쓰는 구성으로 정했습니다. 2026-09-27 확정.",
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}
