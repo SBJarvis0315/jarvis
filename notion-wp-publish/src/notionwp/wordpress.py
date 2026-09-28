@@ -25,7 +25,17 @@ MAX_RETRIES = 4
 
 
 class WordPressError(RuntimeError):
-    pass
+    """워드프레스 요청 실패.
+
+    `status` 는 서버가 응답했을 때의 HTTP 코드입니다. 아예 닿지 못한 경우
+    (DNS·방화벽·연결 끊김)에는 None 입니다. 브리지가 '없는 것'과 사이트에
+    '닿지 못한 것'을 가르는 데 씁니다 — 둘을 섞으면 네트워크가 막힌 것을
+    플러그인 탓으로 잘못 보고하게 됩니다.
+    """
+
+    def __init__(self, message: str, *, status: int | None = None):
+        super().__init__(message)
+        self.status = status
 
 
 @dataclass
@@ -96,7 +106,8 @@ class WordPressClient:
             if not resp.ok:
                 raise WordPressError(
                     f"워드프레스 요청 실패 {method} {path}: "
-                    f"{resp.status_code} {resp.text[:500]}"
+                    f"{resp.status_code} {resp.text[:500]}",
+                    status=resp.status_code,
                 )
 
             if not resp.content:
@@ -118,16 +129,24 @@ class WordPressClient:
         try:
             return self._request("GET", "/notion-bridge/v1/ping")
         except WordPressError as exc:
+            # 404 만 '플러그인이 없다'는 뜻입니다. 사이트에 닿지 못했거나 인증이
+            # 막힌 것이라면 그대로 터뜨려야 합니다 — 제한 모드로 넘어가 봐야
+            # 이어지는 요청도 같은 이유로 전부 실패하고, 원인만 가려집니다.
+            if exc.status != 404:
+                # 닿지 못했거나 인증이 막힌 것입니다. 플러그인 탓으로 바꿔 말하면
+                # 진짜 원인(네트워크 허용 도메인 누락 등)이 가려집니다.
+                raise
             if not required:
                 log.warning("브리지 플러그인을 찾지 못했습니다. 제한 모드로 진행합니다: %s", exc)
                 return None
             raise WordPressError(
-                "Notion Publish Bridge mu-plugin 을 찾을 수 없습니다.\n"
-                "  wp-mu-plugin/notion-publish-bridge.php 를 "
-                "wp-content/mu-plugins/ 에 업로드해 주세요.\n"
+                "Notion Publish Bridge 플러그인을 찾을 수 없습니다.\n"
+                "  wp-mu-plugin/notion-publish-bridge-1.0.1.zip 을 워드프레스에 설치하고 "
+                "활성화해 주세요.\n"
                 "  이 사이트가 워드프레스가 아니라 자체 홈페이지 게시판이라면, "
                 "boards/<호스트>.json 프로파일을 만들어야 게시판 발행이 집어갑니다.\n"
-                f"  (원본 오류: {exc})"
+                f"  (원본 오류: {exc})",
+                status=exc.status,
             ) from exc
 
     def lookup_by_notion_id(self, notion_page_id: str) -> dict[str, Any]:
