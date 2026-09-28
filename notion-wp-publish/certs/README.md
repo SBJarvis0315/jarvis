@@ -35,7 +35,7 @@ SSLCertVerificationError: unable to get local issuer certificate
 
 | 파일 | 왜 |
 |---|---|
-| (없음) | |
+| `RapidSSL-TLS-RSA-CA-G1.pem` | 쉬즈메디병원(`www.shesmedi.co.kr`). 서버가 이 중간 인증서를 안 보내고 그 자리에 최상위 루트(DigiCert Global Root G2)를 넣어 보냅니다. `cacerts.rapidssl.com/RapidSSLTLSRSACAG1.crt` 에서 받아 PEM 으로 바꾼 것이고, 인증서 자체는 2027-11-02 까지 유효합니다. |
 
 ## 고객사가 서버를 고치면
 

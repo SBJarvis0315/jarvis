@@ -69,9 +69,13 @@ class WordPressClient:
         # 인증서 사슬을 잘못 설치해 둔 고객사 서버가 있습니다. 빠진 중간 인증서를
         # 저장소에 두고 여기서 보탭니다. 검증을 끄는 것이 아니라 빈 칸을 채우는
         # 것이며, 보탤 것이 없으면 기본 동작 그대로입니다.
-        bundle = ca_bundle()
-        if bundle:
-            self.session.verify = bundle
+        #
+        # 번들은 요청마다 넘겨야 합니다. requests 는 REQUESTS_CA_BUNDLE /
+        # CURL_CA_BUNDLE 환경 변수를 session.verify 보다 우선해서 씁니다. 그런
+        # 환경(프록시를 쓰는 곳이 대표적)에서는 session.verify 에만 넣어 두면
+        # 조용히 무시되고, 보탠 중간 인증서가 없는 셈이 됩니다. 요청에 직접 넘긴
+        # 값은 환경 변수보다 우선하므로 어디서 돌려도 같게 동작합니다.
+        self._ca_bundle = ca_bundle()
 
     # ------------------------------------------------------------------ 저수준
 
@@ -91,6 +95,8 @@ class WordPressClient:
         """
         url = f"{self.config.api_root}{path}"
         delay = 2.0
+        if self._ca_bundle:
+            kwargs.setdefault("verify", self._ca_bundle)
 
         for attempt in range(MAX_RETRIES):
             try:

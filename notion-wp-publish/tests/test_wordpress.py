@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import requests
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -56,3 +57,46 @@ def test_required_mode_still_explains_how_to_install(monkeypatch):
     monkeypatch.setattr(client, "_request", _raising("404 rest_no_route", 404))
     with pytest.raises(WordPressError, match="설치하고 활성화"):
         client.bridge_ping()
+
+
+def test_the_extra_certs_survive_a_ca_bundle_environment_variable(monkeypatch, tmp_path):
+    """보탠 중간 인증서는 요청까지 살아 있어야 합니다.
+
+    requests 는 REQUESTS_CA_BUNDLE / CURL_CA_BUNDLE 환경 변수를 session.verify
+    보다 우선해서 씁니다. 번들을 session.verify 에만 넣어 두면 그런 환경에서는
+    조용히 무시되고, 중간 인증서를 넣어 둔 보람도 없이 검증이 실패합니다.
+    """
+    bundle = tmp_path / "bundle.pem"
+    bundle.write_text("-----BEGIN CERTIFICATE-----\nZmFrZQ==\n-----END CERTIFICATE-----", encoding="utf-8")
+    monkeypatch.setattr("notionwp.wordpress.ca_bundle", lambda: str(bundle))
+
+    client = _client()
+    seen: dict[str, object] = {}
+
+    def capture(method, url, **kwargs):
+        seen.update(kwargs)
+        raise requests.ConnectionError("stop")  # 응답은 볼 필요가 없습니다
+
+    monkeypatch.setattr(client.session, "request", capture)
+    with pytest.raises(WordPressError):
+        client._request("GET", "/wp/v2/posts", retry_network=False)
+
+    assert seen.get("verify") == str(bundle), "요청에 번들이 실려야 환경 변수가 덮지 못합니다"
+
+
+def test_nothing_to_add_leaves_the_request_alone(monkeypatch):
+    """보탤 인증서가 없으면 기본 동작 그대로여야 합니다."""
+    monkeypatch.setattr("notionwp.wordpress.ca_bundle", lambda: None)
+
+    client = _client()
+    seen: dict[str, object] = {}
+
+    def capture(method, url, **kwargs):
+        seen.update(kwargs)
+        raise requests.ConnectionError("stop")
+
+    monkeypatch.setattr(client.session, "request", capture)
+    with pytest.raises(WordPressError):
+        client._request("GET", "/wp/v2/posts", retry_network=False)
+
+    assert "verify" not in seen
