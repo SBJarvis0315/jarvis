@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#F0F4F5",
+    "accent": "#50BAE2",
+    "title": "#142931",
+    "sub": "#56656B",
+    "pill_bg": "#D5DEE2",
+    "pill_fg": "#142931",
+    "brand": "#142931",
+    "muted": "#8E989C",
+    "rule": "#C4D1D6",
+    "ornament": "#E6EBED"
+  },
+  "note": "공식 홈페이지(zeroclinic1.com)에서 로고(짙은 회색 워드마크 'ZERO CLINIC', #4C4C4C)와 CSS를 직접 확인했습니다. 브랜드 컬러는 상담신청 버튼과 팝업 타이틀 배경에 쓰인 CSS 커스텀 프로퍼티 --color-key: #2c5b6d(딥 틸블루)를 근거로 잡았습니다 — 페이지 전체에서 유일하게 선언된 --color- 변수이고 실제 주요 액션(상담신청 버튼)에 쓰여 스크롤바 그라데이션 같은 라이브러리 기본값과는 다릅니다. 사이트는 밝은 바탕 구성이라 배경을 옅은 쿨그레이(#F0F4F5), 글씨는 짙은 네이비(#142931), 상단 액센트는 선명한 하늘색(#50BAE2)으로 정했습니다. 2026-09-28 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

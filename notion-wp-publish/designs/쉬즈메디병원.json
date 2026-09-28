@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHESMEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#F8F0F2",
+    "accent": "#E25077",
+    "title": "#461522",
+    "sub": "#7A5760",
+    "pill_bg": "#EBD5DB",
+    "pill_fg": "#461522",
+    "brand": "#461522",
+    "muted": "#A68F95",
+    "rule": "#E3C5CD",
+    "ornament": "#F3E6EA"
+  },
+  "note": "홈페이지(shesmedi.co.kr)는 이 환경에서 접근하지 못했습니다 — 직접 curl/requests 시도는 SSL 인증서 체인 오류로, 프록시 터널은 중간에 리셋(ws_closed_mid_exchange)으로 실패했고, 네이버 블로그 프로필 이미지(pstatic.net CDN)는 프록시 정책상 403으로 막혔습니다. 여러 경로를 시도했으나 로고 실물을 확인하지 못해, 노션 참고자료 페이지의 브랜드 정의글로만 판단했습니다. 브랜드 키메시지가 '난임부터 임신·분만·산후·소아까지 이어지는 여성·가족 생애주기 병원'이고 희망 인식이 '전문성을 바탕으로 중요한 순간을 함께하는 믿을 수 있는 병원'이라, 여성병원다운 따뜻함과 신뢰감을 함께 주는 딥 로즈/와인 톤(#9B2F4C)을 시드 컬러로 정했습니다. 배경은 아주 옅은 블러시(#F8F0F2), 글씨는 짙은 와인(#461522), 상단 액센트는 선명한 로즈(#E25077)입니다. 로고를 구하지 못해 워드마크로 대신합니다. 사이트 접근이 가능해지거나 팀이 로고를 주면 다시 검토해야 합니다. 2026-09-28 확정."
+}

@@ -1,0 +1,25 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#F4F2F1",
+    "accent": "#E28C50",
+    "title": "#291F17",
+    "sub": "#655E58",
+    "pill_bg": "#DEDAD6",
+    "pill_fg": "#291F17",
+    "brand": "#291F17",
+    "muted": "#989390",
+    "rule": "#D1CBC6",
+    "ornament": "#EBE9E7"
+  },
+  "note": "공식 홈페이지(becomeps.com)에서 로고(검정 세리프 워드마크, #222222)와 CSS를 직접 확인했습니다. 브랜드 컬러는 상담 팝업 탭의 active 상태에서 반복적으로 쓰인 #5c4433(웜 브라운)을 근거로 잡았습니다 — 카카오 버튼 초록색이나 워드프레스 기본색 같은 기계적 추출이 아니라, 탭 강조색처럼 실제 UI 상태에 일관되게 쓰인 값입니다. 사이트 전체는 흰 바탕에 검정 로고를 쓰는 미니멀한 구성이라 '밝은 브랜드'로 보고 배경을 아주 옅게 깔고(#F4F2F1) 글씨를 짙은 브라운(#291F17)으로, 상단 액센트는 브라운의 선명한 버전(#E28C50)으로 정했습니다. 2026-09-28 확정.",
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}
