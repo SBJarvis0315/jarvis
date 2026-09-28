@@ -156,7 +156,7 @@ class WordPressClient:
                 return None
             raise WordPressError(
                 "Notion Publish Bridge 플러그인을 찾을 수 없습니다.\n"
-                "  wp-mu-plugin/notion-publish-bridge-1.0.1.zip 을 워드프레스에 설치하고 "
+                "  wp-mu-plugin/notion-publish-bridge-1.1.0.zip 을 워드프레스에 설치하고 "
                 "활성화해 주세요.\n"
                 "  이 사이트가 워드프레스가 아니라 자체 홈페이지 게시판이라면, "
                 "boards/<호스트>.json 프로파일을 만들어야 게시판 발행이 집어갑니다.\n"

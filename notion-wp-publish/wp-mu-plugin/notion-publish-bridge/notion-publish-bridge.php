@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Notion Publish Bridge
  * Description: 노션 콘텐츠 플래너 자동 발행용 엔드포인트. 중복 발행 방지와 Rank Math 메타·스키마 기입에 쓰입니다.
- * Version:     1.0.1
+ * Version:     1.1.0
  * Author:      리드젠랩
  *
  * 설치: wp-content/plugins/ 에 이 파일을 올리고 플러그인 목록에서 활성화합니다.
@@ -19,7 +19,16 @@
  *                   때문에, 이 경로가 없으면 Rank Math 항목이 전부 비게 되고
  *                   노션 ID 도 안 심겨 1번의 중복 방지까지 무력해집니다.
  *   3. /ping        설치 확인용. 발행 루틴은 시작할 때 이 경로부터 확인하고,
- *                   응답이 없으면 그 고객사 발행을 아예 중단합니다.
+ *                   응답이 없으면 그 고객사 발행을 아예 중단합니다. 이 사이트가
+ *                   쓰는 글 종류와 분류 목록도 함께 돌려주므로, 어디에 올려야
+ *                   하는지 브라우저로 열어 보기만 해도 알 수 있습니다.
+ *
+ * 글 종류를 가리지 않습니다 (1.1.0):
+ *   개발사가 '용어사전' 같은 별도 글 종류를 만들어 둔 사이트가 있습니다
+ *   (비컴성형외과 glossary). 메뉴는 일반 카테고리와 똑같이 생겼지만 속은
+ *   다른 글 종류라, 일반 글만 보면 찾지도 기입하지도 못합니다.
+ *   이 플러그인은 REST 에 노출된 글 종류를 전부 대상으로 삼습니다. 고객사마다
+ *   이름을 적어 둘 필요가 없고, 새 고객사가 어떤 이름을 쓰든 그대로 됩니다.
  *
  *   여기에 더해 rank_math/json_ld 필터로 스키마(JSON-LD)를 주입합니다.
  */
@@ -37,6 +46,35 @@ final class Notion_Publish_Bridge {
 
 	/** schema_mode=jsonld 일 때 원본 JSON-LD를 담아두는 메타 키. */
 	const JSONLD_META = '_notion_jsonld';
+
+	/**
+	 * 이 플러그인이 다룰 글 종류.
+	 *
+	 * 일반 글만 쓰는 고객사가 대부분이지만, 개발사가 '용어사전' 같은 별도 글
+	 * 종류를 만들어 둔 사이트가 있습니다(비컴성형외과 glossary). 겉보기 메뉴는
+	 * 같아도 속은 다른 글 종류라, 일반 글만 보면 찾지도 기입하지도 못합니다.
+	 *
+	 * 그래서 고객사마다 이름을 적어 두는 대신, **REST 에 노출된 글 종류를 전부**
+	 * 대상으로 삼습니다. 새 고객사가 어떤 이름을 쓰든 손댈 것이 없습니다.
+	 * 화면을 만드는 내부 종류(메뉴·템플릿·패턴 등)는 제외합니다.
+	 */
+	public static function target_post_types() {
+		$skip = array(
+			'attachment', 'nav_menu_item', 'wp_block', 'wp_template',
+			'wp_template_part', 'wp_global_styles', 'wp_navigation',
+			'wp_font_family', 'wp_font_face', 'rm_content_editor',
+			'rank_math_schema', 'page',
+		);
+
+		$types = get_post_types( array( 'show_in_rest' => true ), 'names' );
+		$types = array_values( array_diff( $types, $skip ) );
+
+		/**
+		 * 이 목록을 사이트에서 바꿔야 할 일이 생기면 이 필터를 씁니다.
+		 * 보통은 손댈 일이 없습니다.
+		 */
+		return apply_filters( 'notion_bridge/post_types', $types );
+	}
 
 	public static function init() {
 		add_action( 'init', array( __CLASS__, 'register_meta' ) );
@@ -57,19 +95,21 @@ final class Notion_Publish_Bridge {
 			self::NOTION_ID_META,
 		);
 
-		foreach ( $scalar_keys as $key ) {
-			register_post_meta(
-				'post',
-				$key,
-				array(
-					'type'          => 'string',
-					'single'        => true,
-					'show_in_rest'  => true,
-					'auth_callback' => function () {
-						return current_user_can( 'edit_posts' );
-					},
-				)
-			);
+		foreach ( self::target_post_types() as $post_type ) {
+			foreach ( $scalar_keys as $key ) {
+				register_post_meta(
+					$post_type,
+					$key,
+					array(
+						'type'          => 'string',
+						'single'        => true,
+						'show_in_rest'  => true,
+						'auth_callback' => function () {
+							return current_user_can( 'edit_posts' );
+						},
+					)
+				);
+			}
 		}
 	}
 
@@ -125,11 +165,28 @@ final class Notion_Publish_Bridge {
 	}
 
 	public static function handle_ping() {
+		// 이 사이트가 어떤 글 종류와 분류를 쓰는지 함께 알려 줍니다.
+		// 고객사마다 구조가 달라, 이것만 봐도 어디에 올려야 하는지 판단됩니다.
+		$types = array();
+		foreach ( self::target_post_types() as $name ) {
+			$object = get_post_type_object( $name );
+			if ( ! $object ) {
+				continue;
+			}
+			$types[] = array(
+				'name'       => $name,
+				'label'      => $object->labels->name,
+				'rest_base'  => $object->rest_base ? $object->rest_base : $name,
+				'taxonomies' => array_values( get_object_taxonomies( $name ) ),
+			);
+		}
+
 		return array(
-			'ok'             => true,
-			'version'        => '1.0.1',
-			'rank_math'      => defined( 'RANK_MATH_VERSION' ) ? RANK_MATH_VERSION : null,
+			'ok'               => true,
+			'version'          => '1.1.0',
+			'rank_math'        => defined( 'RANK_MATH_VERSION' ) ? RANK_MATH_VERSION : null,
 			'rank_math_active' => class_exists( 'RankMath' ),
+			'post_types'       => $types,
 		);
 	}
 
@@ -138,7 +195,9 @@ final class Notion_Publish_Bridge {
 
 		$posts = get_posts(
 			array(
-				'post_type'        => 'post',
+				// 용어사전 같은 별도 글 종류에 올라간 글도 찾아야 합니다.
+				// 일반 글만 뒤지면 같은 원고가 두 번 올라갑니다.
+				'post_type'        => self::target_post_types(),
 				'post_status'      => 'any',
 				'numberposts'      => 1,
 				'fields'           => 'ids',
@@ -159,10 +218,11 @@ final class Notion_Publish_Bridge {
 		$post_id = (int) $posts[0];
 
 		return array(
-			'found'   => true,
-			'post_id' => $post_id,
-			'status'  => get_post_status( $post_id ),
-			'link'    => get_permalink( $post_id ),
+			'found'     => true,
+			'post_id'   => $post_id,
+			'post_type' => get_post_type( $post_id ),
+			'status'    => get_post_status( $post_id ),
+			'link'      => get_permalink( $post_id ),
 		);
 	}
 
@@ -352,7 +412,7 @@ final class Notion_Publish_Bridge {
 	 * jsonld 모드에서 저장해둔 원본을 Rank Math 출력에 얹습니다.
 	 */
 	public static function inject_jsonld( $data, $jsonld ) {
-		if ( ! is_singular( 'post' ) ) {
+		if ( ! is_singular( self::target_post_types() ) ) {
 			return $data;
 		}
 
