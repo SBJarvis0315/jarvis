@@ -16,6 +16,8 @@ from requests.auth import HTTPBasicAuth
 
 from .config import WordPressConfig
 
+from .trust import ca_bundle
+
 log = logging.getLogger(__name__)
 
 TIMEOUT = 60
@@ -63,6 +65,13 @@ class WordPressClient:
         self.session = session or requests.Session()
         # 응용 프로그램 비밀번호는 공백이 들어간 형태로 복사되는 경우가 많습니다.
         self.session.auth = HTTPBasicAuth(user, app_password.replace(" ", ""))
+
+        # 인증서 사슬을 잘못 설치해 둔 고객사 서버가 있습니다. 빠진 중간 인증서를
+        # 저장소에 두고 여기서 보탭니다. 검증을 끄는 것이 아니라 빈 칸을 채우는
+        # 것이며, 보탤 것이 없으면 기본 동작 그대로입니다.
+        bundle = ca_bundle()
+        if bundle:
+            self.session.verify = bundle
 
     # ------------------------------------------------------------------ 저수준
 
