@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#23272B",
+    "accent": "#8FB8C9",
+    "title": "#F2F4F5",
+    "sub": "#B4BCC1",
+    "pill_bg": "#2F353A",
+    "pill_fg": "#A9CBD9",
+    "brand": "#F2F4F5",
+    "muted": "#8A949A",
+    "rule": "#3A4147",
+    "ornament": "#292E32"
+  },
+  "note": "로고는 회색(#4C4C4C) 단색이고 홈페이지에 흰색 버전(images/footer/logo.png)이 있어, 그 흰 로고가 보이도록 진한 그래파이트 바탕으로 잡았습니다. 참고자료의 '프리미엄 다이어트·인바디 체성분 검사 기반' 이미지에 맞춰 차갑고 정밀한 그래파이트+스틸블루 포인트입니다. 2026-09-29 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

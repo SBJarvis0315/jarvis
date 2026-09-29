@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHE'S MEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#FBEEF0",
+    "accent": "#D4667B",
+    "title": "#6E2A3B",
+    "sub": "#8C5563",
+    "pill_bg": "#F4D9DE",
+    "pill_fg": "#8E2F47",
+    "brand": "#6E2A3B",
+    "muted": "#B08893",
+    "rule": "#EFD3D8",
+    "ornament": "#F6E1E5"
+  },
+  "note": "홈페이지(shesmedi.co.kr)가 인증서 체인 문제로 열리지 않아 로고를 받지 못했고, 참고자료의 브랜드 정의(산부인과 중심 여성·가족 생애주기 병원, 난임~분만~소아)로 정했습니다. 따뜻하고 안정적인 로즈 계열입니다. 로고는 확보하지 못해 워드마크로 대신합니다. 2026-09-29 확정."
+}
