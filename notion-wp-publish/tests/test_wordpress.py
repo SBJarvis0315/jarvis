@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import base64
 import sys
 from pathlib import Path
 
@@ -100,3 +101,29 @@ def test_nothing_to_add_leaves_the_request_alone(monkeypatch):
         client._request("GET", "/wp/v2/posts", retry_network=False)
 
     assert "verify" not in seen
+
+
+# --------------------------------------------------- Authorization 헤더가 지워지는 서버
+
+
+def test_credentials_ride_along_in_a_second_header():
+    """Authorization 을 지우는 서버가 있어 같은 값을 한 벌 더 보냅니다.
+
+    그런 서버에서는 비밀번호가 맞아도 워드프레스가 아무것도 못 받아 401 이
+    나고, 밖에서 보면 비밀번호가 틀린 것과 구분이 안 됩니다. 브리지
+    플러그인(1.2.0+)이 이 헤더를 읽어 워드프레스가 보는 자리에 옮깁니다.
+    """
+    client = WordPressClient(WordPressConfig(base_url="https://blog.test"), "u", "p a s s")
+
+    header = client.session.headers["X-Notion-Authorization"]
+
+    assert header == "Basic " + base64.b64encode(b"u:pass").decode()
+
+
+def test_the_second_header_carries_the_same_credentials_as_the_first():
+    """두 헤더가 어긋나면 한쪽 경로에서만 로그인되는 유령 버그가 납니다."""
+    client = WordPressClient(WordPressConfig(base_url="https://blog.test"), "u@x.test", "abcd efgh")
+
+    request = requests.Request("GET", "https://blog.test", auth=client.session.auth).prepare()
+
+    assert client.session.headers["X-Notion-Authorization"] == request.headers["Authorization"]

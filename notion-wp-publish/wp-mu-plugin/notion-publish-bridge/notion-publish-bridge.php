@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Notion Publish Bridge
  * Description: 노션 콘텐츠 플래너 자동 발행용 엔드포인트. 중복 발행 방지와 Rank Math 메타·스키마 기입에 쓰입니다.
- * Version:     1.1.0
+ * Version:     1.2.0
  * Author:      리드젠랩
  *
  * 설치: wp-content/plugins/ 에 이 파일을 올리고 플러그인 목록에서 활성화합니다.
@@ -23,6 +23,18 @@
  *                   쓰는 글 종류와 분류 목록도 함께 돌려주므로, 어디에 올려야
  *                   하는지 브라우저로 열어 보기만 해도 알 수 있습니다.
  *
+ *   4. /auth-probe  로그인이 왜 안 되는지 알아보는 진단용. 값은 돌려주지 않고,
+ *                   어떤 인증 헤더가 PHP까지 닿았는지만 알려줍니다.
+ *
+ * 인증 헤더를 지우는 서버 대비 (1.2.0):
+ *   Authorization 헤더를 PHP까지 넘기지 않는 서버가 있습니다(쉬즈메디 의심).
+ *   그런 곳에서는 응용 프로그램 비밀번호가 맞아도 워드프레스가 아무것도 못 받아
+ *   'rest_not_logged_in' 만 돌려줍니다. 비밀번호가 틀린 것과 구분이 안 됩니다.
+ *   그래서 발행 도구는 같은 자격 증명을 X-Notion-Authorization 헤더에도 함께
+ *   보냅니다. 이 플러그인이 그 헤더를 읽어 워드프레스가 보는 자리에 옮겨 놓으면,
+ *   인증 자체는 워드프레스 코어가 평소대로 처리합니다. 우리가 비밀번호를 따로
+ *   검사하지 않으므로 인증이 느슨해지지 않습니다.
+ *
  * 글 종류를 가리지 않습니다 (1.1.0):
  *   개발사가 '용어사전' 같은 별도 글 종류를 만들어 둔 사이트가 있습니다
  *   (비컴성형외과 glossary). 메뉴는 일반 카테고리와 똑같이 생겼지만 속은
@@ -38,6 +50,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 final class Notion_Publish_Bridge {
+
+	const VERSION = '1.2.0';
 
 	const NS = 'notion-bridge/v1';
 
@@ -80,6 +94,10 @@ final class Notion_Publish_Bridge {
 		add_action( 'init', array( __CLASS__, 'register_meta' ) );
 		add_action( 'rest_api_init', array( __CLASS__, 'register_routes' ) );
 		add_filter( 'rank_math/json_ld', array( __CLASS__, 'inject_jsonld' ), 99, 2 );
+
+		// 코어의 응용 프로그램 비밀번호 검사(우선순위 20)보다 **먼저** 끼어들어,
+		// 서버가 지워 버린 자격 증명을 코어가 보는 자리에 되돌려 놓습니다.
+		add_filter( 'determine_current_user', array( __CLASS__, 'restore_basic_auth' ), 15 );
 	}
 
 	/**
@@ -143,6 +161,19 @@ final class Notion_Publish_Bridge {
 			)
 		);
 
+		// 진단용. 로그인이 안 될 때 원인을 가르기 위한 것이라 인증을 요구하지
+		// 않습니다. 대신 **값은 하나도 돌려주지 않습니다** — 어떤 인증 헤더가
+		// PHP까지 닿았는지, 지금 로그인으로 인정됐는지만 알려줍니다.
+		register_rest_route(
+			self::NS,
+			'/auth-probe',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( __CLASS__, 'handle_auth_probe' ),
+				'permission_callback' => '__return_true',
+			)
+		);
+
 		// 설치 확인용.
 		register_rest_route(
 			self::NS,
@@ -152,6 +183,138 @@ final class Notion_Publish_Bridge {
 				'callback'            => array( __CLASS__, 'handle_ping' ),
 				'permission_callback' => array( __CLASS__, 'can_edit_posts' ),
 			)
+		);
+	}
+
+	/**
+	 * 서버가 Authorization 헤더를 지우는 경우를 메웁니다.
+	 *
+	 * 워드프레스 코어는 `$_SERVER['PHP_AUTH_USER']` 와 `PHP_AUTH_PW` 가 둘 다
+	 * 있을 때만 응용 프로그램 비밀번호를 확인합니다. 일부 서버(LiteSpeed/CGI
+	 * 구성, 보안 모듈을 얹은 곳)는 Authorization 헤더를 PHP까지 넘기지 않아
+	 * 그 두 값이 비고, 비밀번호가 맞아도 무조건 'rest_not_logged_in' 이 납니다.
+	 *
+	 * 여기서는 헤더가 살아남았을 만한 자리를 차례로 뒤져 그 두 값만 채워 넣습니다.
+	 * **비밀번호 검사는 하지 않습니다** — 그건 그대로 코어가 합니다. 그래서
+	 * 인증이 느슨해지지 않고, 서버가 헤더를 멀쩡히 넘겨주는 곳에서는 아무 일도
+	 * 일어나지 않습니다.
+	 */
+	public static function restore_basic_auth( $input_user ) {
+		if ( ! empty( $input_user ) ) {
+			return $input_user;
+		}
+
+		// 코어가 이미 볼 수 있는 상태면 손대지 않습니다.
+		if ( isset( $_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW'] ) ) {
+			return $input_user;
+		}
+
+		$credentials = self::read_basic_credentials();
+
+		if ( $credentials ) {
+			$_SERVER['PHP_AUTH_USER'] = $credentials[0];
+			$_SERVER['PHP_AUTH_PW']   = $credentials[1];
+		}
+
+		return $input_user;
+	}
+
+	/**
+	 * Basic 자격 증명이 숨어 있을 수 있는 자리들.
+	 *
+	 * REDIRECT_ 가 붙은 것은 .htaccess 의 rewrite 를 거치면서 아파치가 붙이는
+	 * 이름이고, X-Notion-Authorization 은 Authorization 이 통째로 지워지는
+	 * 서버를 위해 발행 도구가 같은 값을 한 벌 더 보내는 헤더입니다.
+	 */
+	public static function auth_header_keys() {
+		return array(
+			'HTTP_AUTHORIZATION',
+			'REDIRECT_HTTP_AUTHORIZATION',
+			'REDIRECT_REDIRECT_HTTP_AUTHORIZATION',
+			'HTTP_X_NOTION_AUTHORIZATION',
+			'REDIRECT_HTTP_X_NOTION_AUTHORIZATION',
+			'REDIRECT_REDIRECT_HTTP_X_NOTION_AUTHORIZATION',
+		);
+	}
+
+	/** 위 자리들에서 `Basic <base64>` 를 찾아 아이디/비밀번호로 가릅니다. */
+	private static function read_basic_credentials() {
+		$raw = '';
+
+		foreach ( self::auth_header_keys() as $key ) {
+			if ( ! empty( $_SERVER[ $key ] ) && is_string( $_SERVER[ $key ] ) ) {
+				$raw = $_SERVER[ $key ];
+				break;
+			}
+		}
+
+		// $_SERVER 에는 안 실리고 getallheaders() 에만 잡히는 구성이 있습니다.
+		if ( '' === $raw && function_exists( 'getallheaders' ) ) {
+			foreach ( (array) getallheaders() as $name => $value ) {
+				$name = strtolower( $name );
+				if ( 'authorization' === $name || 'x-notion-authorization' === $name ) {
+					$raw = (string) $value;
+					break;
+				}
+			}
+		}
+
+		if ( 0 !== stripos( $raw, 'basic ' ) ) {
+			return null;
+		}
+
+		$decoded = base64_decode( substr( $raw, 6 ), true );
+
+		if ( ! is_string( $decoded ) || false === strpos( $decoded, ':' ) ) {
+			return null;
+		}
+
+		return explode( ':', $decoded, 2 );
+	}
+
+	/**
+	 * 인증이 왜 안 되는지 가르는 진단.
+	 *
+	 * 자격 증명이 틀린 것과, 서버가 헤더를 지워 워드프레스가 아무것도 못 받은
+	 * 것은 밖에서 보면 응답이 똑같습니다. 이 경로는 값을 빼고 '무엇이 닿았는지'
+	 * 만 돌려주므로 둘을 구분할 수 있습니다.
+	 */
+	public static function handle_auth_probe() {
+		$server_keys = array();
+
+		foreach ( self::auth_header_keys() as $key ) {
+			if ( ! empty( $_SERVER[ $key ] ) ) {
+				$server_keys[] = $key;
+			}
+		}
+
+		$header_names = array();
+
+		if ( function_exists( 'getallheaders' ) ) {
+			foreach ( (array) getallheaders() as $name => $value ) {
+				$lower = strtolower( $name );
+				if ( 'authorization' === $lower || 0 === strpos( $lower, 'x-notion-' ) ) {
+					$header_names[] = $lower;
+				}
+			}
+		}
+
+		return array(
+			'ok'                      => true,
+			'version'                 => self::VERSION,
+			// 값이 아니라 '있었는지'만.
+			'php_auth_user'           => isset( $_SERVER['PHP_AUTH_USER'] ),
+			'php_auth_pw'             => isset( $_SERVER['PHP_AUTH_PW'] ),
+			'server_keys'             => $server_keys,
+			'getallheaders'           => $header_names,
+			'sapi'                    => PHP_SAPI,
+			'is_ssl'                  => is_ssl(),
+			'app_passwords_available' => function_exists( 'wp_is_application_passwords_available' )
+				? (bool) wp_is_application_passwords_available()
+				: null,
+			// 이게 true 면 인증까지 끝난 것입니다 — 남은 문제는 권한뿐입니다.
+			'logged_in'               => get_current_user_id() > 0,
+			'can_edit_posts'          => current_user_can( 'edit_posts' ),
 		);
 	}
 
@@ -183,7 +346,7 @@ final class Notion_Publish_Bridge {
 
 		return array(
 			'ok'               => true,
-			'version'          => '1.1.0',
+			'version'          => self::VERSION,
 			'rank_math'        => defined( 'RANK_MATH_VERSION' ) ? RANK_MATH_VERSION : null,
 			'rank_math_active' => class_exists( 'RankMath' ),
 			'post_types'       => $types,

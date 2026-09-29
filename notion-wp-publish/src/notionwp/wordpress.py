@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import html
 import logging
 import mimetypes
@@ -66,7 +67,16 @@ class WordPressClient:
         self.config = config
         self.session = session or requests.Session()
         # 응용 프로그램 비밀번호는 공백이 들어간 형태로 복사되는 경우가 많습니다.
-        self.session.auth = HTTPBasicAuth(user, app_password.replace(" ", ""))
+        password = app_password.replace(" ", "")
+        self.session.auth = HTTPBasicAuth(user, password)
+
+        # Authorization 헤더를 PHP까지 넘기지 않는 서버가 있습니다. 그런 곳에서는
+        # 비밀번호가 맞아도 워드프레스가 아무것도 못 받아 401 만 돌려주고, 밖에서
+        # 보면 비밀번호가 틀린 것과 구분이 안 됩니다. 같은 값을 헤더 하나에 더
+        # 실어 보내고, 브리지 플러그인(1.2.0+)이 그걸 워드프레스가 보는 자리에
+        # 옮겨 놓습니다. 헤더가 멀쩡히 가는 고객사에서는 그냥 무시됩니다.
+        token = base64.b64encode(f"{user}:{password}".encode()).decode()
+        self.session.headers["X-Notion-Authorization"] = f"Basic {token}"
 
         # 인증서 사슬을 잘못 설치해 둔 고객사 서버가 있습니다. 빠진 중간 인증서를
         # 저장소에 두고 여기서 보탭니다. 검증을 끄는 것이 아니라 빈 칸을 채우는
@@ -158,7 +168,7 @@ class WordPressClient:
                 return None
             raise WordPressError(
                 "Notion Publish Bridge 플러그인을 찾을 수 없습니다.\n"
-                "  wp-mu-plugin/notion-publish-bridge-1.1.0.zip 을 워드프레스에 설치하고 "
+                "  wp-mu-plugin/notion-publish-bridge-1.2.0.zip 을 워드프레스에 설치하고 "
                 "활성화해 주세요.\n"
                 "  이 사이트가 워드프레스가 아니라 자체 홈페이지 게시판이라면, "
                 "boards/<호스트>.json 프로파일을 만들어야 게시판 발행이 집어갑니다.\n"
