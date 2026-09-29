@@ -285,8 +285,11 @@ def main(argv: list[str] | None = None) -> int:
                 publisher.prepare(Path(args.prepare)) if args.prepare else publisher.run()
             )
         except Exception as exc:
-            # 한 고객사가 넘어져도 나머지는 계속 진행합니다.
+            # 한 고객사가 넘어져도 나머지는 계속 진행합니다. 다만 로그에는
+            # 반드시 한 줄 남깁니다 — 줄이 통째로 빠지면 '대상이 없었다'와
+            # 구분이 안 되어 원인을 찾을 수가 없습니다.
             print(f"[{cfg.client}] 실행 중단: {exc}", file=sys.stderr)
+            publisher.log_abort(exc)
             failed = True
             continue
 

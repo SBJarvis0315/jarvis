@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fixtures import sample_page
 from notionwp.config import RunLogConfig
 from notionwp.publish import Outcome, Publisher
-from notionwp.runlog import RunLogger, summarize_for_log
+from notionwp.runlog import RunLogger, summarize_abort, summarize_for_log
 from test_gate_schema import CONFIG, complete_page
 from test_publish_flow import FakeNotion, FakeWordPress, _no_network  # noqa: F401
 
@@ -162,3 +162,27 @@ def test_missing_bridge_is_written_at_the_top_of_the_detail():
 def test_a_normal_run_says_nothing_about_the_bridge():
     notion, _ = run()
     assert "브리지" not in value(logged(notion), "상세")
+
+
+# ------------------------------------------------------- 고객사 실행이 통째로 멈췄을 때
+
+
+def test_an_aborted_client_still_gets_a_row():
+    """줄이 통째로 빠지면 '대상 없음'과 구분이 안 됩니다.
+
+    쉬즈메디가 두 회차 연속 이렇게 사라져, 로그만 보고는 원인은커녕
+    돌긴 돌았는지조차 알 수 없었습니다.
+    """
+    summary = summarize_abort("워드프레스 요청 실패 GET /notion-bridge/v1/ping: 401")
+
+    assert summary.result == "실패"
+    assert summary.count == 0
+    assert "실행 중단" in summary.detail
+    assert "401" in summary.detail
+
+
+def test_the_abort_reason_is_kept_short_enough_to_store():
+    """노션 rich_text 한 조각에는 상한이 있습니다. 통째로 넣으면 버려집니다."""
+    summary = summarize_abort("가" * 5000)
+
+    assert len(summary.detail) < 1000

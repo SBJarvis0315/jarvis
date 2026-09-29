@@ -78,6 +78,21 @@ def summarize_for_log(outcomes: list[Any]) -> Summary:
     return Summary(result=result, count=len(published), detail="\n".join(lines))
 
 
+def summarize_abort(message: str) -> Summary:
+    """고객사 실행이 통째로 중단됐을 때의 요약.
+
+    지금까지는 이런 경우 로그에 **아무 줄도 남지 않았습니다**. 다른 고객사
+    줄만 보이고 그 고객사만 통째로 빠져, 밖에서 보면 '대상이 없었나 보다'와
+    구분이 안 됩니다. 실제로 쉬즈메디가 두 회차 연속 이렇게 사라져 원인을
+    찾는 데 시간을 썼습니다. 빠지는 것보다 실패로 남는 편이 낫습니다.
+    """
+    return Summary(
+        result="실패",
+        count=0,
+        detail=f"❌ 실행 중단 — {str(message)[:800]}",
+    )
+
+
 class RunLogger:
     """설정에 로그 DB가 있을 때만 동작합니다. 없으면 조용히 아무것도 하지 않습니다."""
 

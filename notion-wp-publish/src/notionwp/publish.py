@@ -48,7 +48,7 @@ from .plan import (
 )
 from .posttype import load as load_routing
 from .posttype import target_for
-from .runlog import RunLogger
+from .runlog import RunLogger, summarize_abort
 from .tail import append as append_tail
 from .tail import load as load_tail
 from .schema import build_schemas, extract_faqs, has_faq_heading
@@ -447,6 +447,16 @@ class Publisher:
         self.routing = load_routing(cfg.client)
 
     # -------------------------------------------------------------------- 실행
+
+    def log_abort(self, exc: BaseException) -> None:
+        """고객사 실행이 통째로 중단된 것을 로그에 남깁니다.
+
+        이 호출이 또 실패해도 다른 고객사 처리를 막지 않습니다.
+        """
+        try:
+            self.runlog.write([], summary=summarize_abort(str(exc)))
+        except Exception:  # noqa: BLE001 - 로그 쓰기는 부가 기능입니다.
+            log.warning("'%s' 실행 중단을 로그에 남기지 못했습니다.", self.cfg.client)
 
     def run(self) -> list[Outcome]:
         started = time.monotonic()
