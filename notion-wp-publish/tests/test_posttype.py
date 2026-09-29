@@ -65,3 +65,24 @@ def test_the_real_becomeps_file_routes_the_glossary():
     assert (glossary.rest_base, glossary.taxonomy_rest_base) == ("glossary", "glossary_cat")
     # 용어사전 외의 게시판은 건드리지 않습니다.
     assert target_for(routing, "블로그") == DEFAULT
+
+
+def test_the_real_shesmedi_file_routes_the_encyclopedia():
+    """쉬즈메디도 같은 구조입니다 — '백과사전'(encyclopedia)이 따로 있습니다.
+
+    분류 이름('검사·수치 용어' 등)이 일반 카테고리 목록에 없어, 대응표가
+    없으면 발행이 분류 단계에서 막힙니다. 실제로 5건이 그렇게 막혔습니다.
+    """
+    routing = load("쉬즈메디병원")
+    assert routing is not None
+
+    encyclopedia = target_for(routing, "백과사전")
+    assert (encyclopedia.rest_base, encyclopedia.taxonomy_rest_base) == (
+        "encyclopedia",
+        "encyclopedia_cat",
+    )
+    assert encyclopedia.taxonomy_field == "encyclopedia_cat"
+
+    # 백과사전이 아닌 게시판은 지금까지처럼 일반 글로 갑니다.
+    for board in ("임신·출산", "난임·시험관", "여성질환", "줄기세포"):
+        assert target_for(routing, board) == DEFAULT, board
