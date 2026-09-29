@@ -47,7 +47,7 @@ from .plan import (
     plan_dir_for,
 )
 from .posttype import load as load_routing
-from .posttype import target_for
+from .posttype import Target, target_for
 from .runlog import RunLogger, summarize_abort
 from .tail import append as append_tail
 from .tail import load as load_tail
@@ -526,6 +526,42 @@ class Publisher:
 
     # ------------------------------------------------------------------ 단건 발행
 
+    def _route(self, target: Target, category_name: str) -> tuple[Target, list[int], str]:
+        """분류 이름으로 '어느 글 종류에 올릴지' 까지 확정합니다.
+
+        `posttypes/<고객사>.json` 에 적어 둔 대응표가 있으면 그것이 우선이고,
+        거기서 분류를 못 찾으면 사람이 적어 둔 것이 틀린 것이므로 그대로
+        알립니다. 적어 둔 것이 없을 때만 사이트에 직접 물어봅니다.
+
+        개발사가 '용어사전'·'백과사전' 같은 별도 글 종류를 만들어 둔 사이트가
+        있습니다. 메뉴는 일반 카테고리와 똑같이 생겨서 고객사를 붙일 때
+        알아채기 어렵고, 실제로 비컴·쉬즈메디 둘 다 발행이 막히고 나서야
+        드러났습니다. 이제는 막히지 않고 스스로 찾아갑니다.
+        """
+        if not category_name:
+            return target, [], ""
+
+        try:
+            found = self.wp.resolve_category(category_name, target=target)
+            return target, [found] if found is not None else [], ""
+        except WordPressError:
+            if not target.is_default:
+                # 대응표에 적힌 곳에 그 분류가 없다 — 적어 둔 것이 틀렸습니다.
+                raise
+
+            discovered = self.wp.find_target_for_category(category_name)
+            if discovered is None:
+                raise
+
+            elsewhere, category_id = discovered
+            note = (
+                f"'{category_name}' 은 일반 카테고리에 없고 "
+                f"'{elsewhere.label}'({elsewhere.rest_base}) 글 종류의 분류라, "
+                f"그쪽에 올렸습니다."
+            )
+            log.info(note)
+            return elsewhere, [category_id], note
+
     def _publish(self, cand: Candidate) -> Outcome:
         nc = self.cfg.notion
         out = Outcome(page_id=cand.page_id, title=cand.title)
@@ -540,10 +576,20 @@ class Publisher:
         category = napi.read_select(prop("category"))
 
         # 플래너의 '게시판' 이 어느 글 종류로 갈지 정합니다. 대응표가 없는
-        # 고객사는 지금까지처럼 일반 글 + 일반 카테고리입니다.
+        # 고객사는 일반 글 + 일반 카테고리에서 시작하고, 거기에 분류가 없으면
+        # 사이트에 직접 물어봐서 찾습니다(_route).
         target = target_for(self.routing, napi.read_select(prop("board")))
+        category_name = self.cfg.wordpress.category_map.get(
+            category, category or self.cfg.wordpress.default_category
+        )
 
         try:
+            # 0) 어디에 올릴지부터 확정합니다. 중복 확인·슬러그 확인이 모두
+            #    글 종류마다 따로이므로, 이것이 먼저 정해져야 합니다.
+            target, category_ids, routed = self._route(target, category_name)
+            if routed:
+                out.warnings.append(routed)
+
             # 1) 이미 발행된 적이 있는지 — 하루 두 번 도는 구조라 중복 방지가 필수입니다.
             #    브리지가 없으면 노션 ID 를 글에 심어 둘 수 없으므로 슬러그로 찾습니다.
             existing = (
@@ -637,13 +683,6 @@ class Publisher:
                 raise WordPressError(
                     f"슬러그 '{slug}' 가 이미 사용 중입니다. 플래너에서 슬러그를 바꿔 주세요."
                 )
-
-            category_name = self.cfg.wordpress.category_map.get(
-                category, category or self.cfg.wordpress.default_category
-            )
-            category_ids = [
-                cid for cid in [self.wp.resolve_category(category_name, target=target)] if cid is not None
-            ]
 
             # 4) 먼저 초안으로 만듭니다. SEO 기입까지 끝난 뒤에 공개합니다.
             if post_id is None:

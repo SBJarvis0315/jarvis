@@ -12,10 +12,23 @@
       비컴성형외과.json
 
 설정표에도 플래너에도 칸을 늘리지 않습니다. `designs/`·`tails/`·`certs/` 와
-같은 방식입니다. 파일이 없거나 게시판 값이 표에 없으면 지금까지처럼
-일반 글 + 일반 카테고리로 올라갑니다.
+같은 방식입니다.
 
-어떤 글 종류가 있는지는 브리지 플러그인 1.1.0 의 `/ping` 이 알려 줍니다.
+**이 파일은 이제 필수가 아닙니다.** 파일이 없거나 게시판 값이 표에 없으면
+일반 글 + 일반 카테고리로 시작하고, 거기에 그 분류가 없으면 발행기가
+사이트에 직접 물어봐서(`WordPressClient.discover_targets`) 그 분류를 가진
+글 종류를 찾아갑니다. 비컴·쉬즈메디처럼 개발사가 별도 글 종류를 만들어 둔
+새 고객사도 손댈 것 없이 그대로 올라갑니다.
+
+그래도 이 파일이 남아 있는 이유는 둘입니다.
+  · 같은 분류 이름이 여러 글 종류에 있으면 기계가 고를 수 없습니다.
+    그때는 발행을 멈추고 여기에 적어 달라고 합니다.
+  · 분류가 비어 있는 게시판을 글 종류로 못 박아 두고 싶을 때.
+
+여기에 적어 둔 대응은 탐색보다 **우선합니다**. 적어 둔 곳에 그 분류가
+없으면 적어 둔 것이 틀린 것이므로, 우회하지 않고 그대로 알립니다.
+
+어떤 글 종류가 있는지는 브리지 플러그인 1.1.0 의 `/ping` 도 알려 줍니다.
 """
 
 from __future__ import annotations
@@ -60,6 +73,23 @@ class Target:
 
 
 DEFAULT = Target()
+
+
+#: 화면을 만드는 내부 글 종류. 원고가 갈 곳이 아닙니다.
+#: 브리지 플러그인의 같은 목록과 짝을 이룹니다.
+INTERNAL_POST_TYPES = frozenset(
+    {
+        "attachment", "nav_menu_item", "wp_block", "wp_template",
+        "wp_template_part", "wp_global_styles", "wp_navigation",
+        "wp_font_family", "wp_font_face", "rm_content_editor",
+        "rank_math_schema", "page",
+    }
+)
+
+#: 분류로 쓰지 않는 분류 체계. 태그는 카테고리가 아니고, 나머지는 내부용입니다.
+INTERNAL_TAXONOMIES = frozenset(
+    {"post_tag", "nav_menu", "wp_pattern_category", "post_format"}
+)
 
 
 @dataclass

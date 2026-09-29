@@ -18,7 +18,7 @@ from requests.auth import HTTPBasicAuth
 from .config import WordPressConfig
 
 from .posttype import DEFAULT as DEFAULT_TARGET
-from .posttype import Target
+from .posttype import INTERNAL_POST_TYPES, INTERNAL_TAXONOMIES, Target
 from .trust import ca_bundle
 
 log = logging.getLogger(__name__)
@@ -88,6 +88,9 @@ class WordPressClient:
         # 조용히 무시되고, 보탠 중간 인증서가 없는 셈이 됩니다. 요청에 직접 넘긴
         # 값은 환경 변수보다 우선하므로 어디서 돌려도 같게 동작합니다.
         self._ca_bundle = ca_bundle()
+
+        #: discover_targets() 의 결과. 회차당 한 번만 물어봅니다.
+        self._targets: list[Target] | None = None
 
     # ------------------------------------------------------------------ 저수준
 
@@ -369,6 +372,88 @@ class WordPressClient:
             page += 1
 
         return names
+
+    def discover_targets(self) -> list[Target]:
+        """이 사이트가 쓰는 글 종류를 REST 에서 직접 읽어 후보로 만듭니다.
+
+        개발사가 '용어사전'·'백과사전' 같은 별도 글 종류를 만들어 둔 사이트가
+        있습니다. 겉보기 메뉴는 일반 카테고리와 똑같아서, 고객사를 붙일 때
+        사람이 알아채기 어렵습니다. 실제로 비컴·쉬즈메디 둘 다 발행이 막히고
+        나서야 드러났습니다. 그래서 사이트에 직접 물어봅니다.
+
+        `posttypes/<고객사>.json` 에 적어 둔 대응표가 있으면 그쪽이 우선입니다.
+        여기는 적어 둔 것이 없을 때 쓰는 길입니다.
+        """
+        if self._targets is not None:
+            return self._targets
+
+        types = self._request("GET", "/wp/v2/types") or {}
+        taxonomies = self._request("GET", "/wp/v2/taxonomies") or {}
+
+        # 분류 체계의 REST 이름은 따로 물어봐야 압니다 (category → categories).
+        tax_rest = {
+            name: str(spec.get("rest_base") or name)
+            for name, spec in taxonomies.items()
+        }
+
+        targets: list[Target] = []
+        for name, spec in types.items():
+            if name in INTERNAL_POST_TYPES:
+                continue
+            rest_base = str(spec.get("rest_base") or "").strip()
+            if not rest_base:
+                continue
+            label = str(spec.get("name") or name).strip()
+            for taxonomy in spec.get("taxonomies") or []:
+                if taxonomy in INTERNAL_TAXONOMIES:
+                    continue
+                rest = tax_rest.get(taxonomy, taxonomy)
+                targets.append(
+                    Target(
+                        rest_base=rest_base,
+                        taxonomy_rest_base=rest,
+                        taxonomy_field=rest,
+                        label=label,
+                    )
+                )
+
+        self._targets = targets
+        return targets
+
+    def find_target_for_category(self, name: str) -> tuple[Target, int] | None:
+        """분류 이름 하나로 '어느 글 종류의 분류인지' 를 찾습니다.
+
+        딱 한 곳에서만 나올 때만 돌려줍니다. 여러 글 종류에 같은 이름이 있으면
+        어느 쪽인지 기계가 정할 수 없으므로, 골라 주지 않고 사람에게 넘깁니다.
+        """
+        wanted = (name or "").strip()
+        if not wanted:
+            return None
+
+        matches: list[tuple[Target, int]] = []
+        for target in self.discover_targets():
+            if target.is_default:
+                # 일반 카테고리는 이미 확인한 뒤에 여기까지 온 것입니다.
+                continue
+            try:
+                found = self.list_categories(target=target).get(wanted)
+            except WordPressError:
+                continue
+            if found is not None:
+                matches.append((target, found))
+
+        if len(matches) == 1:
+            return matches[0]
+
+        if len(matches) > 1:
+            where = ", ".join(f"{t.label}({t.rest_base})" for t, _ in matches)
+            raise WordPressError(
+                f"'{wanted}' 분류가 여러 글 종류에 있습니다: {where}. "
+                f"어느 쪽에 올릴지는 사람이 정해야 합니다 — "
+                f"posttypes/<고객사>.json 에 게시판 대응을 적어 주세요."
+            )
+
+        return None
 
     def resolve_category(self, name: str, *, target: Target = DEFAULT_TARGET) -> int | None:
         """이름으로 분류를 찾습니다. 없으면 만들지 않고 실패시킵니다.

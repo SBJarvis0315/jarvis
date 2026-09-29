@@ -127,3 +127,109 @@ def test_the_second_header_carries_the_same_credentials_as_the_first():
     request = requests.Request("GET", "https://blog.test", auth=client.session.auth).prepare()
 
     assert client.session.headers["X-Notion-Authorization"] == request.headers["Authorization"]
+
+
+# ------------------------------------------- 별도 글 종류를 사이트에 직접 물어보기
+
+TYPES = {
+    "post": {"name": "글", "rest_base": "posts", "taxonomies": ["category", "post_tag"]},
+    "page": {"name": "페이지", "rest_base": "pages", "taxonomies": []},
+    "encyclopedia": {
+        "name": "산부인과 백과사전",
+        "rest_base": "encyclopedia",
+        "taxonomies": ["encyclopedia_cat"],
+    },
+    "wp_block": {"name": "패턴", "rest_base": "blocks", "taxonomies": ["wp_pattern_category"]},
+}
+
+TAXONOMIES = {
+    "category": {"rest_base": "categories"},
+    "post_tag": {"rest_base": "tags"},
+    "encyclopedia_cat": {"rest_base": "encyclopedia_cat"},
+    "wp_pattern_category": {"rest_base": "wp_pattern_category"},
+}
+
+
+def _discovering_client(monkeypatch, terms: dict[str, list[dict]]) -> WordPressClient:
+    client = _client()
+
+    def fake(method, path, **kwargs):
+        if path == "/wp/v2/types":
+            return TYPES
+        if path == "/wp/v2/taxonomies":
+            return TAXONOMIES
+        if kwargs.get("params", {}).get("page", 1) > 1:
+            return []
+        return terms.get(path, [])
+
+    monkeypatch.setattr(client, "_request", fake)
+    return client
+
+
+def test_discovery_finds_the_custom_post_type(monkeypatch):
+    client = _discovering_client(monkeypatch, {})
+    found = {(t.rest_base, t.taxonomy_rest_base) for t in client.discover_targets()}
+
+    assert ("posts", "categories") in found
+    assert ("encyclopedia", "encyclopedia_cat") in found
+    # 화면을 만드는 내부 종류와 태그는 원고가 갈 곳이 아닙니다.
+    assert not any(t.rest_base in {"pages", "blocks"} for t in client.discover_targets())
+    assert not any(t.taxonomy_rest_base == "tags" for t in client.discover_targets())
+
+
+def test_a_category_that_lives_in_a_custom_taxonomy_is_found(monkeypatch):
+    """'검사·수치 용어' 는 일반 카테고리에 없고 백과사전 분류에만 있습니다."""
+    client = _discovering_client(
+        monkeypatch,
+        {"/wp/v2/encyclopedia_cat": [{"id": 17, "name": "검사·수치 용어"}]},
+    )
+
+    target, category_id = client.find_target_for_category("검사·수치 용어")
+
+    assert target.rest_base == "encyclopedia"
+    assert target.taxonomy_field == "encyclopedia_cat"
+    assert category_id == 17
+
+
+def test_an_unknown_category_is_not_invented(monkeypatch):
+    client = _discovering_client(monkeypatch, {})
+    assert client.find_target_for_category("없는 분류") is None
+
+
+def test_an_ambiguous_category_is_handed_back_to_a_human(monkeypatch):
+    """같은 이름이 여러 글 종류에 있으면 기계가 고르면 안 됩니다."""
+    TYPES["glossary"] = {
+        "name": "용어사전",
+        "rest_base": "glossary",
+        "taxonomies": ["glossary_cat"],
+    }
+    TAXONOMIES["glossary_cat"] = {"rest_base": "glossary_cat"}
+    try:
+        client = _discovering_client(
+            monkeypatch,
+            {
+                "/wp/v2/encyclopedia_cat": [{"id": 17, "name": "겹치는 이름"}],
+                "/wp/v2/glossary_cat": [{"id": 99, "name": "겹치는 이름"}],
+            },
+        )
+        with pytest.raises(WordPressError, match="여러 글 종류"):
+            client.find_target_for_category("겹치는 이름")
+    finally:
+        TYPES.pop("glossary")
+        TAXONOMIES.pop("glossary_cat")
+
+
+def test_discovery_is_asked_only_once(monkeypatch):
+    """회차마다 고객사별로 한 번이면 됩니다. 글마다 물어보면 낭비입니다."""
+    client = _client()
+    calls = []
+
+    def fake(method, path, **kwargs):
+        calls.append(path)
+        return TYPES if path == "/wp/v2/types" else TAXONOMIES
+
+    monkeypatch.setattr(client, "_request", fake)
+    client.discover_targets()
+    client.discover_targets()
+
+    assert calls.count("/wp/v2/types") == 1

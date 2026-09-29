@@ -11,12 +11,15 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from notionwp.posttype import DEFAULT, PostTypeError, load, path_for, target_for
+from notionwp.posttype import DEFAULT, PostTypeError, Target, load, path_for, target_for
+from notionwp.publish import Publisher
+from notionwp.wordpress import WordPressError
 
 
 def write(tmp_path, boards) -> None:
@@ -86,3 +89,71 @@ def test_the_real_shesmedi_file_routes_the_encyclopedia():
     # 백과사전이 아닌 게시판은 지금까지처럼 일반 글로 갑니다.
     for board in ("임신·출산", "난임·시험관", "여성질환", "줄기세포"):
         assert target_for(routing, board) == DEFAULT, board
+
+
+# --------------------------------------- 대응표가 없을 때 스스로 찾아가는 경로 (_route)
+
+
+class _FakeWP:
+    """resolve_category 는 일반 카테고리만 알고, 나머지는 탐색으로 찾습니다."""
+
+    def __init__(self, known: dict[str, int], elsewhere=None):
+        self.known = known
+        self.elsewhere = elsewhere
+        self.asked = 0
+
+    def resolve_category(self, name, *, target):
+        found = self.known.get(name)
+        if found is None:
+            raise WordPressError(f"'{name}' 분류가 없습니다")
+        return found
+
+    def find_target_for_category(self, name):
+        self.asked += 1
+        return self.elsewhere
+
+
+def _route(wp, target, name):
+    return Publisher._route(SimpleNamespace(wp=wp), target, name)
+
+
+def test_an_ordinary_category_never_triggers_a_search():
+    wp = _FakeWP({"여성질환": 11})
+    target, ids, note = _route(wp, DEFAULT, "여성질환")
+
+    assert (target, ids, note) == (DEFAULT, [11], "")
+    assert wp.asked == 0
+
+
+def test_a_category_only_in_a_custom_post_type_reroutes_the_article():
+    """비컴·쉬즈메디에서 발행을 막았던 바로 그 경우입니다."""
+    encyclopedia = Target(
+        rest_base="encyclopedia",
+        taxonomy_rest_base="encyclopedia_cat",
+        taxonomy_field="encyclopedia_cat",
+        label="산부인과 백과사전",
+    )
+    wp = _FakeWP({}, elsewhere=(encyclopedia, 17))
+
+    target, ids, note = _route(wp, DEFAULT, "검사·수치 용어")
+
+    assert target is encyclopedia
+    assert ids == [17]
+    # 조용히 다른 데로 보내면 안 됩니다. 로그에 남을 문구가 함께 나와야 합니다.
+    assert "백과사전" in note
+
+
+def test_an_explicit_mapping_that_is_wrong_is_reported_not_worked_around():
+    """사람이 적어 둔 대응표가 틀렸으면 고쳐야 할 일이지, 우회할 일이 아닙니다."""
+    mapped = Target(rest_base="glossary", taxonomy_rest_base="glossary_cat")
+    wp = _FakeWP({}, elsewhere=(DEFAULT, 1))
+
+    with pytest.raises(WordPressError):
+        _route(wp, mapped, "없는 분류")
+    assert wp.asked == 0
+
+
+def test_a_category_nobody_has_still_fails():
+    wp = _FakeWP({}, elsewhere=None)
+    with pytest.raises(WordPressError):
+        _route(wp, DEFAULT, "아무도 안 쓰는 분류")
