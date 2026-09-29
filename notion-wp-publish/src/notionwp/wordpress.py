@@ -16,6 +16,8 @@ from requests.auth import HTTPBasicAuth
 
 from .config import WordPressConfig
 
+from .posttype import DEFAULT as DEFAULT_TARGET
+from .posttype import Target
 from .trust import ca_bundle
 
 log = logging.getLogger(__name__)
@@ -254,6 +256,7 @@ class WordPressClient:
         status: str = "publish",
         categories: list[int] | None = None,
         featured_media: int | None = None,
+        target: Target = DEFAULT_TARGET,
     ) -> Post:
         payload: dict[str, Any] = {
             "title": title,
@@ -262,33 +265,40 @@ class WordPressClient:
             "status": status,
         }
         if categories:
-            payload["categories"] = categories
+            # 별도 글 종류는 분류를 담는 필드 이름도 다릅니다 (glossary_cat 등).
+            payload[target.taxonomy_field] = categories
         if featured_media:
             payload["featured_media"] = featured_media
 
-        created = self._request("POST", "/wp/v2/posts", json=payload)
+        created = self._request("POST", target.posts_path, json=payload)
         return Post(
             id=int(created["id"]),
             link=created.get("link", ""),
             status=created.get("status", status),
         )
 
-    def update_post(self, post_id: int, fields: dict[str, Any]) -> Post:
-        updated = self._request("POST", f"/wp/v2/posts/{post_id}", json=fields)
+    def update_post(
+        self, post_id: int, fields: dict[str, Any], *, target: Target = DEFAULT_TARGET
+    ) -> Post:
+        updated = self._request("POST", f"{target.posts_path}/{post_id}", json=fields)
         return Post(
             id=int(updated["id"]),
             link=updated.get("link", ""),
             status=updated.get("status", ""),
         )
 
-    def delete_post(self, post_id: int, *, force: bool = False) -> None:
+    def delete_post(
+        self, post_id: int, *, force: bool = False, target: Target = DEFAULT_TARGET
+    ) -> None:
         """발행 후 후속 단계가 실패했을 때 되돌리기 위한 용도."""
-        self._request("DELETE", f"/wp/v2/posts/{post_id}", params={"force": str(force).lower()})
+        self._request(
+            "DELETE", f"{target.posts_path}/{post_id}", params={"force": str(force).lower()}
+        )
 
-    def slug_taken(self, slug: str) -> bool:
+    def slug_taken(self, slug: str, *, target: Target = DEFAULT_TARGET) -> bool:
         """워드프레스는 슬러그가 겹치면 조용히 -2 를 붙입니다. 미리 확인합니다."""
         found = self._request(
-            "GET", "/wp/v2/posts", params={"slug": slug, "status": "any", "per_page": 1}
+            "GET", target.posts_path, params={"slug": slug, "status": "any", "per_page": 1}
         )
         return bool(found)
 
@@ -328,14 +338,14 @@ class WordPressClient:
 
         return best
 
-    def list_categories(self) -> dict[str, int]:
-        """워드프레스에 있는 분류를 이름 → id 로 전부 가져옵니다."""
+    def list_categories(self, *, target: Target = DEFAULT_TARGET) -> dict[str, int]:
+        """그 글 종류의 분류를 이름 → id 로 전부 가져옵니다."""
         names: dict[str, int] = {}
         page = 1
 
         while True:
             items = self._request(
-                "GET", "/wp/v2/categories", params={"per_page": 100, "page": page}
+                "GET", target.taxonomy_path, params={"per_page": 100, "page": page}
             )
             if not items:
                 break
@@ -350,7 +360,7 @@ class WordPressClient:
 
         return names
 
-    def resolve_category(self, name: str) -> int | None:
+    def resolve_category(self, name: str, *, target: Target = DEFAULT_TARGET) -> int | None:
         """이름으로 분류를 찾습니다. 없으면 만들지 않고 실패시킵니다.
 
         예전에는 없는 이름이면 그 이름으로 분류를 새로 만들었습니다. 편의 기능이었지만
@@ -360,13 +370,14 @@ class WordPressClient:
         if not name:
             return None
 
-        existing = self.list_categories()
+        existing = self.list_categories(target=target)
         found = existing.get(name.strip())
         if found is not None:
             return found
 
+        where = f"'{target.label}'" if target.label else "워드프레스"
         raise WordPressError(
-            f"워드프레스에 '{name}' 분류가 없습니다. "
+            f"{where} 에 '{name}' 분류가 없습니다. "
             f"플래너의 카테고리를 워드프레스에 있는 이름으로 맞춰 주세요. "
             f"현재 있는 분류: {', '.join(sorted(existing)) or '(없음)'}"
         )

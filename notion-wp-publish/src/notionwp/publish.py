@@ -46,6 +46,8 @@ from .plan import (
     outline,
     plan_dir_for,
 )
+from .posttype import load as load_routing
+from .posttype import target_for
 from .runlog import RunLogger
 from .tail import append as append_tail
 from .tail import load as load_tail
@@ -442,6 +444,7 @@ class Publisher:
         self.wp = wp
         self.runlog = RunLogger(cfg.run_log, cfg.client, self.notion)
         self.tail = load_tail(cfg.client)
+        self.routing = load_routing(cfg.client)
 
     # -------------------------------------------------------------------- 실행
 
@@ -525,6 +528,10 @@ class Publisher:
         meta_desc = napi.read_text(prop("meta_description")).strip()
         keywords = napi.read_text(prop("keywords")).strip()
         category = napi.read_select(prop("category"))
+
+        # 플래너의 '게시판' 이 어느 글 종류로 갈지 정합니다. 대응표가 없는
+        # 고객사는 지금까지처럼 일반 글 + 일반 카테고리입니다.
+        target = target_for(self.routing, napi.read_select(prop("board")))
 
         try:
             # 1) 이미 발행된 적이 있는지 — 하루 두 번 도는 구조라 중복 방지가 필수입니다.
@@ -616,7 +623,7 @@ class Publisher:
             content = append_tail(content, self.tail, napi.read_select(prop("type")))
 
             # 3) 슬러그 충돌 확인. 방치하면 워드프레스가 말없이 -2 를 붙입니다.
-            if post_id is None and self.wp.slug_taken(slug):
+            if post_id is None and self.wp.slug_taken(slug, target=target):
                 raise WordPressError(
                     f"슬러그 '{slug}' 가 이미 사용 중입니다. 플래너에서 슬러그를 바꿔 주세요."
                 )
@@ -625,7 +632,7 @@ class Publisher:
                 category, category or self.cfg.wordpress.default_category
             )
             category_ids = [
-                cid for cid in [self.wp.resolve_category(category_name)] if cid is not None
+                cid for cid in [self.wp.resolve_category(category_name, target=target)] if cid is not None
             ]
 
             # 4) 먼저 초안으로 만듭니다. SEO 기입까지 끝난 뒤에 공개합니다.
@@ -637,6 +644,7 @@ class Publisher:
                     status="draft",
                     categories=category_ids,
                     featured_media=thumb.id,
+                    target=target,
                 )
                 post_id = post.id
                 out.post_id = post_id
@@ -657,6 +665,7 @@ class Publisher:
                         "categories": category_ids,
                         "featured_media": thumb.id,
                     },
+                    target=target,
                 )
 
             guessed_permalink = f"{self.cfg.wordpress.base_url.rstrip('/')}/{slug}/"
@@ -718,7 +727,7 @@ class Publisher:
                 return out
 
             # 6) 공개.
-            published = self.wp.update_post(post_id, {"status": "publish"})
+            published = self.wp.update_post(post_id, {"status": "publish"}, target=target)
             out.link = published.link or guessed_permalink
             out.published = True
 

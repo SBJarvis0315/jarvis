@@ -17,7 +17,7 @@ def test_schema_url_matches_the_real_permalink():
 
     original = wp.update_post
 
-    def update(post_id, fields):
+    def update(post_id, fields, **kw):
         result = original(post_id, fields)
         if fields.get("status") == "publish":
             return Post(id=post_id, link=real, status="publish")

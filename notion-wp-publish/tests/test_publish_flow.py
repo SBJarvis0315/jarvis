@@ -90,15 +90,16 @@ class FakeWordPress:
         self.media.append({"filename": filename, "alt": alt, "id": self._next_id})
         return Media(id=self._next_id, url=f"{BASE}/uploads/{filename}")
 
-    def slug_taken(self, slug):
+    def slug_taken(self, slug, *, target=None):
         self._maybe_fail("slug_taken")
         return False
 
-    def resolve_category(self, name):
+    def resolve_category(self, name, *, target=None):
         self._maybe_fail("resolve_category")
         return 7 if name else None
 
-    def create_post(self, *, title, content, slug, status, categories=None, featured_media=None):
+    def create_post(self, *, title, content, slug, status, categories=None,
+                    featured_media=None, target=None):
         self._maybe_fail("create_post")
         self._next_id += 1
         self.posts[self._next_id] = {
@@ -108,10 +109,13 @@ class FakeWordPress:
             "status": status,
             "categories": categories,
             "featured_media": featured_media,
+            # 어느 글 종류로 올렸는지. 용어사전 같은 별도 종류를 확인할 때 씁니다.
+            "target": getattr(target, "rest_base", "posts"),
+            "taxonomy_field": getattr(target, "taxonomy_field", "categories"),
         }
         return Post(id=self._next_id, link="", status=status)
 
-    def update_post(self, post_id, fields):
+    def update_post(self, post_id, fields, *, target=None):
         self._maybe_fail("update_post")
         self.posts.setdefault(post_id, {}).update(fields)
         slug = self.posts[post_id].get("slug", "x")
@@ -321,7 +325,7 @@ def test_dry_run_touches_nothing():
 
 def test_slug_collision_is_reported_not_silently_suffixed():
     wp = FakeWordPress()
-    wp.slug_taken = lambda slug: True
+    wp.slug_taken = lambda slug, **kw: True
     pub, _ = build(wp)
 
     outcomes = pub.run()
@@ -411,3 +415,32 @@ def test_a_client_without_a_tail_publishes_unchanged():
     assert pub.tail is None  # 클리어톤의원은 꼬리말 파일이 없습니다
     pub.run()
     assert "wp:block" not in next(iter(wp.posts.values()))["content"]
+
+
+def test_a_mapped_board_publishes_into_its_own_post_type():
+    """비컴성형외과 숏폼처럼 '용어사전' 게시판은 별도 글 종류로 올라갑니다."""
+    from notionwp.posttype import Routing, Target
+
+    page = complete_page(**{"게시판": {"type": "select", "select": {"name": "용어사전"}}})
+    wp = FakeWordPress()
+    pub, _ = build(wp, pages=[page])
+    pub.routing = Routing(
+        client="어떤의원",
+        boards={"용어사전": Target(rest_base="glossary",
+                                taxonomy_rest_base="glossary_cat",
+                                taxonomy_field="glossary_cat")},
+    )
+
+    pub.run()
+
+    post = next(iter(wp.posts.values()))
+    assert post["target"] == "glossary"
+    assert post["taxonomy_field"] == "glossary_cat"
+
+
+def test_without_a_mapping_it_stays_an_ordinary_post():
+    wp = FakeWordPress()
+    pub, _ = build(wp)
+    assert pub.routing is None  # 클리어톤의원은 대응표가 없습니다
+    pub.run()
+    assert next(iter(wp.posts.values()))["target"] == "posts"
