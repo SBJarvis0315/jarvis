@@ -1,0 +1,29 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#F4F1EC",
+    "accent": "#1C1C1C",
+    "title": "#1C1C1C",
+    "sub": "#5B5852",
+    "pill_bg": "#E6E1D9",
+    "pill_fg": "#1C1C1C",
+    "brand": "#1C1C1C",
+    "muted": "#9A958C",
+    "rule": "#DAD5CC",
+    "ornament": "#EBE7E0"
+  },
+  "note": "홈페이지(becomeps.com) 로고를 직접 열어 확인했습니다. 로고는 검정 단색 라인 마크 + 세리프 'BECOME' 워드마크로, 브랜드 색이 따로 없는 흑백 미니멀 톤입니다. 참고자료의 '디자인 중심 성형외과'·과한 세일즈 톤 금지 방향에 맞춰 따뜻한 오프화이트 바탕(#F4F1EC)에 로고와 같은 먹색(#1C1C1C) 제목을 얹은 여백형(skeleton=minimal)으로 정했습니다. 2026-09-30 확정.",
+  "layout": {
+    "logo_w": 620,
+    "logo_h": 185
+  },
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}
