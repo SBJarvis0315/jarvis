@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHE'S MEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#4A2D3B",
+    "accent": "#E3A3B7",
+    "title": "#FBF1F4",
+    "sub": "#D9BFC8",
+    "pill_bg": "#5F3C4E",
+    "pill_fg": "#F2B8C9",
+    "brand": "#FBF1F4",
+    "muted": "#AE8E9B",
+    "rule": "#614456",
+    "ornament": "#533446"
+  },
+  "note": "홈페이지(shesmedi.co.kr)가 이 환경에서 막혀 로고를 확보하지 못해, 참고자료의 브랜드 정의로 정했습니다. 난임·임신·분만·산후·소아를 잇는 여성·가족 생애주기 병원이고 20~40대 여성 독자에 '안정감 있는 톤, 과도한 세일즈 톤 금지'가 명시돼 있어, 차분한 딥 플럼 바탕에 부드러운 로즈 포인트로 잡았습니다. 다른 고객사(딥그린·민트·화이트골드)와 겹치지 않습니다. 로고는 워드마크로 대신하며, 구하면 designs/logos 에 넣어 logo 로 교체합니다. 2026-10-01 확정."
+}

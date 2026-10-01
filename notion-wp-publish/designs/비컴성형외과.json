@@ -1,0 +1,25 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#F5F2ED",
+    "accent": "#1F1F1F",
+    "title": "#1F1F1F",
+    "sub": "#5A564F",
+    "pill_bg": "#1F1F1F",
+    "pill_fg": "#F5F2ED",
+    "brand": "#1F1F1F",
+    "muted": "#8E8981",
+    "rule": "#DDD8CF",
+    "ornament": "#ECE7DF"
+  },
+  "note": "공식 홈페이지(becomeps.com)의 로고(/images/logo.png)를 직접 열어 확인했습니다. 로고가 세리프 워드마크와 얇은 선 마크의 먹색(검정에 가까운 차콜) 단색이라, 밝은 아이보리 바탕에 차콜 글씨로 잡았습니다. 참고자료의 '디자인 중심·정밀 계측' 정체성에 맞춘 절제된 흑백 톤이며, 뱃지는 차콜 배경에 아이보리 글씨로 밝기 차를 크게 했습니다. 2026-10-01 확정.",
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}
