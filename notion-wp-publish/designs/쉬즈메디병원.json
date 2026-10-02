@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHE'S MEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "WantedSans",
+  "hangul_font": "WantedSans",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#FBEEF0",
+    "accent": "#C4506C",
+    "title": "#8F2A4A",
+    "sub": "#8F2A4A",
+    "pill_bg": "#F3D3DA",
+    "pill_fg": "#7A2540",
+    "brand": "#6E4A55",
+    "muted": "#A98A94",
+    "rule": "#EBCDD4",
+    "ornament": "#F6DDE2"
+  },
+  "note": "로고를 받지 못했습니다(홈페이지가 인증서 오류·503 으로 막힘). 참고자료의 브랜드 정의(수원 여성·가족 생애주기 병원, 난임-임신-분만-소아)만 근거로, 따뜻한 로즈 계열을 추정해 정했습니다. 실제 브랜드 색과 다를 수 있으니 로고를 구하면 palette 와 logo 를 교체하세요. 로고가 없어 워드마크로 그립니다. 2026-10-02 임시 확정."
+}

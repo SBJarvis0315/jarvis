@@ -1,0 +1,25 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "WantedSans",
+  "hangul_font": "WantedSans",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#F3EFE9",
+    "accent": "#1E1E1E",
+    "title": "#1E1E1E",
+    "sub": "#4A4640",
+    "pill_bg": "#E2DBD0",
+    "pill_fg": "#2A2723",
+    "brand": "#1E1E1E",
+    "muted": "#8A847A",
+    "rule": "#D9D2C6",
+    "ornament": "#E9E3DA"
+  },
+  "note": "홈페이지(becomeps.com/images/logo.png)의 검정 단색 로고와 참고자료의 '디자인 중심 성형외과' 정의를 근거로 정했습니다. 로고가 검정 한 색이라 따뜻한 아이보리 바탕에 먹색 글씨로 절제된 톤을 줬습니다. 로고는 342x102 원본이라 크게 키우면 흐릴 수 있어 layout 기본값을 쓰고, 어색하면 logo_w/logo_h 만 고칩니다. 2026-10-02 확정.",
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}
