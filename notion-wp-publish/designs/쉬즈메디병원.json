@@ -1,0 +1,29 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHE'S MEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#FFFFFF",
+    "accent": "#E8741E",
+    "title": "#E8741E",
+    "sub": "#4A4340",
+    "pill_bg": "#FCE9D8",
+    "pill_fg": "#A9500F",
+    "brand": "#202020",
+    "muted": "#A39A94",
+    "rule": "#F1E4D8",
+    "ornament": "#FBF4EC"
+  },
+  "note": "공식 홈페이지(shesmedi.co.kr)의 로고(/img/main/logo.jpg)를 직접 열어 보고 정했습니다. 오렌지 소용돌이 마크(#E8741E 부근)에 먹색 병원명입니다. 로고가 흰 배경 JPG라 바탕은 흰색으로 두고, 오렌지를 제목과 상단 바에 썼습니다. 로고가 190x47로 작아 확대 시 약간 흐릴 수 있으니 고해상도 로고를 받으면 교체하세요. 팀 레퍼런스 이미지는 없습니다. 2026-10-03 확정.",
+  "layout": {
+    "logo_w": 480,
+    "logo_h": 120
+  },
+  "logo": "쉬즈메디병원.jpg",
+  "logo_mime": "image/jpeg"
+}
