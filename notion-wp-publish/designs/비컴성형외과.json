@@ -1,0 +1,25 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#F3F1EE",
+    "accent": "#202020",
+    "title": "#202020",
+    "sub": "#5A5650",
+    "pill_bg": "#E4E0D9",
+    "pill_fg": "#202020",
+    "brand": "#202020",
+    "muted": "#8C877F",
+    "rule": "#DAD6CE",
+    "ornament": "#E9E6E0"
+  },
+  "note": "홈페이지 로고(becomeps.com/images/logo.png)가 검정 한 색의 가는 세리프 워드마크라서 색을 로고 검정(#202020)에서 가져왔습니다. 성형외과의 절제된 톤에 맞춰 따뜻한 오프화이트 바탕(#F3F1EE)에 검정 제목·회갈색 부제만 남기는 여백형(skeleton=minimal, 기본 치수). 로고가 투명 PNG 검정이라 밝은 바탕이어야 합니다. 참고자료에는 브랜드 색 정의가 없어 로고와 '트렌드를 담고, 디테일을 더하다' 의 절제된 톤을 근거로 정했습니다. 2026-10-04 확정.",
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}

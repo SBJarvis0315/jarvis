@@ -1,0 +1,25 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHE'S MEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#FFFFFF",
+    "accent": "#FD6801",
+    "title": "#EE6000",
+    "sub": "#3A3330",
+    "pill_bg": "#FFE6D3",
+    "pill_fg": "#9C4100",
+    "brand": "#202020",
+    "muted": "#A38E80",
+    "rule": "#F6DCC8",
+    "ornament": "#FFF1E6"
+  },
+  "note": "홈페이지 로고(shesmedi.co.kr/img/main/logo.jpg, 190x47)의 소용돌이 마크를 픽셀에서 직접 재서 주황 #FD6801 을 accent 로, 글자 진회색 #202020 을 brand 로 정했습니다. 로고가 흰 배경 JPG라 바탕은 흰색(skeleton=minimal, 기본 치수). 제목은 accent 보다 살짝 눌러 #EE6000 으로 흰 바탕에서 읽히게 했습니다. 로고 원본이 190px 뿐이라 3배 확대(Lanczos)해 PNG 로 넣었으므로 다소 흐립니다 — 고해상도 로고를 받으면 designs/logos 파일만 바꾸세요. 2026-10-04 확정.",
+  "logo": "쉬즈메디병원.png",
+  "logo_mime": "image/png"
+}
