@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHE'S MEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#46293A",
+    "accent": "#D98BA3",
+    "title": "#FBF1F4",
+    "sub": "#D9BCC8",
+    "pill_bg": "#5A3A4D",
+    "pill_fg": "#F2BDCD",
+    "brand": "#FBF1F4",
+    "muted": "#A98A98",
+    "rule": "#664659",
+    "ornament": "#503245"
+  },
+  "note": "홈페이지(shesmedi.co.kr)가 허용 도메인에 없어 접근하지 못했고 로고도 확보하지 못해, 참고자료의 브랜드 정의로 정했습니다. 산부인과 중심 여성·가족 생애주기 병원이고 '의료진 전문성에 기반해 믿을 수 있는 병원'이 희망 인식이라, 차분하고 신뢰감 있는 깊은 자두색 바탕에 부드러운 로즈 포인트로 잡았습니다. 로고는 워드마크로 대신합니다. 실제 브랜드 색과 다르면 파일만 고치면 됩니다. 2026-10-05 확정."
+}
