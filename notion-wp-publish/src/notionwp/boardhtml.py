@@ -17,13 +17,14 @@
   · 헤딩 간격은 <br> 이 아니라 인라인 margin 으로 줍니다. 텍스트 보기에서 엔터를
     치면 h 태그가 씹힙니다.
   · <ul>/<ol> 은 사이트 템플릿에서 서식이 깨져 <p> 로 풉니다.
-  · 이모지는 ✅ ➡️ 정도만 살아남습니다. 원고가 알아서 지키는 몫이라 여기서
-    바꾸지는 않습니다.
+  · 이모지는 BMP(세 바이트) 범위만 살아남습니다. 📚·👉 처럼 네 바이트인 문자는
+    게시판 DB가 담지 못해 '?' 로 바뀌거나 통째로 사라집니다. 여기서 걸러 냅니다.
 """
 
 from __future__ import annotations
 
 import html
+import re
 from typing import Any
 
 from .gutenberg import LIST_TYPES, WP_IMAGE, WP_VIDEO
@@ -36,6 +37,42 @@ H2_STYLE = "font-size: 18px; margin-top: 28px; margin-bottom: 14px;"
 H3_STYLE = "font-size: 16px; margin-top: 22px; margin-bottom: 10px;"
 
 BULLET = "•"
+
+#: 게시판 DB가 세 바이트 utf8 이라 **네 바이트 문자(U+10000 이상)를 담지 못합니다.**
+#: 넣으면 '?' 로 바뀌거나 통째로 사라집니다. 실제로 제로클리닉에 올라간 글 36편을
+#: 전부 훑어 보니 네 바이트 문자는 **하나도 살아남지 못했고**, 같은 이모지라도 세
+#: 바이트인 ✅(U+2705)·➡(U+27A1)·▪(U+25AA)는 멀쩡했습니다. 원고의 📚 가 그렇게
+#: 날아가서 사람이 손으로 ➡️ 로 바꿔 넣고 있었습니다.
+#:
+#: 그래서 보내기 전에 여기서 바꿉니다. 쓸모가 있는 것만 세 바이트 기호로 바꾸고
+#: 나머지는 지웁니다. '?' 가 박히는 것보다 없는 편이 낫습니다.
+NON_BMP_REPLACEMENTS = {
+    "📚": "▪",
+    "📌": "▪",
+    "📋": "▪",
+    "📝": "▪",
+    "👉": "▶",
+    "💡": "※",
+    "⚡": "※",
+    "🚫": "※",
+    "🔔": "※",
+}
+
+#: 네 바이트 문자 + 바로 뒤에 딸려 오는 이체자 선택자(U+FE0F 등)까지 한 덩이로 봅니다.
+#: 선택자만 남으면 그것도 깨진 글자로 보입니다.
+_NON_BMP = re.compile(r"[\U00010000-\U0010FFFF][\uFE00-\uFE0F]*")
+
+
+def bmp_only(text: str) -> str:
+    """게시판이 담을 수 있는 범위로 낮춥니다. 세 바이트 문자는 건드리지 않습니다."""
+
+    def swap(match: re.Match[str]) -> str:
+        return NON_BMP_REPLACEMENTS.get(match.group(0)[0], "")
+
+    cleaned = _NON_BMP.sub(swap, text)
+    # 이모지가 빠진 자리에 남는 겹공백을 정리합니다.
+    cleaned = re.sub(r"(<p[^>]*>)\s+", r"\1", cleaned)
+    return re.sub(r"[ \t]{2,}", " ", cleaned)
 
 
 def render(
@@ -52,7 +89,7 @@ def render(
         "",
         f'<h1 style="{H1_STYLE}">{html.escape(title, quote=False)}</h1>',
     ]
-    return "\n".join(head) + "\n\n" + render_blocks(body)
+    return bmp_only("\n".join(head) + "\n\n" + render_blocks(body))
 
 
 def render_blocks(blocks: list[Block]) -> str:
@@ -68,7 +105,7 @@ def render_blocks(blocks: list[Block]) -> str:
         if chunk:
             out.append(chunk)
         i += 1
-    return "\n\n".join(c for c in out if c)
+    return bmp_only("\n\n".join(c for c in out if c))
 
 
 # ---------------------------------------------------------------- 블록별

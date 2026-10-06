@@ -110,3 +110,42 @@ def test_callout_keeps_its_emoji():
         "callout": {"rich_text": [rt("체성분 검사 평가")], "icon": {"emoji": "✅"}},
     }
     assert render_blocks([callout]) == "<p>✅ 체성분 검사 평가</p>"
+
+
+# ------------------------------------------------- 게시판 DB가 담지 못하는 네 바이트 문자
+
+
+def test_four_byte_emoji_never_reach_the_board():
+    """게시판 DB가 세 바이트 utf8 이라 네 바이트 문자를 담지 못합니다.
+
+    넣으면 '?' 로 바뀌거나 사라집니다. 실제로 올라간 글 36편에 네 바이트
+    문자는 하나도 살아남지 못했고, 원고의 📚 가 그렇게 날아갔습니다.
+    """
+    html = render_blocks([para("📚 함께 읽으면 좋은 글: 지방분해주사 성분 비교")])
+
+    assert "📚" not in html
+    assert max(ord(c) for c in html) <= 0xFFFF
+    # 자리만 비우지 않고 쓸모 있는 기호로 바꿉니다.
+    assert html == "<p>▪ 함께 읽으면 좋은 글: 지방분해주사 성분 비교</p>"
+
+
+def test_three_byte_emoji_are_left_alone():
+    """✅ ➡ ▪ 는 게시판에서 멀쩡히 살아남습니다. 건드리면 손해입니다."""
+    html = render_blocks([para("✅ 성분명을 확인할 수 있는지"), para("➡️ 다음 단계")])
+
+    assert "✅" in html
+    assert "➡️" in html
+
+
+def test_an_unmapped_four_byte_emoji_is_dropped_without_a_hole():
+    """대응을 적어 두지 않은 이모지는 지웁니다. 빈자리에 겹공백이 남으면 안 됩니다."""
+    html = render_blocks([para("🎉 축하합니다")])
+
+    assert html == "<p>축하합니다</p>"
+
+
+def test_the_whole_document_is_cleaned_not_just_the_body():
+    """제목·메타에 섞여 들어가도 똑같이 걸러야 합니다."""
+    html = render([para("본문")], title="📚 가이드", meta_description="📌 요약")
+
+    assert max(ord(c) for c in html) <= 0xFFFF
