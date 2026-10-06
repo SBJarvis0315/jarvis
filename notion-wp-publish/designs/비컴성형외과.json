@@ -1,0 +1,25 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#F3EFE8",
+    "accent": "#A88B6A",
+    "title": "#222222",
+    "sub": "#5E574F",
+    "pill_bg": "#E4DCCF",
+    "pill_fg": "#5C4A33",
+    "brand": "#222222",
+    "muted": "#8F877B",
+    "rule": "#DDD5C8",
+    "ornament": "#EAE4DA"
+  },
+  "note": "홈페이지(becomeps.com)에서 받은 로고가 검정(#222222) 단색 라인 로고이고, 참고자료의 브랜드 정의가 벡트라 3D 계측 기반의 정밀·절제된 디자인 중심 성형외과입니다. 그래서 로고가 또렷이 읽히도록 따뜻한 아이보리 바탕에 먹색 글씨로 잡았고, 상단 바는 로고에 어울리는 차분한 브론즈 #A88B6A 입니다. 색은 HTML에서 뽑지 않고 로고와 브랜드 정의를 근거로 정했습니다. 2026-10-06 확정.",
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}

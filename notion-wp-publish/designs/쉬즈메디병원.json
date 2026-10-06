@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHESMEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#5E2C3F",
+    "accent": "#E9A7B8",
+    "title": "#FBF1F3",
+    "sub": "#E3C3CB",
+    "pill_bg": "#74404F",
+    "pill_fg": "#F4C6D1",
+    "brand": "#FBF1F3",
+    "muted": "#C9A0AB",
+    "rule": "#753F51",
+    "ornament": "#683547"
+  },
+  "note": "홈페이지(shesmedi.co.kr)가 이 환경에서 접속이 막혀 로고를 확보하지 못했고(워드마크로 대신), 노션 참고자료의 브랜드 정의로 정했습니다. 산부인과 중심의 여성·가족 생애주기 병원이며 임신·분만·산후를 잇는 따뜻하면서도 의료진 전문성에 기반한 신뢰의 톤이라, 깊은 로즈 와인 바탕에 밝은 핑크 포인트를 썼습니다. 기존 고객사(딥그린·민트·화이트골드)와 확실히 구분됩니다. 로고를 받으면 designs/logos 에 넣고 파일을 고치면 됩니다. 2026-10-06 확정."
+}
