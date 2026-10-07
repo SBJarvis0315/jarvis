@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#F1F3F4",
+    "accent": "#484848",
+    "title": "#2A2D30",
+    "sub": "#5C6165",
+    "pill_bg": "#E1E5E7",
+    "pill_fg": "#3A3F43",
+    "brand": "#484848",
+    "muted": "#8A9094",
+    "rule": "#D5DADD",
+    "ornament": "#E7EAEC"
+  },
+  "note": "홈페이지(zeroclinic1.com)의 로고(gnb/logo_dark.png)를 직접 열어 봤습니다. 짙은 회색(#484848) 단색 로고라 브랜드 색이 따로 없습니다. 지방분해주사·체성분 검사 중심의 깔끔한 의료 톤이라, 로고가 잘 보이는 차가운 밝은 회백색 바탕에 흑연색 글씨를 쓰는 여백형(skeleton=minimal)으로 잡았습니다. 비컴성형외과(따뜻한 아이보리)와 구분되도록 차가운 쪽으로 잡았습니다. 2026-10-07 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}
