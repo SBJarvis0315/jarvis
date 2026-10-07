@@ -49,6 +49,9 @@ from .plan import (
 from .posttype import load as load_routing
 from .posttype import Target, target_for
 from .runlog import RunLogger, summarize_abort
+from .links import apply as apply_links
+from .links import load as load_links
+from .links import make_related_resolver
 from .tail import append as append_tail
 from .tail import load as load_tail
 from .schema import build_schemas, extract_faqs, has_faq_heading
@@ -444,6 +447,9 @@ class Publisher:
         self.wp = wp
         self.runlog = RunLogger(cfg.run_log, cfg.client, self.notion)
         self.tail = load_tail(cfg.client)
+        # 글 끝 '참고 자료'·'관련 글' 줄에 링크를 거는 규칙. 파일이 없으면 None.
+        self.links = load_links(cfg.client)
+        self._related_resolver = None
         self.routing = load_routing(cfg.client)
 
     # -------------------------------------------------------------------- 실행
@@ -525,6 +531,22 @@ class Publisher:
         return outcomes
 
     # ------------------------------------------------------------------ 단건 발행
+
+    def _related(self):
+        """'관련 글' 항목을 이 고객사의 게재완료 글로 잇는 함수. 회차당 한 번만 만듭니다."""
+        if not (self.links and self.links.related):
+            return None
+        if self._related_resolver is None:
+            nc = self.cfg.notion
+            self._related_resolver = make_related_resolver(
+                self.notion.query_planner(),
+                title_prop=nc.prop("title"),
+                url_prop=nc.prop("url"),
+                status_prop=nc.prop("status"),
+                done=nc.status_done,
+                site=self.cfg.wordpress.base_url,
+            )
+        return self._related_resolver
 
     def _route(self, target: Target, category_name: str) -> tuple[Target, list[int], str]:
         """분류 이름으로 '어느 글 종류에 올릴지' 까지 확정합니다.
@@ -664,6 +686,12 @@ class Publisher:
                 at = max(0, min(at + len(uploaded), len(body)))
                 body.insert(at, video_block(url=video.url.strip(), note=video.note))
                 log.info("영상을 본문에 넣었습니다: %s", video.url.strip())
+
+            # 글 끝 '참고 자료'·'관련 글' 줄에 링크를 겁니다. 원고는 글자로만 쓰고,
+            # 지금까지는 사람이 발행 뒤 손으로 걸어 빠지거나 엇나갔습니다. 규칙 파일이
+            # 없는 고객사는 그대로 지나갑니다.
+            body, link_warnings = apply_links(body, self.links, resolve_related=self._related())
+            out.warnings.extend(link_warnings)
 
             content = render(
                 body,

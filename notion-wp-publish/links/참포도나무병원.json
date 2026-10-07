@@ -1,0 +1,22 @@
+{
+  "client": "참포도나무병원",
+  "related": true,
+  "references": {
+    "대한신경외과학회": "https://www.neurosurgery.or.kr/",
+    "대한척추신경외과학회": "https://www.neurospine.or.kr/",
+    "대한척추외과학회": "https://www.spine.or.kr/",
+    "대한통증학회": "https://www.painfree.or.kr/",
+    "대한신경통증학회": "https://neuropain.or.kr/",
+    "대한마취통증의학회": "https://www.anesthesia.or.kr/",
+    "대한류마티스학회": "https://www.rheum.or.kr/",
+    "대한재활의학회": "https://www.karm.or.kr/",
+    "보건복지부 국가건강정보포털": "https://health.kdca.go.kr/healthinfo/",
+    "질병관리청 국가건강정보포털": "https://health.kdca.go.kr/healthinfo/",
+    "국가건강정보포털": "https://health.kdca.go.kr/healthinfo/",
+    "서울대학교병원": "https://www.snuh.org/",
+    "서울아산병원": "https://www.amc.seoul.kr/",
+    "서울아산병원 인체정보": "https://www.amc.seoul.kr/asan/healthinfo/body/bodySubmain.do",
+    "아산병원": "https://www.amc.seoul.kr/"
+  },
+  "note": "지침 [고정 상수]의 '참고 자료 후보' 9곳 + 원고가 실제로 쓰는 추가 2곳(대한신경통증학회·대한척추외과학회). 주소는 2026-10-07 기준 이미 발행된 글 60편에서 팀이 걸어 둔 링크를 모아 가장 많이 쓰인 공식 홈 주소로 통일했습니다(대한신경외과학회 19건 등). 같은 기관을 다른 주소로 걸던 것(대한신경외과학회→neurospine)은 여기서 바로잡힙니다. 대한마취통증의학회만 발행글에 전례가 없어 학회 공식 도메인을 적었습니다. '관련 글' 은 이 고객사 플래너의 게재완료 행 제목과 맞춰 그 행의 URL을 그대로 겁니다. 맞는 글이 없으면 항목을 빼고, 지어내지 않습니다."
+}

@@ -444,3 +444,59 @@ def test_without_a_mapping_it_stays_an_ordinary_post():
     assert pub.routing is None  # 클리어톤의원은 대응표가 없습니다
     pub.run()
     assert next(iter(wp.posts.values()))["target"] == "posts"
+
+
+# ------------------------------------------------- 글 끝 '참고 자료'·'관련 글' 링크
+
+
+def test_reference_and_related_lines_are_linked_at_publish(monkeypatch, tmp_path):
+    """원고는 글자로만 쓰고, 발행 단계가 링크를 겁니다. 규칙 파일이 있는 고객사만."""
+    from fixtures import para
+    from notionwp.links import LinkRules
+
+    done_row = complete_page(**{
+        "제목": {"type": "title", "title": [{"plain_text": "신경차단술이란? 적응증·효과", "annotations": {}}]},
+        "진행 상황": {"type": "status", "status": {"name": "게재완료"}},
+        "URL": {"type": "url", "url": f"{BASE}/nerve-block/"},
+    })
+    done_row["id"] = "11111111-1111-1111-1111-111111111111"
+
+    blocks = sample_page()
+    closing = next(i for i, b in enumerate(blocks) if b["type"] == "divider" and i > 10)
+    blocks[closing:closing] = [
+        para("참고 자료: 대한신경외과학회, 서울아산병원"),
+        para("관련 글: 신경차단술 · 없는 글"),
+    ]
+
+    wp = FakeWordPress()
+    publisher, _ = build(wp, pages=[complete_page(), done_row], blocks=blocks)
+    publisher.links = LinkRules(
+        client=CONFIG.client,
+        references={"대한신경외과학회": "https://www.neurosurgery.or.kr/", "서울아산병원": "https://www.amc.seoul.kr/"},
+        related=True,
+    )
+    outcomes = publisher.run()
+
+    content = next(iter(wp.posts.values()))["content"]
+    assert '<a href="https://www.neurosurgery.or.kr/">대한신경외과학회</a>' in content
+    assert '<a href="https://www.amc.seoul.kr/">서울아산병원</a>' in content
+    assert f'<a href="{BASE}/nerve-block/">신경차단술</a>' in content
+    assert "없는 글" not in content
+    assert any("없는 글" in w for o in outcomes for w in o.warnings)
+
+
+def test_clients_without_link_rules_publish_exactly_as_before():
+    from fixtures import para
+
+    blocks = sample_page()
+    closing = next(i for i, b in enumerate(blocks) if b["type"] == "divider" and i > 10)
+    blocks[closing:closing] = [para("참고 자료: 대한신경외과학회")]
+
+    wp = FakeWordPress()
+    publisher, _ = build(wp, blocks=blocks)
+    publisher.links = None
+    publisher.run()
+
+    content = next(iter(wp.posts.values()))["content"]
+    assert "참고 자료: 대한신경외과학회" in content
+    assert "neurosurgery" not in content
