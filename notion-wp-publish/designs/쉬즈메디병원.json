@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHE'S MEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#FBF1F0",
+    "accent": "#C9707F",
+    "title": "#7A2E45",
+    "sub": "#6B4A52",
+    "pill_bg": "#F3DCDD",
+    "pill_fg": "#8A3A52",
+    "brand": "#7A2E45",
+    "muted": "#B39097",
+    "rule": "#EBD3D4",
+    "ornament": "#F5E3E3"
+  },
+  "note": "홈페이지(shesmedi.co.kr)가 허용 도메인 밖이라 접속하지 못했고 로고도 확보하지 못해 워드마크로 대신합니다. 참고자료의 브랜드 정의(난임·임신·분만·산후·소아·여성질환으로 이어지는 여성·가족 생애주기 병원, 의료진 전문성 기반의 신뢰 톤)만 근거로, 따뜻하고 차분한 로즈 계열을 골랐습니다. 로고를 구하면 색을 다시 맞출 수 있으니 사용자가 말해 주면 파일만 고치면 됩니다. 2026-10-08 확정."
+}

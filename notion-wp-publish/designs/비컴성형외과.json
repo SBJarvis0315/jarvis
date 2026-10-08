@@ -1,0 +1,25 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#F4F1EC",
+    "accent": "#6B5E52",
+    "title": "#222222",
+    "sub": "#5A544E",
+    "pill_bg": "#E6DFD5",
+    "pill_fg": "#3A332C",
+    "brand": "#222222",
+    "muted": "#9A9187",
+    "rule": "#D9D2C7",
+    "ornament": "#EAE5DC"
+  },
+  "note": "홈페이지(becomeps.com)에서 받은 로고가 완전한 먹색(#222222) 단색이고 사이트도 흑백 절제 톤이라, 따뜻한 아이보리 바탕에 먹색 글씨로 잡았습니다. 눈성형·거상 중심의 디자인 성형외과라는 참고자료 정의(차분하고 정밀한 인상)를 반영했고, 상단 바 색은 먹색과 어울리는 웜 토프로 했습니다. 2026-10-08 확정.",
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}
