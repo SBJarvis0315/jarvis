@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#F4F4F2",
+    "accent": "#111111",
+    "title": "#111111",
+    "sub": "#4C4C4C",
+    "pill_bg": "#E3E3E0",
+    "pill_fg": "#222222",
+    "brand": "#4C4C4C",
+    "muted": "#8A8A88",
+    "rule": "#D8D8D5",
+    "ornament": "#EAEAE8"
+  },
+  "note": "홈페이지(zeroclinic1.com) 화면과 로고(진회색 #4C4C4C, 투명 배경)를 보고 정했습니다. 사이트가 흑백 사진과 굵은 세리프 영문 타이틀 중심의 무채색 에디토리얼 톤이라 바탕을 아주 옅은 회백색, 글씨는 거의 검정으로 잡았습니다. 색 포인트는 일부러 두지 않았습니다. 2026-10-09 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}
