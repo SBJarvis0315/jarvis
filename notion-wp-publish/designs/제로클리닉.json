@@ -1,0 +1,29 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#2E2F33",
+    "accent": "#C9CCD2",
+    "title": "#F4F4F5",
+    "sub": "#B9BCC3",
+    "pill_bg": "#3E4046",
+    "pill_fg": "#D5D8DE",
+    "brand": "#F4F4F5",
+    "muted": "#8B8E96",
+    "rule": "#43454B",
+    "ornament": "#35373C"
+  },
+  "note": "홈페이지(zeroclinic1.com) 로고를 근거로 삼았습니다. 로고가 회색(gnb)·흰색(footer) 단색이고 포인트 컬러가 없어, 흰색 footer 로고가 살아나는 짙은 차콜 바탕에 은빛 포인트로 정했습니다. 참고자료에서 '체형 설계'를 말하는 절제된 톤입니다. 로고는 '신사 본점' 표기가 든 footer 버전입니다(블로그 도메인이 zeroclinic1.com). 2026-10-10 확정.",
+  "layout": {
+    "logo_w": 560,
+    "logo_h": 158
+  },
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

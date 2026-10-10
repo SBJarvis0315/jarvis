@@ -1,0 +1,29 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#F5F2ED",
+    "accent": "#2B2B2B",
+    "title": "#232323",
+    "sub": "#5E5A54",
+    "pill_bg": "#E6E0D6",
+    "pill_fg": "#4A443B",
+    "brand": "#2B2B2B",
+    "muted": "#8F897F",
+    "rule": "#DDD6CA",
+    "ornament": "#EDE8E0"
+  },
+  "note": "홈페이지(becomeps.com) 로고를 직접 열어 근거로 삼았습니다. 로고가 차콜(#222 계열) 단색의 세리프 BECOME 워드마크라 브랜드 색이 따로 없고, '판단 기준·자연스러움'을 앞세우는 톤이라 따뜻한 아이보리 바탕에 차콜 글씨의 절제된 여백형(minimal)으로 정했습니다. 로고 원본이 342px라 logo_w 를 520으로 제한했습니다. 2026-10-10 확정.",
+  "layout": {
+    "logo_w": 520,
+    "logo_h": 155
+  },
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}
