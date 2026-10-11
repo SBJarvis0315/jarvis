@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#1F1F1F",
+    "accent": "#C9C4BC",
+    "title": "#F5F3EF",
+    "sub": "#B5B1AA",
+    "pill_bg": "#2D2D2D",
+    "pill_fg": "#D6D1C9",
+    "brand": "#F5F3EF",
+    "muted": "#8A8781",
+    "rule": "#3A3A3A",
+    "ornament": "#262626"
+  },
+  "note": "로고는 먹색·회색 단색 세리프 워드마크라 색 근거가 못 됩니다. 단정한 모노톤을 살려 차콜 바탕에 흰색 로고(zeroclinic1.com/images/footer/logo.png, 홈페이지 푸터의 흰색 버전)·제목, 웜 실버 포인트로 정했습니다. 2026-10-11 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

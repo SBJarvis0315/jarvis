@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHESMEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#FBF1EE",
+    "accent": "#D98A94",
+    "title": "#A8475A",
+    "sub": "#6B4A50",
+    "pill_bg": "#F4D9DC",
+    "pill_fg": "#8E3A4C",
+    "brand": "#6B4A50",
+    "muted": "#B79A9F",
+    "rule": "#EBD3D5",
+    "ornament": "#F6E3E2"
+  },
+  "note": "홈페이지(shesmedi.co.kr)가 인증서 오류로 열리지 않아 로고를 못 구했습니다(워드마크로 대신). 참고자료의 브랜드 정의(난임·임신·분만·산후·소아까지 이어지는 여성·가족 생애주기 병원, 20~40대 여성 독자, 안정감과 배려의 톤)를 근거로 따뜻한 더스티 로즈로 정했습니다. 로고를 구하면 logo 를 추가하고 색을 맞춰 주세요. 2026-10-11 확정."
+}

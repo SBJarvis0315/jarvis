@@ -1,0 +1,25 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#F4EFE8",
+    "accent": "#A8917A",
+    "title": "#2B2724",
+    "sub": "#6A6058",
+    "pill_bg": "#E6DCCE",
+    "pill_fg": "#6E5A45",
+    "brand": "#222222",
+    "muted": "#A2968A",
+    "rule": "#DDD3C5",
+    "ornament": "#EBE4D9"
+  },
+  "note": "로고(becomeps.com/images/logo.png)는 먹색 단색이라 색 근거가 못 됩니다. 홈페이지 대표 이미지의 실내(웜 그레이지·아이보리)를 브랜드 톤으로 보고, 아이보리 바탕에 먹색 로고·제목, 그레이지 포인트로 정했습니다. 2026-10-11 확정.",
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}
