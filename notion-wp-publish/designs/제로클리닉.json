@@ -1,0 +1,30 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#1C1C1C",
+    "accent": "#C9B99A",
+    "title": "#FFFFFF",
+    "sub": "#CFCAC2",
+    "pill_bg": "#3A3733",
+    "pill_fg": "#E8DFCB",
+    "brand": "#FFFFFF",
+    "muted": "#8C877F",
+    "rule": "#3A3A3A",
+    "ornament": "#262626"
+  },
+  "note": "홈페이지 푸터 로고(/images/footer/logo.png, 흰색 단색 로고)가 어두운 바탕용이라 숯색 배경에 흰 글씨로 정했습니다. 포인트는 샴페인 베이지(판단으로 정함). 여백형(minimal) 골격. 2026-10-13 확정.",
+  "layout": {
+    "logo_w": 640,
+    "logo_h": 180,
+    "logo_shift": 0
+  },
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

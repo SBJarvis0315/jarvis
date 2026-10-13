@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHE'S MEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#FFF1F3",
+    "accent": "#E0607E",
+    "title": "#C2315A",
+    "sub": "#5B4048",
+    "pill_bg": "#FADADF",
+    "pill_fg": "#8F2744",
+    "brand": "#7A2B42",
+    "muted": "#B38A94",
+    "rule": "#F2CBD3",
+    "ornament": "#FBE3E7"
+  },
+  "note": "홈페이지가 인증서 오류·503으로 열리지 않아 로고와 실제 색을 확인하지 못했습니다. 노션 참고자료의 브랜드 정의(여성·가족 생애주기 병원)만 근거로 부드러운 로즈 톤을 정했으므로 실제 브랜드 색과 다를 수 있습니다. 로고는 없어 워드마크로 대신합니다. 로고를 받으면 이 파일의 palette·logo 를 고치세요. 여백형(minimal) 골격. 2026-10-13 확정."
+}
