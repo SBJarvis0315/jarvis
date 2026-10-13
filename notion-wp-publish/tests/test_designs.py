@@ -113,3 +113,69 @@ def test_layout_overrides_survive_a_round_trip(tmp_path):
 def test_a_design_without_layout_keeps_the_skeleton_defaults(tmp_path):
     save(design(skeleton="minimal"), tmp_path)
     assert load("어떤의원", tmp_path).layout == {}
+
+
+# ----------------------------------------------------- 돌아가며 쓰는 모양 (variants)
+
+from notionwp.designs import Variant  # noqa: E402
+
+PALETTE_B = Palette(
+    background="#F4F8FC", accent="#F4F8FC", title="#023E8A", sub="#5A7FA8",
+    pill_bg="#DCE8F6", pill_fg="#023E8A", brand="#023E8A", muted="#8DB0D1",
+    rule="#D0DCEB", ornament="#E3F1F8", domain="#8DB0D1",
+)
+
+
+def test_variants_rotate_by_ordinal_and_wrap():
+    """세 모양이면 0,1,2,0,1,2… 순번이 전체 순서를 따라 돌아갑니다."""
+    d = design(skeleton="card", variants=[
+        Variant("블루", PALETTE), Variant("라이트", PALETTE_B), Variant("네이비", PALETTE),
+    ])
+    assert [d.pick(i).note for i in range(7)] == ["블루", "라이트", "네이비", "블루", "라이트", "네이비", "블루"]
+    assert d.pick(1).palette is PALETTE_B
+    # 골라낸 모양은 더 이상 변형을 품지 않습니다 — 렌더에 바로 쓰는 단일 디자인입니다.
+    assert d.pick(1).variants == []
+
+
+def test_a_design_without_variants_picks_itself():
+    d = design()
+    assert d.pick(0) is d and d.pick(5) is d
+
+
+def test_a_variant_layers_its_layout_and_shapes_over_the_base():
+    d = design(skeleton="card", layout={"pad_x": 60, "bar_h": 6},
+               shapes=[{"kind": "band", "top": 528, "color": "#000"}],
+               variants=[Variant("라이트", PALETTE_B, layout={"bar_h": 0}, shapes=[{"kind": "circle", "cx": 1, "cy": 1, "d": 2, "color": "#fff"}])])
+    chosen = d.pick(0)
+    assert chosen.layout == {"pad_x": 60, "bar_h": 0}
+    assert chosen.shapes == [{"kind": "circle", "cx": 1, "cy": 1, "d": 2, "color": "#fff"}]
+
+
+def test_variants_survive_a_round_trip(tmp_path):
+    d = design(skeleton="card", variants=[
+        Variant("블루", PALETTE, layout={"bar_h": 6}, shapes=[{"kind": "band", "top": 528, "color": "rgba(2,62,138,0.5)"}]),
+        Variant("라이트", PALETTE_B),
+    ])
+    save(d, tmp_path)
+    back = load("어떤의원", tmp_path)
+    assert [v.name for v in back.variants] == ["블루", "라이트"]
+    assert back.variants[0].layout == {"bar_h": 6.0}
+    assert back.variants[0].shapes[0]["kind"] == "band"
+    assert back.variants[1].palette.domain == "#8DB0D1"
+    # 변형이 있는 파일은 첫 변형의 색이 기본 팔레트가 됩니다.
+    assert back.palette.background == PALETTE.background
+
+
+def test_a_variant_missing_a_colour_is_reported(tmp_path):
+    body = {"client": "어떤의원", "skeleton": "card", "variants": [{"name": "x", "palette": {"background": "#fff"}}]}
+    path_for("어떤의원", tmp_path).write_text(json.dumps(body), encoding="utf-8")
+    with pytest.raises(DesignError, match="variants\\[0\\]"):
+        load("어떤의원", tmp_path)
+
+
+def test_the_real_clearseoul_file_has_three_rotating_looks():
+    d = load("클리어서울안과")
+    assert d is not None and d.skeleton == "card" and (d.width, d.height) == (1200, 628)
+    assert [v.name for v in d.variants] == ["블루", "라이트", "네이비"]
+    assert d.pick(3).note == "블루"
+    assert not d.logo  # 로고 없이 글자로 브랜드를 세우는 디자인입니다

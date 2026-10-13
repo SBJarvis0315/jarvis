@@ -1,0 +1,151 @@
+{
+  "client": "클리어서울안과",
+  "name_en": "CLEAR SEOUL OPHTHALMIC CLINIC",
+  "domain": "clearseouleye.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "card",
+  "width": 1200,
+  "height": 628,
+  "variants": [
+    {
+      "name": "블루",
+      "palette": {
+        "background": "#0077B6",
+        "accent": "#48CAE4",
+        "title": "#FFFFFF",
+        "sub": "#99C9E2",
+        "pill_bg": "#48CAE4",
+        "pill_fg": "#023E8A",
+        "brand": "#FFFFFF",
+        "muted": "#5A8CBC",
+        "rule": "#0077B6",
+        "ornament": "#01589E",
+        "domain": "#497AAF"
+      },
+      "layout": {
+        "bar_h": 6,
+        "pad_x": 60,
+        "rule_top": 0,
+        "brand_top": 560,
+        "worden_top": 592,
+        "domain_top": 568
+      },
+      "shapes": [
+        {
+          "kind": "circle",
+          "cx": 1195,
+          "cy": 383,
+          "d": 670,
+          "color": "rgba(2,62,138,0.5)"
+        },
+        {
+          "kind": "ring",
+          "cx": 1219,
+          "cy": 507,
+          "d": 398,
+          "color": "#1375AF",
+          "width": 1.5
+        },
+        {
+          "kind": "band",
+          "top": 528,
+          "color": "rgba(2,62,138,0.7)"
+        }
+      ]
+    },
+    {
+      "name": "라이트",
+      "palette": {
+        "background": "#F4F8FC",
+        "accent": "#F4F8FC",
+        "title": "#023E8A",
+        "sub": "#5A7FA8",
+        "pill_bg": "#DCE8F6",
+        "pill_fg": "#023E8A",
+        "brand": "#023E8A",
+        "muted": "#8DB0D1",
+        "rule": "#D0DCEB",
+        "ornament": "#E3F1F8",
+        "domain": "#8DB0D1"
+      },
+      "layout": {
+        "bar_h": 0,
+        "pad_x": 80,
+        "rule_top": 524,
+        "rule_w": 680,
+        "brand_top": 556,
+        "worden_top": 589,
+        "domain_top": 565
+      },
+      "shapes": [
+        {
+          "kind": "circle",
+          "cx": 950,
+          "cy": 378,
+          "d": 500,
+          "color": "#E3F1F8"
+        },
+        {
+          "kind": "circle",
+          "cx": 1020,
+          "cy": 425,
+          "d": 323,
+          "color": "#D8EEF7"
+        }
+      ]
+    },
+    {
+      "name": "네이비",
+      "palette": {
+        "background": "#023E8A",
+        "accent": "#48CAE4",
+        "title": "#FFFFFF",
+        "sub": "#8DA8CA",
+        "pill_bg": "#0F579A",
+        "pill_fg": "#48CAE4",
+        "brand": "#FFFFFF",
+        "muted": "#5A81B3",
+        "rule": "#205598",
+        "ornament": "#04428C",
+        "domain": "#4974AB"
+      },
+      "layout": {
+        "bar_h": 4,
+        "pad_x": 60,
+        "rule_top": 524,
+        "rule_w": 700,
+        "brand_top": 556,
+        "worden_top": 589,
+        "domain_top": 565
+      },
+      "shapes": [
+        {
+          "kind": "ring",
+          "cx": 185,
+          "cy": 644,
+          "d": 1161,
+          "color": "#04428C",
+          "width": 2
+        }
+      ]
+    }
+  ],
+  "note": "대표가 쓰던 자동화가 내던 숏폼 썸네일 세 가지(블루·라이트·네이비, 1200x628)를 그대로 옮겼습니다. 세 장 모두 같은 뼈대 — 상단 바, 키워드 필, 제목, 부제, (구분선), 국문 워드마크 + 영문명, 우하단 도메인, 오른쪽 원 장식 — 라 card 골격 하나에 색·치수·장식만 변형으로 두고 글마다 돌아가며 씁니다. 색은 예시 이미지에서 픽셀 단위로 뽑았고, 블루의 원과 하단 띠는 네이비(#023E8A) 50% 반투명을 겹쳐 겹치는 자리 색(#024690)까지 맞췄습니다. 치수는 예시와 렌더 결과를 같은 크기에 놓고 필·제목·부제·브랜드·도메인 경계를 재서 맞춘 값입니다. 로고 파일 없이 글자로 브랜드를 세우는 것도 예시 그대로입니다. 2026-10-13 확정.",
+  "layout": {
+    "pill_size": 22.5,
+    "pill_pad_y": 8.5,
+    "pill_pad_x": 44,
+    "main_top": 110,
+    "main_size": 72,
+    "main_lh": 1.25,
+    "main_min": 44,
+    "main_w": 700,
+    "sub_size": 27,
+    "sub_top": 335,
+    "brand_size": 26,
+    "worden_size": 13,
+    "worden_track": 0.1,
+    "domain_size": 20
+  }
+}

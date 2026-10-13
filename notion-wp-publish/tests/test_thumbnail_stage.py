@@ -114,3 +114,31 @@ def test_a_client_without_wordpress_is_still_a_thumbnail_target():
 def test_that_same_client_is_not_a_publish_target():
     cfg, reason = build_config(DEFAULTS, registry_row(**{"워드프레스 주소": ""}))
     assert cfg is None and "원고 생성 전용" in reason
+
+
+# ------------------------------------------------- 돌아가며 쓰는 모양의 순번
+
+from notionwp.thumbnails import rotation_order  # noqa: E402
+
+
+def _row(rid, created, kind="숏폼", thumb=False):
+    # row() 는 속성만 돌려줍니다. 순번은 행 전체(id·created_time)가 필요합니다.
+    return {"id": rid, "created_time": created, "properties": row(kind=kind, thumb=thumb)}
+
+
+def test_rotation_follows_creation_order_within_the_type():
+    rows = [
+        _row("c", "2026-10-03T00:00:00Z"),
+        _row("a", "2026-10-01T00:00:00Z", thumb=True),   # 이미 썸네일이 있어도 순번은 셉니다
+        _row("x", "2026-10-02T00:00:00Z", kind="롱폼"),    # 다른 유형은 끼지 않습니다
+        _row("b", "2026-10-02T00:00:00Z"),
+    ]
+    assert rotation_order(rows, CONFIG) == {"a": 0, "b": 1, "c": 2}
+
+
+def test_rotation_is_stable_across_runs():
+    """회차마다 몇 건을 만들든 전체 순서가 같아야 '돌아가며' 가 이어집니다."""
+    rows = [_row(str(i), f"2026-10-{i + 1:02d}T00:00:00Z") for i in range(5)]
+    first = rotation_order(rows, CONFIG)
+    rows[0]["properties"]["썸네일"] = {"type": "files", "files": [{"name": "t.png"}]}
+    assert rotation_order(rows, CONFIG) == first

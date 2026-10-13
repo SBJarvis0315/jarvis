@@ -22,7 +22,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 from .brand import Brand
@@ -64,8 +64,13 @@ class Design:
     skeleton: str = "band"
     width: int = 1200
     height: int = 630
-    #: 골격 기본 치수를 항목별로 덮어쓰는 값. minimal 골격만 씁니다.
+    #: 골격 기본 치수를 항목별로 덮어쓰는 값. minimal·card 골격이 씁니다.
     layout: dict[str, float] = field(default_factory=dict)
+    #: card 골격의 장식(원·링·띠). 데이터로 받습니다.
+    shapes: list[dict] = field(default_factory=list)
+    #: 한 고객사가 여러 모양을 **돌아가며** 쓸 때. 비어 있으면 위 값 하나만 씁니다.
+    #: 클리어서울안과처럼 대표가 쓰던 자동화가 세 가지 색을 번갈아 내던 곳이 있습니다.
+    variants: list[Variant] = field(default_factory=list)
     note: str = ""
 
     def brand(self) -> Brand:
@@ -80,6 +85,29 @@ class Design:
 
     def fonts(self) -> Fonts:
         return Fonts.bundled(latin=self.latin_font, hangul=self.hangul_font)
+
+    def pick(self, ordinal: int) -> Design:
+        """`ordinal` 번째 글에 쓸 모양. 변형이 없으면 자기 자신입니다.
+
+        순번은 그 고객사 플래너에서 같은 유형의 행을 만든 순서입니다. 회차마다
+        몇 건이 돌든 전체 순서가 같으니, 한 회차에 한 건만 돌아도 다음 회차가
+        이어서 다음 모양을 냅니다 — 그래야 '돌아가며' 가 됩니다.
+        """
+        if not self.variants:
+            return self
+        v = self.variants[ordinal % len(self.variants)]
+        return replace(self, palette=v.palette, layout={**self.layout, **v.layout},
+                       shapes=v.shapes or self.shapes, variants=[], note=v.name)
+
+
+@dataclass
+class Variant:
+    """돌아가며 쓰는 모양 하나. 색과 치수·장식만 다르고 서체·브랜드는 공통입니다."""
+
+    name: str
+    palette: Palette
+    layout: dict[str, float] = field(default_factory=dict)
+    shapes: list[dict] = field(default_factory=list)
 
 
 def path_for(client: str, directory: Path | None = None) -> Path:
@@ -98,9 +126,26 @@ def load(client: str, directory: Path | None = None) -> Design | None:
     except (OSError, ValueError) as exc:
         raise DesignError(f"디자인 파일을 읽지 못했습니다 ({path}): {exc}") from exc
 
-    missing = [k for k in PALETTE_KEYS if k not in raw.get("palette", {})]
-    if missing:
-        raise DesignError(f"디자인 파일에 색이 빠졌습니다 ({path}): {', '.join(missing)}")
+    def palette_of(block: dict, where: str) -> Palette:
+        missing = [k for k in PALETTE_KEYS if k not in block]
+        if missing:
+            raise DesignError(f"디자인 파일에 색이 빠졌습니다 ({path}, {where}): {', '.join(missing)}")
+        return Palette(**{k: block[k] for k in PALETTE_KEYS}, domain=str(block.get("domain", "")))
+
+    variants: list[Variant] = []
+    for n, v in enumerate(raw.get("variants") or []):
+        variants.append(Variant(
+            name=str(v.get("name") or f"변형 {n + 1}"),
+            palette=palette_of(v.get("palette") or {}, f"variants[{n}]"),
+            layout={k: float(x) for k, x in (v.get("layout") or {}).items()},
+            shapes=list(v.get("shapes") or []),
+        ))
+
+    # 변형이 있으면 첫 변형의 색을 기본 팔레트로 삼습니다. 파일에 palette 를 따로 안 적어도 됩니다.
+    base_palette = raw.get("palette") or (
+        {k: getattr(variants[0].palette, k) for k in PALETTE_KEYS} if variants else {}
+    )
+    palette = palette_of(base_palette, "palette")
 
     logo = b""
     logo_name = raw.get("logo", "")
@@ -114,7 +159,7 @@ def load(client: str, directory: Path | None = None) -> Design | None:
 
     return Design(
         client=raw.get("client", client),
-        palette=Palette(**{k: raw["palette"][k] for k in PALETTE_KEYS}),
+        palette=palette,
         name_en=raw.get("name_en", ""),
         domain=raw.get("domain", ""),
         logo=logo,
@@ -125,6 +170,8 @@ def load(client: str, directory: Path | None = None) -> Design | None:
         width=int(raw.get("width", 1200)),
         height=int(raw.get("height", 630)),
         layout={k: float(v) for k, v in (raw.get("layout") or {}).items()},
+        shapes=list(raw.get("shapes") or []),
+        variants=variants,
         note=raw.get("note", ""),
     )
 
@@ -156,6 +203,17 @@ def save(design: Design, directory: Path | None = None, *, overwrite: bool = Fal
 
     if design.layout:
         body["layout"] = dict(design.layout)
+    if design.shapes:
+        body["shapes"] = list(design.shapes)
+    if design.variants:
+        body["variants"] = [
+            {"name": v.name,
+             "palette": {k: getattr(v.palette, k) for k in PALETTE_KEYS}
+                        | ({"domain": v.palette.domain} if v.palette.domain else {}),
+             **({"layout": dict(v.layout)} if v.layout else {}),
+             **({"shapes": list(v.shapes)} if v.shapes else {})}
+            for v in design.variants
+        ]
 
     if design.logo:
         ext = {"image/png": "png", "image/svg+xml": "svg", "image/jpeg": "jpg"}.get(

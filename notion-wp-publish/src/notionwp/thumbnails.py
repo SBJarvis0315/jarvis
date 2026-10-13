@@ -111,26 +111,45 @@ def eligible(
     return True, ""
 
 
+def rotation_order(
+    rows: list[dict[str, Any]], cfg: Config, types: Sequence[str] = DEFAULT_TYPES
+) -> dict[str, int]:
+    """행 ID → 그 유형 안에서 만들어진 순번. 돌아가며 쓰는 모양을 고르는 기준입니다.
+
+    같은 유형의 행을 만든 시각 순으로 세웁니다. 썸네일이 이미 있는 행도 셉니다 —
+    그래야 회차마다 몇 건이 돌든 전체 순서가 흔들리지 않습니다.
+    """
+    name = cfg.notion.prop
+    picked = [
+        r for r in rows
+        if not types or napi.read_select((r.get("properties") or {}).get(name("type"))) in types
+    ]
+    picked.sort(key=lambda r: (r.get("created_time") or "", r.get("id") or ""))
+    return {r.get("id", ""): i for i, r in enumerate(picked)}
+
+
 def make_for_row(
-    props: dict[str, Any], cfg: Config, design: Design
+    props: dict[str, Any], cfg: Config, design: Design, ordinal: int = 0
 ) -> tuple[bytes, str]:
-    """행 하나의 썸네일 PNG 와 파일 이름."""
+    """행 하나의 썸네일 PNG 와 파일 이름. `ordinal` 은 돌아가며 쓸 모양을 고르는 순번."""
     name = cfg.notion.prop
     title = napi.read_text(props.get(name("title"))).strip()
     keywords = napi.read_text(props.get(name("keywords")))
 
+    chosen = design.pick(ordinal)
     main, sub = split_title(title, design.client)
     png = render(
         main,
         sub,
-        design.brand(),
-        design.fonts(),
+        chosen.brand(),
+        chosen.fonts(),
         badge=badge_text(keywords),
-        palette=design.palette,
-        skeleton=design.skeleton,
-        width=design.width,
-        height=design.height,
-        layout=design.layout,
+        palette=chosen.palette,
+        skeleton=chosen.skeleton,
+        width=chosen.width,
+        height=chosen.height,
+        layout=chosen.layout,
+        shapes=chosen.shapes,
     )
     slug = napi.read_text(props.get(name("slug"))).strip()
     return png, f"{slug or 'thumbnail'}.png"
@@ -156,7 +175,10 @@ def run(
         )
         return report
 
-    for row in notion.query_database(cfg.notion.database_id):
+    rows = notion.query_database(cfg.notion.database_id)
+    ordinals = rotation_order(rows, cfg, types)
+
+    for row in rows:
         props = row.get("properties") or {}
         title = napi.read_text(props.get(cfg.notion.prop("title"))).strip()
 
@@ -171,7 +193,7 @@ def run(
 
         outcome = Outcome(title=title, page_id=row.get("id", ""))
         try:
-            png, filename = make_for_row(props, cfg, design)
+            png, filename = make_for_row(props, cfg, design, ordinals.get(row.get("id", ""), 0))
             if dry_run:
                 outcome.skipped = f"미리보기 ({len(png) // 1024}KB)"
             else:

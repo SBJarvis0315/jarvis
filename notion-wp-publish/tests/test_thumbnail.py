@@ -205,3 +205,51 @@ def test_minimal_layout_can_be_overridden_per_client():
     assert base == build_html("수핵이란?", "위치·구조·역할", brand, fonts,
                               width=1920, height=1080, skeleton="minimal", layout={})
     assert "175.00px" in base
+
+
+# --------------------------------------------------------------- card 골격
+
+CARD_PALETTE = Palette(
+    background="#0077B6", accent="#48CAE4", title="#FFFFFF", sub="#99C9E2",
+    pill_bg="#48CAE4", pill_fg="#023E8A", brand="#FFFFFF", muted="#5A8CBC",
+    rule="#0077B6", ornament="#01589E", domain="#497AAF",
+)
+
+
+def _card(**kw):
+    brand = Brand(name="클리어서울안과", name_en="CLEAR SEOUL OPHTHALMIC CLINIC", domain="clearseouleye.com")
+    return build_html("추석 연휴", "강남에서 일정 잡기", brand, Fonts(), badge="스마일라식",
+                      width=1200, height=628, palette=CARD_PALETTE, skeleton="card", **kw)
+
+
+def test_card_places_every_element_of_the_reference():
+    html = _card()
+    for piece in ('class="bar"', 'class="pill">스마일라식', 'class="main">추석 연휴',
+                  'class="sub">강남에서 일정 잡기', 'class="wordmark">클리어서울안과',
+                  'class="worden">CLEAR SEOUL OPHTHALMIC CLINIC', 'class="domain">clearseouleye.com'):
+        assert piece in html, piece
+    assert "#497AAF" in html  # 도메인 글자색은 muted 와 따로 둘 수 있습니다
+
+
+def test_card_bar_and_rule_can_be_switched_off_per_look():
+    html = _card(layout={"bar_h": 0, "rule_top": 0})
+    assert 'class="bar"' not in html and 'class="rule"' not in html
+    html = _card(layout={"bar_h": 4, "rule_top": 524})
+    assert 'class="bar"' in html and 'class="rule"' in html
+
+
+def test_card_draws_shapes_from_data():
+    html = _card(shapes=[
+        {"kind": "circle", "cx": 1195, "cy": 383, "d": 670, "color": "rgba(2,62,138,0.5)"},
+        {"kind": "ring", "cx": 1219, "cy": 507, "d": 398, "color": "#1375AF", "width": 1.5},
+        {"kind": "band", "top": 528, "color": "rgba(2,62,138,0.5)"},
+    ])
+    assert "border-radius:50%;left:860.00px;top:48.00px;width:670.00px" in html
+    assert "border:1.50px solid #1375AF" in html
+    assert "top:528.00px;bottom:0;background:rgba(2,62,138,0.5)" in html
+
+
+def test_card_scales_with_the_requested_width():
+    html = build_html("제목", "", Brand(name="x"), Fonts(), width=600, height=314,
+                      palette=CARD_PALETTE, skeleton="card", layout={"pad_x": 60})
+    assert "left:30.00px" in html  # 1200 기준 60px 이 절반 폭에서는 30px

@@ -140,6 +140,8 @@ class Palette:
     muted: str
     rule: str
     ornament: str
+    #: 우하단 도메인 글자색. 비우면 muted 를 씁니다. card 골격만 봅니다.
+    domain: str = ""
 
     @classmethod
     def derive(cls, color: str) -> Palette:
@@ -284,6 +286,7 @@ def build_html(
     palette: Palette | None = None,
     skeleton: str = "band",
     layout: dict[str, float] | None = None,
+    shapes: list[dict] | None = None,
 ) -> str:
     """골격을 골라 조판합니다. 골격은 고객사 디자인 파일이 정합니다."""
     builder = SKELETONS.get(skeleton)
@@ -291,6 +294,8 @@ def build_html(
         raise ThumbnailError(
             f"모르는 골격입니다: {skeleton} (쓸 수 있는 것: {', '.join(SKELETONS)})"
         )
+    if skeleton == "card":
+        return builder(main, sub, brand, fonts, badge, width, height, palette, layout, shapes)
     return builder(main, sub, brand, fonts, badge, width, height, palette, layout)
 
 
@@ -481,10 +486,148 @@ body{{font-family:'Latin','Hangul',sans-serif}}
 </script>"""
 
 
+CARD_WIDTH = 1200
+CARD_HEIGHT = 628
+
+#: card 골격의 기본 치수(1200x628 기준, px). 디자인 파일의 `layout` 이 항목별로 덮어씁니다.
+#: 모든 요소를 절대 좌표로 놓습니다 — 레퍼런스가 제목 줄 수와 무관하게 부제·푸터를
+#: 같은 자리에 두기 때문입니다(흐름 배치면 제목이 두 줄일 때 부제가 밀립니다).
+CARD_LAYOUT = {
+    "bar_h": 6,          # 상단 강조 바 두께. 0 이면 없음
+    "pad_x": 60,
+    "pill_top": 52,
+    "pill_size": 20,
+    "pill_pad_y": 10,
+    "pill_pad_x": 44,
+    "main_top": 111,     # 제목 글상자 위. 잉크 위치가 아니라 line-height 상자 기준
+    "main_size": 60,
+    "main_min": 40,
+    "main_lh": 1.5,
+    "main_w": 700,       # 제목이 꺾이는 폭
+    "sub_top": 338,
+    "sub_size": 24,
+    "rule_top": 0,       # 0 이면 구분선 없음
+    "rule_w": 700,
+    "brand_top": 560,
+    "brand_size": 22,
+    "worden_top": 595,
+    "worden_size": 11,
+    "worden_track": 0.16,  # em
+    "domain_top": 567,
+    "domain_size": 16,
+}
+
+
+def _card_shapes(shapes: list[dict] | None, px) -> str:
+    """원·링·띠 장식을 절대 좌표 div 로 그립니다. 레퍼런스마다 모양이 달라 데이터로 받습니다.
+
+        {"kind": "circle", "cx": 1195, "cy": 383, "d": 670, "color": "rgba(2,62,138,.5)"}
+        {"kind": "ring",   "cx": 1219, "cy": 507, "d": 398, "color": "#1375AF", "width": 1.5}
+        {"kind": "band",   "top": 528, "color": "rgba(2,62,138,.5)"}
+    """
+    out = []
+    for sh in shapes or []:
+        kind = sh.get("kind")
+        color = sh.get("color", "transparent")
+        if kind in ("circle", "ring"):
+            d = float(sh.get("d", 0)); cx = float(sh.get("cx", 0)); cy = float(sh.get("cy", 0))
+            left, top = cx - d / 2, cy - d / 2
+            if kind == "circle":
+                paint = f"background:{color}"
+            else:
+                paint = f"border:{px(float(sh.get('width', 1.5)))} solid {color}"
+            out.append(
+                f'<div style="position:absolute;border-radius:50%;left:{px(left)};top:{px(top)};'
+                f'width:{px(d)};height:{px(d)};{paint}"></div>'
+            )
+        elif kind == "band":
+            out.append(
+                f'<div style="position:absolute;left:0;right:0;top:{px(float(sh.get("top", 0)))};'
+                f'bottom:0;background:{color}"></div>'
+            )
+    return "".join(out)
+
+
+def _card_html(
+    main: str,
+    sub: str,
+    brand: Brand,
+    fonts: Fonts,
+    badge: str,
+    width: int,
+    height: int,
+    palette: Palette | None,
+    layout: dict[str, float] | None = None,
+    shapes: list[dict] | None = None,
+) -> str:
+    """뱃지·제목·부제·푸터를 절대 좌표로 놓는 카드 골격. 1200x628 기준.
+
+    band 와 구성은 같지만, 레퍼런스가 정한 자리에 요소를 **고정**합니다. 대표가
+    쓰던 자동화 결과물(클리어서울안과)을 그대로 재현하려고 만들었습니다. 로고
+    대신 국문 워드마크 + 영문명으로 브랜드를 세웁니다.
+    """
+    p = palette or Palette.derive(brand.color)
+    u = width / CARD_WIDTH
+    L = {**CARD_LAYOUT, **{k: v for k, v in (layout or {}).items() if k in CARD_LAYOUT}}
+
+    def px(v: float) -> str:
+        return f"{v * u:.2f}px"
+
+    domain_color = p.domain or p.muted
+    return f"""<!doctype html><meta charset="utf-8"><style>
+{fonts.faces()}
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{font-family:'Latin','Hangul',sans-serif}}
+.frame{{position:relative;width:{width}px;height:{height}px;background:{p.background};overflow:hidden}}
+.bar{{position:absolute;left:0;right:0;top:0;height:{px(L["bar_h"])};background:{p.accent}}}
+.pill{{position:absolute;left:{px(L["pad_x"])};top:{px(L["pill_top"])};background:{p.pill_bg};
+  color:{p.pill_fg};font-size:{px(L["pill_size"])};font-weight:700;line-height:1.1;
+  padding:{px(L["pill_pad_y"])} {px(L["pill_pad_x"])};border-radius:999px;letter-spacing:-0.01em}}
+.main{{position:absolute;left:{px(L["pad_x"])};top:{px(L["main_top"])};width:{px(L["main_w"])};
+  color:{p.title};font-weight:700;font-size:{px(L["main_size"])};line-height:{L["main_lh"]};
+  letter-spacing:-0.02em;word-break:keep-all}}
+.sub{{position:absolute;left:{px(L["pad_x"])};top:{px(L["sub_top"])};width:{px(L["main_w"])};
+  color:{p.sub};font-weight:600;font-size:{px(L["sub_size"])};line-height:1.3;word-break:keep-all}}
+.rule{{position:absolute;left:{px(L["pad_x"])};top:{px(L["rule_top"])};width:{px(L["rule_w"])};
+  height:1px;background:{p.rule}}}
+.wordmark{{position:absolute;left:{px(L["pad_x"])};top:{px(L["brand_top"])};color:{p.brand};
+  font-size:{px(L["brand_size"])};font-weight:700;letter-spacing:-0.02em;line-height:1.2}}
+.worden{{position:absolute;left:{px(L["pad_x"])};top:{px(L["worden_top"])};color:{p.muted};
+  font-size:{px(L["worden_size"])};font-weight:600;letter-spacing:{L["worden_track"]}em;line-height:1.2}}
+.domain{{position:absolute;right:{px(L["pad_x"])};top:{px(L["domain_top"])};color:{domain_color};
+  font-size:{px(L["domain_size"])};font-weight:600;letter-spacing:0.04em;line-height:1.2}}
+</style>
+<div class="frame">
+  {_card_shapes(shapes, px)}
+  {'<div class="bar"></div>' if L["bar_h"] > 0 else ''}
+  {f'<div class="pill">{_escape(badge)}</div>' if badge else ''}
+  <div class="main">{_escape(main)}</div>
+  {f'<div class="sub">{_escape(sub)}</div>' if sub else ''}
+  {'<div class="rule"></div>' if L["rule_top"] > 0 else ''}
+  <div class="wordmark">{_escape(brand.name)}</div>
+  {f'<div class="worden">{_escape(brand.name_en)}</div>' if brand.name_en else ''}
+  {f'<div class="domain">{_escape(brand.domain)}</div>' if brand.domain else ''}
+</div>
+<script>
+// 제목이 길어 부제 자리를 침범하면 들어올 때까지 글자를 줄입니다.
+(function () {{
+  const main = document.querySelector('.main');
+  const limit = {L["sub_top"]} * {u:.5f} - {12} * {u:.5f};
+  let size = {L["main_size"]} * {u:.5f};
+  const floor = {L["main_min"]} * {u:.5f};
+  while (main.offsetTop + main.offsetHeight > limit && size > floor) {{
+    size -= 1;
+    main.style.fontSize = size + 'px';
+  }}
+}})();
+</script>"""
+
+
 #: 쓸 수 있는 골격. 고객사 디자인 파일의 `skeleton` 값이 여기서 하나를 고릅니다.
 SKELETONS = {
     "band": _band_html,
     "minimal": _minimal_html,
+    "card": _card_html,
 }
 
 
@@ -528,6 +671,7 @@ def render(
     palette: Palette | None = None,
     skeleton: str = "band",
     layout: dict[str, float] | None = None,
+    shapes: list[dict] | None = None,
 ) -> bytes:
     """썸네일 한 장을 PNG 바이트로 돌려줍니다."""
     if not main.strip():
@@ -535,7 +679,7 @@ def render(
 
     html = build_html(main, sub, brand, fonts, badge=badge, width=width,
                       height=height, palette=palette, skeleton=skeleton,
-                      layout=layout)
+                      layout=layout, shapes=shapes)
 
     with tempfile.TemporaryDirectory() as tmp:
         page, shot = Path(tmp, "page.html"), Path(tmp, "out.png")
