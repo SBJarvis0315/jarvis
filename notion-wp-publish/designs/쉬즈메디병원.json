@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHESMEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#FBF0EF",
+    "accent": "#C8566F",
+    "title": "#8A3248",
+    "sub": "#7A5A62",
+    "pill_bg": "#F3D9DD",
+    "pill_fg": "#7A2B40",
+    "brand": "#8A3248",
+    "muted": "#B79AA0",
+    "rule": "#EBD3D6",
+    "ornament": "#F6E3E4"
+  },
+  "note": "홈페이지(shesmedi.co.kr)가 접속 차단(TLS)돼 로고를 받지 못해 참고자료의 브랜드 정의로 정했습니다. 산부인과 중심 '여성·가족 생애주기 병원'이라 따뜻하고 부드러운 블러시 바탕에 깊은 로즈 글씨. 로고는 못 구해 워드마크로 대신합니다. 로고를 받으면 designs/logos 에 넣고 팔레트만 조정하세요."
+}

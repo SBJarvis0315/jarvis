@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#2C5B6D",
+    "accent": "#6FB3C8",
+    "title": "#FFFFFF",
+    "sub": "#BCD3DC",
+    "pill_bg": "#E3EEF2",
+    "pill_fg": "#1F4352",
+    "brand": "#FFFFFF",
+    "muted": "#86A9B6",
+    "rule": "#3B6D7F",
+    "ornament": "#285567"
+  },
+  "note": "홈페이지 CSS의 키 컬러 변수(--color-key:#2c5b6d, 진한 청록 블루)를 배경에 깔고, 홈페이지 푸터의 흰색 로고를 올렸습니다. 기계 추출이 아니라 사이트가 브랜드 키 컬러로 명시한 값입니다. accent 는 그 색의 밝고 선명한 버전.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}
