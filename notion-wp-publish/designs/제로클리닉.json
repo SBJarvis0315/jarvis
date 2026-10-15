@@ -1,0 +1,25 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#151515",
+    "accent": "#E8E3DA",
+    "title": "#FFFFFF",
+    "sub": "#C9C5BE",
+    "pill_bg": "#EDE8DF",
+    "pill_fg": "#151515",
+    "brand": "#FFFFFF",
+    "muted": "#8A8780",
+    "rule": "#3A3835",
+    "ornament": "#232120"
+  },
+  "note": "홈페이지 로고가 흑백 단색(검정 'ZERO CLINIC' 세리프, 대표 이미지는 흰 바탕+검정 로고)이고 사이트에 흰색 반전 로고(images/main/selfie/logo.png)가 있어, 무채색 브랜드로 보고 검정 바탕+흰 글씨로 정했습니다. 로고는 흰색 반전본 사용. 2026-10-15 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

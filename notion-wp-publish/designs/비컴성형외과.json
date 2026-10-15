@@ -1,0 +1,25 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "band",
+  "width": 1200,
+  "height": 630,
+  "palette": {
+    "background": "#EFE9E0",
+    "accent": "#B8A48C",
+    "title": "#222222",
+    "sub": "#5A524A",
+    "pill_bg": "#222222",
+    "pill_fg": "#F3EEE6",
+    "brand": "#222222",
+    "muted": "#8E8377",
+    "rule": "#D9CFC1",
+    "ornament": "#E6DED2"
+  },
+  "note": "홈페이지 로고(차콜 #222222 세리프 워드마크+원형 마크)와 대표 이미지(og-image)의 웜 그레이지 인테리어 톤을 근거로 정했습니다. 웜 그레이지 바탕에 차콜 글씨의 절제된 구성. accent 는 그레이지의 진한 버전. 2026-10-15 확정.",
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}
