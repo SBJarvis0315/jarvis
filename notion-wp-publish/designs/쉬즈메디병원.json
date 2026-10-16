@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHE'S MEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#FCF0F1",
+    "accent": "#D9667A",
+    "title": "#A8405A",
+    "sub": "#5B4A4E",
+    "pill_bg": "#F6D9DE",
+    "pill_fg": "#8E2F49",
+    "brand": "#7A4452",
+    "muted": "#B8949B",
+    "rule": "#F0D5DA",
+    "ornament": "#F8E3E6"
+  },
+  "note": "홈페이지가 이 환경에서 막혀 로고를 받지 못했습니다(연결 차단). 근거는 노션 참고자료의 브랜드 정의뿐입니다 — 산부인과 중심의 여성·가족 생애주기 병원, 20~40대 여성 독자, 안정감 있는 톤. 그에 맞춰 옅은 로즈 바탕에 진한 로즈 제목으로 정했고, 실제 브랜드 색이 아닐 수 있습니다. 로고가 없어 워드마크로 대신합니다. 로고와 브랜드 색을 확인하면 이 파일과 designs/logos 를 고치세요. 2026-10-16 임시 확정."
+}
