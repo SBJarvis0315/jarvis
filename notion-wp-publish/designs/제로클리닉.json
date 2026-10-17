@@ -1,0 +1,29 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#1F1F1F",
+    "accent": "#FFFFFF",
+    "title": "#FFFFFF",
+    "sub": "#CCCCCC",
+    "pill_bg": "#333333",
+    "pill_fg": "#FFFFFF",
+    "brand": "#FFFFFF",
+    "muted": "#AAAAAA",
+    "rule": "#3A3A3A",
+    "ornament": "#292929"
+  },
+  "note": "홈페이지(zeroclinic1.com)가 흑백 무채색이고 푸터에 흰색 로고(291x82)를 쓰는 점을 근거로, 검은 바탕에 흰 로고·흰 제목·연회색(#CCC) 부제를 두는 여백형(minimal) 구성입니다. 사이트가 쓰는 #fff/#ccc/#aaa 를 그대로 가져왔습니다. 2026-10-17 확정.",
+  "layout": {
+    "logo_w": 640,
+    "logo_h": 180
+  },
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

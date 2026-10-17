@@ -1,0 +1,29 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#F5F1EA",
+    "accent": "#222222",
+    "title": "#222222",
+    "sub": "#5A544C",
+    "pill_bg": "#E7DFD2",
+    "pill_fg": "#3A352F",
+    "brand": "#222222",
+    "muted": "#8F877A",
+    "rule": "#DDD4C6",
+    "ornament": "#EBE5DA"
+  },
+  "note": "홈페이지(becomeps.com) 로고를 근거로 정했습니다. 로고가 숯색(#222222) 한 가지의 절제된 세리프 워드마크라, 따뜻한 아이보리 바탕에 로고·제목을 숯색으로 두는 여백형(minimal) 구성입니다. 브랜드 정의(디자인 중심·계측·정밀)에 맞춰 장식색 없이 무채색 톤으로 갔습니다. 로고 크기만 가로세로비(342x102)에 맞춰 조정. 2026-10-17 확정.",
+  "layout": {
+    "logo_w": 640,
+    "logo_h": 191
+  },
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}
