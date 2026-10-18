@@ -1,0 +1,29 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#F3F3F1",
+    "accent": "#1F1F1F",
+    "title": "#1F1F1F",
+    "sub": "#4C4C4C",
+    "pill_bg": "#E2E2DF",
+    "pill_fg": "#333333",
+    "brand": "#4C4C4C",
+    "muted": "#9A9A96",
+    "rule": "#DADAD6",
+    "ornament": "#E8E8E5"
+  },
+  "note": "로고(홈페이지 /images/gnb/logo_dark.png, 224x63)와 대표 이미지(og)가 흰 바탕에 검정 세리프 'ZERO CLINIC'과 괄호 심볼뿐인 흑백 브랜드입니다. 색이 없는 브랜드라 아주 옅은 무채색 바탕 #F3F3F1 에 검정 제목 #1F1F1F 로 정했습니다. 참고자료 페이지에는 색 정의가 없습니다. 팀이 준 레퍼런스 이미지는 없어 치수는 기본 골격에서 로고 크기만 로고 비율(3.56:1)에 맞췄습니다. 로고 원본이 작아(224px) 560px 로 키우면 약간 부드럽습니다. 2026-10-18 확정. 로고 파일에 '신사 본점' 문구가 함께 들어 있어 그대로 썼습니다. 로고가 가늘어 logo_w 를 760 으로 키웠습니다.",
+  "layout": {
+    "logo_w": 760,
+    "logo_h": 214
+  },
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}
