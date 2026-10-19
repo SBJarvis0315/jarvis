@@ -1,0 +1,30 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#2C5B6D",
+    "accent": "#50BAE2",
+    "title": "#FFFFFF",
+    "sub": "#B7C7CD",
+    "pill_bg": "#456F7F",
+    "pill_fg": "#73C8E8",
+    "brand": "#FFFFFF",
+    "muted": "#96ADB6",
+    "rule": "#567C8A",
+    "ornament": "#3F6A7A"
+  },
+  "note": "홈페이지(zeroclinic1.com)의 푸터 로고가 흰색 'ZERO CLINIC' 이라 어두운 바탕이 전제입니다. 사이트 CSS 의 대표색 변수(--color-key) #2C5B6D 딥틸을 바탕에 깔고 글씨는 흰색으로 했습니다(Palette.derive). 로고 원본이 291x82 로 작아 logo_w 를 620 으로 제한했습니다. 2026-10-19 자동 확정.",
+  "layout": {
+    "logo_w": 620,
+    "logo_h": 175,
+    "logo_shift": 0
+  },
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png"
+}

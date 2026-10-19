@@ -1,0 +1,30 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#F4F1EC",
+    "accent": "#222222",
+    "title": "#222222",
+    "sub": "#5A554E",
+    "pill_bg": "#E4DED5",
+    "pill_fg": "#222222",
+    "brand": "#222222",
+    "muted": "#8E877D",
+    "rule": "#DAD3C8",
+    "ornament": "#EBE6DE"
+  },
+  "note": "홈페이지(becomeps.com)에서 받은 로고가 숯색(#222222) 세리프 워드마크와 원형 마크라 흰빛 도는 웜그레이 바탕에 진한 글씨로 정했습니다. 참고자료에는 색 정의가 없어 로고가 유일한 근거입니다. 로고 원본이 342x102 로 작아 logo_w 를 560 으로 제한했습니다. 2026-10-19 자동 확정.",
+  "layout": {
+    "logo_w": 560,
+    "logo_h": 170,
+    "logo_shift": 0
+  },
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}

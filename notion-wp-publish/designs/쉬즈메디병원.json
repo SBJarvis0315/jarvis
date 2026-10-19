@@ -1,0 +1,23 @@
+{
+  "client": "쉬즈메디병원",
+  "name_en": "SHESMEDI HOSPITAL",
+  "domain": "shesmedi.co.kr",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#B8456A",
+    "accent": "#E2507F",
+    "title": "#FFFFFF",
+    "sub": "#E7C0CC",
+    "pill_bg": "#C15B7C",
+    "pill_fg": "#F3B9CC",
+    "brand": "#FFFFFF",
+    "muted": "#DCA2B4",
+    "rule": "#C66A88",
+    "ornament": "#BE5677"
+  },
+  "note": "홈페이지가 이 환경에서 열리지 않아(DNS 실패) 로고와 실제 색을 확인하지 못했습니다. 근거는 노션 참고자료의 브랜드 정의뿐입니다: 산부인과 중심 여성·가족 생애주기 병원. 그래서 따뜻한 로즈(#B8456A)를 대표색으로 정해 바탕에 깔고 글씨를 흰색으로 했습니다(Palette.derive, 흰 글씨 대비를 위해 진한 로즈). 로고는 없어 이름 워드마크로 대신합니다. 로고와 실제 브랜드 색을 확인하면 이 파일과 designs/logos 를 고쳐 주세요. 2026-10-19 자동 확정."
+}
