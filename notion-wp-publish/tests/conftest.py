@@ -6,6 +6,13 @@ from types import SimpleNamespace
 
 import pytest
 
+import sys
+from pathlib import Path
+
+# 패키지를 설치하지 않아도 테스트가 돌도록 src 를 경로에 넣습니다.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
 from notionwp import authors as real_authors
 from notionwp import publish as publish_mod
 
