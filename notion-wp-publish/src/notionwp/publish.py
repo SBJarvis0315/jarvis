@@ -25,6 +25,7 @@ from typing import Any
 from urllib.parse import unquote, urlparse
 from zoneinfo import ZoneInfo
 
+from . import authors as authors_mod
 from . import notion_api as napi
 from .config import Config, Secrets, credential_key, wp_credentials
 from .extract import Extracted, extract
@@ -447,6 +448,9 @@ class Publisher:
         self.wp = wp
         self.runlog = RunLogger(cfg.run_log, cfg.client, self.notion)
         self.tail = load_tail(cfg.client)
+        # 글 작성자. 지정이 없거나 작업 계정이면 발행하지 않습니다(authors.py).
+        self.author = authors_mod.load(cfg.client)
+        self.author_id: int | None = None
         # 글 끝 '참고 자료'·'관련 글' 줄에 링크를 거는 규칙. 파일이 없으면 None.
         self.links = load_links(cfg.client)
         self._related_resolver = None
@@ -482,6 +486,10 @@ class Publisher:
             if not cand.ok:
                 outcomes.append(skipped_outcome(cand))
                 continue
+            if self.author_id is None:
+                # 글을 하나라도 만들기 전에 확인합니다. 여기서 막히면 고객사 실행이
+                # 통째로 중단되고(로그에 남음) 플래너 행은 건드리지 않습니다.
+                self.author_id = authors_mod.resolve(self.wp, self.author, self.cfg.client)
             outcomes.append(self._publish(cand))
 
         # --dry-run 은 아무것도 하지 않았고, --draft 는 공개하지도 노션을 건드리지도
@@ -721,6 +729,7 @@ class Publisher:
                     status="draft",
                     categories=category_ids,
                     featured_media=thumb.id,
+                    author=self.author_id,
                     target=target,
                 )
                 post_id = post.id
@@ -741,6 +750,7 @@ class Publisher:
                         "slug": slug,
                         "categories": category_ids,
                         "featured_media": thumb.id,
+                        "author": self.author_id,
                     },
                     target=target,
                 )
