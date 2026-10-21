@@ -451,6 +451,7 @@ class Publisher:
         # 글 작성자. 지정이 없거나 작업 계정이면 발행하지 않습니다(authors.py).
         self.author = authors_mod.load(cfg.client)
         self.author_id: int | None = None
+        self.author_warning = ""
         # 글 끝 '참고 자료'·'관련 글' 줄에 링크를 거는 규칙. 파일이 없으면 None.
         self.links = load_links(cfg.client)
         self._related_resolver = None
@@ -487,9 +488,10 @@ class Publisher:
                 outcomes.append(skipped_outcome(cand))
                 continue
             if self.author_id is None:
-                # 글을 하나라도 만들기 전에 확인합니다. 여기서 막히면 고객사 실행이
-                # 통째로 중단되고(로그에 남음) 플래너 행은 건드리지 않습니다.
-                self.author_id = authors_mod.resolve(self.wp, self.author, self.cfg.client)
+                # 글을 만들기 전에 한 번 정합니다. Growth 밖에 없어도 멈추지 않고,
+                # 이유를 경고로 남겨 각 글의 로그에 붙입니다.
+                choice = authors_mod.resolve(self.wp, self.author, self.cfg.client)
+                self.author_id, self.author_warning = choice.user_id, choice.warning
             outcomes.append(self._publish(cand))
 
         # --dry-run 은 아무것도 하지 않았고, --draft 는 공개하지도 노션을 건드리지도
@@ -595,6 +597,8 @@ class Publisher:
     def _publish(self, cand: Candidate) -> Outcome:
         nc = self.cfg.notion
         out = Outcome(page_id=cand.page_id, title=cand.title)
+        if self.author_warning:
+            out.warnings.append(self.author_warning)
 
         def prop(key: str) -> dict[str, Any] | None:
             return cand.props.get(nc.prop(key))
