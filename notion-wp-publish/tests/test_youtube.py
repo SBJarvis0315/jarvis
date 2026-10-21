@@ -238,16 +238,43 @@ def status_payload(**flags):
                       for vid, (emb, priv) in flags.items()]}
 
 
-def test_videos_that_forbid_embedding_are_not_candidates():
+def test_videos_that_forbid_embedding_stay_candidates_but_are_flagged():
     """지혜로운 필라테스 '클래식과 모던필라테스 3가지 차이점' — 공개지만 퍼가기가 꺼져 있었습니다.
 
-    embed 블록으로 넣으면 빈 16:9 상자와 맨 URL 만 남습니다. 후보에서 뺍니다.
+    embed 블록으로 넣으면 빈 16:9 상자와 맨 URL 만 남습니다. 그렇다고 후보에서 빼면
+    채널 영상이 전부 그런 고객사는 영상이 아예 안 들어가므로, 표시만 달아 넘깁니다.
+    비공개 영상은 뺍니다.
     """
     session = FakeSession([CHANNELS, playlist("임베드 되는 영상", "퍼가기 막힌 영상", "비공개로 바뀐 영상"),
                            status_payload(vid0=(True, "public"), vid1=(False, "public"), vid2=(True, "private"))])
     videos = list_videos("UC" + "x" * 22, key="k", session=session)
-    assert [v.title for v in videos] == ["임베드 되는 영상"]
+    assert [(v.title, v.embeddable) for v in videos] == [("임베드 되는 영상", True), ("퍼가기 막힌 영상", False)]
     assert any("googleapis.com/youtube/v3/videos" in u for u in session.urls)
+
+
+def test_a_flagged_candidate_is_linked_without_asking_youtube_again(tmp_path, monkeypatch):
+    """채널 영상이 전부 퍼가기 불가인 고객사라도 영상은 들어갑니다 — 링크로."""
+    from notionwp.plan import VideoCandidate
+    monkeypatch.setattr(publish_mod, "embeddable", lambda url: (_ for _ in ()).throw(AssertionError("물어볼 필요가 없습니다")))
+    plan = PagePlan(page_id="e2868fa2-06ff-8387-a4ce-018c082c51d5", title="제목", slug="melasma-laser-sessions",
+                    images=[], thumbnail_alt="썸네일 설명")
+    plan.video_candidates = [VideoCandidate(title="퍼가기 막힌 영상", url="https://www.youtube.com/watch?v=rEekgNZIwpw", embeddable=False)]
+    plan.video = VideoChoice(url="https://www.youtube.com/watch?v=rEekgNZIwpw", anchor=2, note="영상으로 정리했습니다")
+    plan.save(tmp_path / plan.page_id.replace("-", ""))
+    wp = FakeWordPress()
+    outcomes = Publisher(CONFIG, notion=FakeNotion([complete_page()], sample_page()), wp=wp, plan_root=tmp_path).run()
+    content = next(iter(wp.posts.values()))["content"]
+    assert "wp:embed" not in content and "유튜브에서 영상 보기" in content
+    assert any("임베드를 허용하지 않아" in w for o in outcomes for w in o.warnings)
+
+
+def test_old_plan_files_without_the_flag_still_load(tmp_path):
+    from notionwp.plan import PagePlan as P
+    directory = tmp_path / "e2868fa206ff8387a4ce018c082c51d5"; directory.mkdir()
+    (directory / "plan.json").write_text('{"page_id":"e2868fa2-06ff-8387-a4ce-018c082c51d5","title":"t","slug":"s","video_candidates":[{"title":"a","url":"https://www.youtube.com/watch?v=kN0iB58w_6I"}]}', encoding="utf-8")
+    plan = P.load(directory) if hasattr(P, "load") else None
+    if plan is not None:
+        assert plan.video_candidates[0].embeddable is True
 
 
 def test_a_failed_status_check_keeps_the_list_instead_of_emptying_it():

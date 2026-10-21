@@ -70,6 +70,8 @@ class VideoCandidate:
     title: str
     url: str
     published: str = ""
+    #: False 면 채널이 퍼가기를 막아 둔 영상. 골라도 되지만 embed 가 아니라 링크로 들어갑니다.
+    embeddable: bool = True
 
 
 @dataclass

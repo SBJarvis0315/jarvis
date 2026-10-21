@@ -705,9 +705,11 @@ class Publisher:
                 if known and video_id_of(url) not in known:
                     out.warnings.append(f"고른 영상이 후보 목록에 없습니다 — 주소를 옮겨 적다 틀렸는지 확인하세요: {url}")
 
-                # 퍼가기가 막힌 영상은 embed 로 넣으면 빈 상자만 남습니다. 먼저 물어보고,
-                # 안 되면 같은 자리에 링크로 넣습니다.
-                link_only = embeddable(url) is False
+                # 퍼가기가 막힌 영상은 embed 로 넣으면 빈 상자만 남습니다. 후보 단계에서
+                # 이미 표시된 영상이면 바로 링크로, 아니면 유튜브에 먼저 물어보고 안 되면
+                # 같은 자리에 링크로 넣습니다.
+                flagged = {video_id_of(c.url) for c in page_plan.video_candidates if not c.embeddable}
+                link_only = video_id_of(url) in flagged or embeddable(url) is False
                 body.insert(at, video_block(url=url, note=video.note, link_only=link_only))
                 if link_only:
                     out.warnings.append(f"영상이 임베드를 허용하지 않아 링크로 넣었습니다 (채널에서 '퍼가기 허용'을 켜면 임베드됩니다): {url}")
@@ -878,7 +880,10 @@ class Publisher:
         videos = list_videos(channel, key=youtube_key())
         if videos:
             log.info("유튜브 영상 후보 %d개를 담았습니다", len(videos))
-        return [VideoCandidate(title=v.title, url=v.url, published=v.published) for v in videos]
+        return [
+            VideoCandidate(title=v.title, url=v.url, published=v.published, embeddable=v.embeddable)
+            for v in videos
+        ]
 
     def _load_plan(self, page_id: str) -> PagePlan | None:
         try:

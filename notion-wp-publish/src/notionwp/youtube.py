@@ -40,6 +40,8 @@ class Video:
     video_id: str
     title: str
     published: str = ""
+    #: 채널이 퍼가기(임베드)를 허용한 영상인지. False 면 발행 단계가 embed 대신 링크로 넣습니다.
+    embeddable: bool = True
 
     @property
     def url(self) -> str:
@@ -166,13 +168,17 @@ def _from_api(
         if not page:
             break
 
-    return _drop_unembeddable(videos[:limit], key, session)
+    return _mark_embeddable(videos[:limit], key, session)
 
 
-def _drop_unembeddable(
+def _mark_embeddable(
     videos: list[Video], key: str, session: requests.Session | None
 ) -> list[Video]:
-    """퍼가기를 막아 둔 영상과 공개가 아닌 영상을 후보에서 뺍니다.
+    """공개가 아닌 영상은 빼고, 퍼가기를 막아 둔 영상은 **빼지 않고 표시만** 합니다.
+
+    채널 영상이 전부 퍼가기 불가인 고객사도 있을 수 있습니다. 그런 영상을 후보에서
+    빼 버리면 글에 영상이 아예 안 들어가는데, 그보다는 발행 단계가 같은 자리에
+    링크 한 줄로 넣는 편이 낫습니다. 그래서 `embeddable=False` 로 표시해 넘깁니다.
 
     Data API 의 videos.list(status) 가 `embeddable` 과 `privacyStatus` 를 돌려줍니다.
     50개씩 한 번에 물어볼 수 있어 비용이 거의 없습니다. 이 확인이 실패하면 목록을
@@ -199,10 +205,12 @@ def _drop_unembeddable(
     kept: list[Video] = []
     for v in videos:
         can, privacy = status.get(v.video_id, (True, "public"))
-        if can and privacy == "public":
-            kept.append(v)
-        else:
-            log.info("임베드 불가 영상을 후보에서 뺍니다: %s (%s, embeddable=%s)", v.title[:40], privacy, can)
+        if privacy != "public":
+            log.info("공개가 아닌 영상을 후보에서 뺍니다: %s (%s)", v.title[:40], privacy)
+            continue
+        if not can:
+            log.info("퍼가기 불가 영상 — 골라지면 링크로 넣습니다: %s", v.title[:40])
+        kept.append(Video(v.video_id, v.title, v.published, embeddable=can))
     return kept
 
 
