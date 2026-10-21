@@ -34,8 +34,22 @@ log = logging.getLogger(__name__)
 #: 플래너 템플릿 행의 제목에 들어 있는 말. 이게 남아 있으면 원고 생성 전입니다.
 TEMPLATE_MARK = "템플릿"
 
-#: 당장은 숏폼만 만듭니다. 늘리려면 이 목록에 유형을 더하면 됩니다.
+#: 일반 고객사는 숏폼만 만듭니다.
 DEFAULT_TYPES = ("숏폼",)
+
+#: 설정표의 '고객사 유형'이 이 값이면 그 고객사의 '대상 유형' 전부에 썸네일을 만듭니다.
+ALL_TYPES_TIER = "저단가"
+
+
+def types_for(cfg: Config) -> tuple[str, ...]:
+    """이 고객사에 썸네일을 만들 콘텐츠 유형.
+
+    저단가 고객사는 설정표 '대상 유형'에 적힌 유형 전부(롱폼·브랜드 엔티티 등),
+    그 밖에는 숏폼만입니다. 저단가인데 대상 유형이 비어 있으면 숏폼만 만듭니다.
+    """
+    if cfg.tier == ALL_TYPES_TIER and cfg.notion.type_filter:
+        return tuple(cfg.notion.type_filter)
+    return DEFAULT_TYPES
 
 
 @dataclass
@@ -136,7 +150,8 @@ def make_for_row(
     title = napi.read_text(props.get(name("title"))).strip()
     keywords = napi.read_text(props.get(name("keywords")))
 
-    chosen = design.pick(ordinal)
+    kind = napi.read_select(props.get(name("type")))
+    chosen = design.pick(ordinal, kind)
     main, sub = split_title(title, design.client)
     png = render(
         main,
@@ -159,12 +174,14 @@ def run(
     cfg: Config,
     notion: NotionClient,
     *,
-    types: Sequence[str] = DEFAULT_TYPES,
+    types: Sequence[str] | None = None,
     dry_run: bool = False,
     limit: int = 0,
 ) -> Report:
     """한 고객사의 플래너를 훑어 썸네일을 만들고 붙입니다."""
     report = Report(client=cfg.client)
+    if types is None:
+        types = types_for(cfg)
 
     design = load_design(cfg.client)
     if design is None:

@@ -119,7 +119,9 @@ def build_config(
 
     board = replace(defaults.board, admin_url=board_url)
 
-    return replace(defaults, client=client, notion=notion, wordpress=wordpress, board=board), ""
+    tier = napi.read_select(props.get(rc.prop("tier")))
+
+    return replace(defaults, client=client, notion=notion, wordpress=wordpress, board=board, tier=tier), ""
 
 
 def _is_board_site(url: str) -> bool:
