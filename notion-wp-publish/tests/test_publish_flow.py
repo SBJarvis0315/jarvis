@@ -98,8 +98,25 @@ class FakeWordPress:
         self._maybe_fail("resolve_category")
         return 7 if name else None
 
+    # 작업 계정(Growth, id 2) 외에 저자로 쓸 수 있는 사용자 한 명(id 1)이 있는 사이트.
+    USERS = [
+        {"id": 2, "name": "Growth", "slug": "growth-team"},
+        {"id": 1, "name": "테스트 저자", "slug": "author"},
+    ]
+
+    def current_user(self):
+        return self.USERS[0]
+
+    def list_users(self):
+        return self.USERS
+
+    def find_user(self, spec):
+        return next(
+            (u for u in self.USERS if spec in (u["name"], u["slug"], str(u["id"]))), None
+        )
+
     def create_post(self, *, title, content, slug, status, categories=None,
-                    featured_media=None, target=None):
+                    featured_media=None, author=None, target=None):
         self._maybe_fail("create_post")
         self._next_id += 1
         self.posts[self._next_id] = {
@@ -109,6 +126,7 @@ class FakeWordPress:
             "status": status,
             "categories": categories,
             "featured_media": featured_media,
+            "author": author,
             # 어느 글 종류로 올렸는지. 용어사전 같은 별도 종류를 확인할 때 씁니다.
             "target": getattr(target, "rest_base", "posts"),
             "taxonomy_field": getattr(target, "taxonomy_field", "categories"),
