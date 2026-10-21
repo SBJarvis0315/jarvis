@@ -1,0 +1,29 @@
+{
+  "client": "제로클리닉",
+  "name_en": "ZERO CLINIC",
+  "domain": "zeroclinic1.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#FFFFFF",
+    "accent": "#1A1A1A",
+    "title": "#1A1A1A",
+    "sub": "#555555",
+    "pill_bg": "#EEEEEE",
+    "pill_fg": "#333333",
+    "brand": "#1A1A1A",
+    "muted": "#9A9A9A",
+    "rule": "#E2E2E2",
+    "ornament": "#F3F3F3"
+  },
+  "note": "로고(괄호 모양 심벌 + 검은 세리프 ZERO CLINIC)와 홈페이지 대표 이미지가 흑백뿐이라 흰 바탕에 먹색 글씨로 정했습니다. 포인트 색이 없는 브랜드라 accent 도 먹색. 로고 원본이 224x63 으로 작아 크게 쓰면 흐릴 수 있습니다 — 더 큰 로고를 받으면 교체하세요. 2026-10-20 자동 확정.",
+  "logo": "제로클리닉.png",
+  "logo_mime": "image/png",
+  "layout": {
+    "logo_w": 400.0,
+    "logo_h": 112.5
+  }
+}

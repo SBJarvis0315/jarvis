@@ -6,7 +6,7 @@ from __future__ import annotations
 from dataclasses import replace
 
 from notionwp.registry import build_config, load_defaults
-from notionwp.thumbnails import eligible, has_file
+from notionwp.thumbnails import eligible, has_file, types_for
 
 DEFAULTS = load_defaults()
 
@@ -19,6 +19,7 @@ def registry_row(**over) -> dict:
         "대상 유형": "롱폼, 숏폼",
         "워드프레스 주소": "https://blog.cleartone.co.kr",
         "유튜브 채널": "",
+        "고객사 유형": "",
     }
     unknown = set(over) - set(values)
     assert not unknown, f"설정표에 없는 컬럼: {unknown}"
@@ -26,7 +27,7 @@ def registry_row(**over) -> dict:
 
     props: dict = {}
     for key, val in values.items():
-        if key == "상태":
+        if key in ("상태", "고객사 유형"):
             props[key] = {"select": {"name": val}} if val else {"select": None}
         else:
             props[key] = {"rich_text": [{"plain_text": val}]} if val else {"rich_text": []}
@@ -142,3 +143,25 @@ def test_rotation_is_stable_across_runs():
     first = rotation_order(rows, CONFIG)
     rows[0]["properties"]["썸네일"] = {"type": "files", "files": [{"name": "t.png"}]}
     assert rotation_order(rows, CONFIG) == first
+
+
+def test_general_clients_only_get_shortform_thumbnails():
+    cfg, _ = build_config(DEFAULTS, registry_row(**{"고객사 유형": "일반"}))
+    assert types_for(cfg) == ("숏폼",)
+
+
+def test_low_price_clients_get_every_target_type():
+    cfg, _ = build_config(
+        DEFAULTS,
+        registry_row(**{"고객사 유형": "저단가", "대상 유형": "롱폼, 숏폼, 브랜드 엔티티, 제품 엔티티"}),
+    )
+    assert types_for(cfg) == ("롱폼", "숏폼", "브랜드 엔티티", "제품 엔티티")
+
+
+def test_low_price_client_without_target_types_stays_shortform():
+    cfg, _ = build_config(DEFAULTS, registry_row(**{"고객사 유형": "저단가", "대상 유형": ""}))
+    assert types_for(cfg) == ("숏폼",)
+
+
+def test_unset_client_type_counts_as_general():
+    assert types_for(CONFIG) == ("숏폼",)

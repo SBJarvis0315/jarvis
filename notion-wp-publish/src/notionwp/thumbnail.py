@@ -404,6 +404,7 @@ MINIMAL_LAYOUT = {
     "pad_top": 160,
     "pad_bottom": 120,
     "logo_shift": 0,  # 로고만 좌우로 미는 값. 레퍼런스가 로고를 글자보다 왼쪽에 둘 때 씁니다
+    "logo_upscale": 0,  # 1 이면 로고 원본이 logo_w 보다 작아도 그 폭까지 키웁니다. 기본은 원본보다 키우지 않습니다
     "logo_w": 600,
     "logo_h": 155,
     "main_size": MINIMAL_MAX_MAIN,
@@ -454,7 +455,7 @@ def _minimal_html(
 body{{font-family:'Latin','Hangul',sans-serif}}
 .frame{{width:{width}px;height:{height}px;background:{p.background};
   overflow:hidden;padding:{px(L["pad_top"])} {px(L["pad_x"])} {px(L["pad_bottom"])}}}
-.logo{{max-width:{px(L["logo_w"])};max-height:{px(L["logo_h"])};object-fit:contain;
+.logo{{{"width" if L["logo_upscale"] else "max-width"}:{px(L["logo_w"])};max-height:{px(L["logo_h"])};object-fit:contain;
   object-position:left top;display:block;margin-left:{px(L["logo_shift"])}}}
 .wordmark{{color:{p.title};font-size:{px(76)};font-weight:700;letter-spacing:{px(8)}}}
 .worden{{color:{p.sub};font-size:{px(26)};font-weight:600;letter-spacing:{px(9)};

@@ -1,0 +1,25 @@
+{
+  "client": "비컴성형외과",
+  "name_en": "BECOME PLASTIC SURGERY",
+  "domain": "becomeps.com",
+  "latin_font": "NataSans",
+  "hangul_font": "NotoSansKR",
+  "skeleton": "minimal",
+  "width": 1920,
+  "height": 1080,
+  "palette": {
+    "background": "#F4EFE8",
+    "accent": "#B39C82",
+    "title": "#3B332C",
+    "sub": "#6B5F54",
+    "pill_bg": "#E6DCCE",
+    "pill_fg": "#5C4D3E",
+    "brand": "#2B2B2B",
+    "muted": "#A39482",
+    "rule": "#DDD2C3",
+    "ornament": "#EBE3D8"
+  },
+  "note": "로고(검은 세리프 워드마크와 곡선 심벌)와 홈페이지 대표 이미지(og-image)의 따뜻한 그레이지 톤 인테리어를 근거로 정했습니다. 연한 웜 베이지 바탕에 로고를 왼쪽 위로 두고 짙은 갈색 제목을 얹는 여백형(minimal). accent 는 인테리어의 탑 컬러. 레퍼런스 이미지를 받은 것이 아니라 layout 은 기본값입니다. 2026-10-20 자동 확정.",
+  "logo": "비컴성형외과.png",
+  "logo_mime": "image/png"
+}

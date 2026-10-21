@@ -179,3 +179,10 @@ def test_the_real_clearseoul_file_has_three_rotating_looks():
     assert [v.name for v in d.variants] == ["블루", "라이트", "네이비"]
     assert d.pick(3).note == "블루"
     assert not d.logo  # 로고 없이 글자로 브랜드를 세우는 디자인입니다
+
+
+def test_layout_by_type_changes_only_that_type():
+    d = Design(client="X", palette=PALETTE, layout={"main_size": 170}, layout_by_type={"롱폼": {"main_size": 126}})
+    assert d.pick(0, "롱폼").layout["main_size"] == 126
+    assert d.pick(0, "숏폼").layout["main_size"] == 170
+    assert d.pick(0).layout["main_size"] == 170

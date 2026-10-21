@@ -71,6 +71,9 @@ class Design:
     #: 한 고객사가 여러 모양을 **돌아가며** 쓸 때. 비어 있으면 위 값 하나만 씁니다.
     #: 클리어서울안과처럼 대표가 쓰던 자동화가 세 가지 색을 번갈아 내던 곳이 있습니다.
     variants: list[Variant] = field(default_factory=list)
+    #: 콘텐츠 유형별로 치수만 달리 쓸 때. {"롱폼": {"main_size": 126, ...}} 처럼 `layout` 위에 덮어씁니다.
+    #: 팀이 롱폼을 숏폼과 다른 크기로 만든 경우(클리어톤의원)에 씁니다. 색·서체는 그대로입니다.
+    layout_by_type: dict[str, dict[str, float]] = field(default_factory=dict)
     note: str = ""
 
     def brand(self) -> Brand:
@@ -86,17 +89,20 @@ class Design:
     def fonts(self) -> Fonts:
         return Fonts.bundled(latin=self.latin_font, hangul=self.hangul_font)
 
-    def pick(self, ordinal: int) -> Design:
+    def pick(self, ordinal: int, kind: str = "") -> Design:
         """`ordinal` 번째 글에 쓸 모양. 변형이 없으면 자기 자신입니다.
 
         순번은 그 고객사 플래너에서 같은 유형의 행을 만든 순서입니다. 회차마다
         몇 건이 돌든 전체 순서가 같으니, 한 회차에 한 건만 돌아도 다음 회차가
         이어서 다음 모양을 냅니다 — 그래야 '돌아가며' 가 됩니다.
         """
+        base = self
+        if kind in self.layout_by_type:
+            base = replace(self, layout={**self.layout, **self.layout_by_type[kind]})
         if not self.variants:
-            return self
+            return base
         v = self.variants[ordinal % len(self.variants)]
-        return replace(self, palette=v.palette, layout={**self.layout, **v.layout},
+        return replace(base, palette=v.palette, layout={**base.layout, **v.layout},
                        shapes=v.shapes or self.shapes, variants=[], note=v.name)
 
 
@@ -172,6 +178,8 @@ def load(client: str, directory: Path | None = None) -> Design | None:
         layout={k: float(v) for k, v in (raw.get("layout") or {}).items()},
         shapes=list(raw.get("shapes") or []),
         variants=variants,
+        layout_by_type={t: {k: float(x) for k, x in (blk or {}).items()}
+                        for t, blk in (raw.get("layout_by_type") or {}).items()},
         note=raw.get("note", ""),
     )
 
@@ -203,6 +211,8 @@ def save(design: Design, directory: Path | None = None, *, overwrite: bool = Fal
 
     if design.layout:
         body["layout"] = dict(design.layout)
+    if design.layout_by_type:
+        body["layout_by_type"] = {t: dict(b) for t, b in design.layout_by_type.items()}
     if design.shapes:
         body["shapes"] = list(design.shapes)
     if design.variants:
