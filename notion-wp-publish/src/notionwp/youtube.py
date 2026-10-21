@@ -46,6 +46,42 @@ class Video:
         return f"https://www.youtube.com/watch?v={self.video_id}"
 
 
+OEMBED_URL = "https://www.youtube.com/oembed"
+_VIDEO_ID = re.compile(r"(?:v=|youtu\.be/|/embed/|/shorts/)([A-Za-z0-9_-]{11})")
+
+
+def video_id_of(url: str) -> str:
+    """유튜브 주소에서 영상 ID 11자를 꺼냅니다. 못 찾으면 빈 문자열."""
+    found = _VIDEO_ID.search(url or "")
+    return found.group(1) if found else ""
+
+
+def embeddable(url: str, *, session: requests.Session | None = None) -> bool | None:
+    """이 영상을 워드프레스가 임베드할 수 있는지 유튜브 oEmbed 로 미리 물어봅니다.
+
+    공개 영상이어도 채널이 '퍼가기 허용'을 꺼 둔 것이 있습니다(지혜로운 필라테스
+    '클래식과 모던필라테스 3가지 차이점'). 그런 영상을 embed 블록으로 넣으면
+    워드프레스가 oEmbed 에 실패해 **빈 16:9 상자와 맨 URL** 만 남깁니다. 발행 전에
+    같은 요청을 우리가 먼저 보내 보면 압니다 — 200 이면 되고, 401·403·404 면 안 됩니다.
+
+    True / False / None(몰라서 판단 보류 — 네트워크 문제 등). None 이면 막지 않습니다.
+    """
+    if not video_id_of(url):
+        return False
+    sess = session or requests
+    try:
+        resp = sess.get(OEMBED_URL, params={"url": url, "format": "json"}, timeout=TIMEOUT)
+    except Exception as exc:  # 네트워크 사정으로 못 물어본 것은 영상 탓이 아닙니다.
+        log.warning("유튜브 oEmbed 확인에 실패해 그대로 진행합니다: %s", exc)
+        return None
+    if resp.status_code == 200:
+        return True
+    if resp.status_code in (401, 403, 404):
+        return False
+    log.warning("유튜브 oEmbed 가 %s 를 돌려줘 판단을 보류합니다", resp.status_code)
+    return None
+
+
 def api_key(env: dict[str, str] | None = None) -> str:
     src: Any = env if env is not None else os.environ
     return (src.get("YOUTUBE_API_KEY") or "").strip()
@@ -130,7 +166,44 @@ def _from_api(
         if not page:
             break
 
-    return videos[:limit]
+    return _drop_unembeddable(videos[:limit], key, session)
+
+
+def _drop_unembeddable(
+    videos: list[Video], key: str, session: requests.Session | None
+) -> list[Video]:
+    """퍼가기를 막아 둔 영상과 공개가 아닌 영상을 후보에서 뺍니다.
+
+    Data API 의 videos.list(status) 가 `embeddable` 과 `privacyStatus` 를 돌려줍니다.
+    50개씩 한 번에 물어볼 수 있어 비용이 거의 없습니다. 이 확인이 실패하면 목록을
+    그대로 두고, 발행 직전의 oEmbed 확인(embeddable)이 한 번 더 거릅니다.
+    """
+    if not videos:
+        return videos
+    status: dict[str, tuple[bool, str]] = {}
+    try:
+        for i in range(0, len(videos), 50):
+            batch = videos[i : i + 50]
+            data = _get(session, f"{API_ROOT}/videos", {
+                "part": "status", "id": ",".join(v.video_id for v in batch), "key": key,
+            })
+            for item in data.get("items") or []:
+                st = item.get("status") or {}
+                status[item.get("id", "")] = (
+                    bool(st.get("embeddable", True)), str(st.get("privacyStatus", "public")),
+                )
+    except Exception as exc:
+        log.warning("영상 임베드 가능 여부 확인에 실패해 전부 후보로 둡니다: %s", exc)
+        return videos
+
+    kept: list[Video] = []
+    for v in videos:
+        can, privacy = status.get(v.video_id, (True, "public"))
+        if can and privacy == "public":
+            kept.append(v)
+        else:
+            log.info("임베드 불가 영상을 후보에서 뺍니다: %s (%s, embeddable=%s)", v.title[:40], privacy, can)
+    return kept
 
 
 def _from_rss(channel_id: str, session: requests.Session | None) -> list[Video]:

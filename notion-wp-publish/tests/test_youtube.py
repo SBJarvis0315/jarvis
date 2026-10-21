@@ -170,8 +170,9 @@ def publish_with(plan_video: VideoChoice | None, tmp_path: Path):
 
 
 def test_chosen_video_lands_in_the_body(tmp_path):
+    # 실제 영상 ID 는 11자입니다. 짧은 가짜 ID 는 '없는 영상' 으로 보고 링크로 바뀝니다.
     content = publish_with(
-        VideoChoice(url="https://www.youtube.com/watch?v=abc", anchor=2, note="직접 설명합니다"),
+        VideoChoice(url="https://www.youtube.com/watch?v=kN0iB58w_6I", anchor=2, note="직접 설명합니다"),
         tmp_path,
     )
     assert "wp:embed" in content
@@ -222,3 +223,113 @@ def test_old_videos_are_kept_as_candidates():
         ]
     )
     assert [v.title for v in list_videos("UC" + "x" * 22, key="k", session=session)] == ["2년 전 기미 영상"]
+
+
+# ------------------------------------------------- 퍼가기가 막힌 영상 (임베드 불가)
+
+from notionwp.gutenberg import youtube_link  # noqa: E402
+from notionwp.youtube import embeddable, video_id_of  # noqa: E402
+import notionwp.publish as publish_mod  # noqa: E402
+
+
+def status_payload(**flags):
+    """videos.list(status) 응답. flags = {videoId: (embeddable, privacy)}"""
+    return {"items": [{"id": vid, "status": {"embeddable": emb, "privacyStatus": priv}}
+                      for vid, (emb, priv) in flags.items()]}
+
+
+def test_videos_that_forbid_embedding_are_not_candidates():
+    """지혜로운 필라테스 '클래식과 모던필라테스 3가지 차이점' — 공개지만 퍼가기가 꺼져 있었습니다.
+
+    embed 블록으로 넣으면 빈 16:9 상자와 맨 URL 만 남습니다. 후보에서 뺍니다.
+    """
+    session = FakeSession([CHANNELS, playlist("임베드 되는 영상", "퍼가기 막힌 영상", "비공개로 바뀐 영상"),
+                           status_payload(vid0=(True, "public"), vid1=(False, "public"), vid2=(True, "private"))])
+    videos = list_videos("UC" + "x" * 22, key="k", session=session)
+    assert [v.title for v in videos] == ["임베드 되는 영상"]
+    assert any("googleapis.com/youtube/v3/videos" in u for u in session.urls)
+
+
+def test_a_failed_status_check_keeps_the_list_instead_of_emptying_it():
+    class StatusFails(FakeSession):
+        def get(self, url, params=None, timeout=None):
+            if url.endswith("/videos"):
+                raise requests.ConnectionError("status 죽음")
+            return super().get(url, params, timeout)
+
+    session = StatusFails([CHANNELS, playlist("A", "B")])
+    assert [v.title for v in list_videos("UC" + "x" * 22, key="k", session=session)] == ["A", "B"]
+
+
+class OEmbedSession:
+    def __init__(self, code):
+        self.code = code
+
+    def get(self, url, params=None, timeout=None):
+        r = FakeResponse({})
+        r.status_code = self.code
+        return r
+
+
+def test_oembed_tells_embeddable_from_forbidden():
+    url = "https://www.youtube.com/watch?v=rEekgNZIwpw"
+    assert embeddable(url, session=OEmbedSession(200)) is True
+    assert embeddable(url, session=OEmbedSession(401)) is False   # 퍼가기 꺼짐
+    assert embeddable(url, session=OEmbedSession(404)) is False   # 없는 영상(옮겨 적다 틀린 주소)
+    assert embeddable(url, session=OEmbedSession(500)) is None    # 모르면 막지 않습니다
+    assert embeddable("https://example.com/not-a-video") is False
+
+
+def test_video_id_is_read_from_any_youtube_url_shape():
+    assert video_id_of("https://www.youtube.com/watch?v=rEekgNZIwpw") == "rEekgNZIwpw"
+    assert video_id_of("https://youtu.be/rEekgNZIwpw") == "rEekgNZIwpw"
+    assert video_id_of("https://www.youtube.com/shorts/rEekgNZIwpw") == "rEekgNZIwpw"
+    assert video_id_of("") == ""
+
+
+def test_link_block_replaces_the_embed_when_embedding_is_forbidden():
+    html = youtube_link("https://www.youtube.com/watch?v=abc", note="영상으로 정리했습니다")
+    assert "wp:embed" not in html and "wp:paragraph" in html
+    assert "영상으로 정리했습니다" in html and "유튜브에서 영상 보기" in html
+    assert 'href="https://www.youtube.com/watch?v=abc"' in html
+
+
+def test_publish_falls_back_to_a_link_and_warns_when_embedding_is_forbidden(tmp_path, monkeypatch):
+    monkeypatch.setattr(publish_mod, "embeddable", lambda url: False)
+    plan = PagePlan(page_id="e2868fa2-06ff-8387-a4ce-018c082c51d5", title="제목", slug="melasma-laser-sessions",
+                    images=[], thumbnail_alt="썸네일 설명")
+    plan.video = VideoChoice(url="https://www.youtube.com/watch?v=rEekgNZIwpw", anchor=2, note="영상으로 정리했습니다")
+    plan.save(tmp_path / plan.page_id.replace("-", ""))
+    wp = FakeWordPress()
+    outcomes = Publisher(CONFIG, notion=FakeNotion([complete_page()], sample_page()), wp=wp, plan_root=tmp_path).run()
+    content = next(iter(wp.posts.values()))["content"]
+
+    assert "wp:embed" not in content
+    assert "유튜브에서 영상 보기" in content and "영상으로 정리했습니다" in content
+    assert any("임베드를 허용하지 않아" in w for o in outcomes for w in o.warnings)
+
+
+def test_publish_embeds_normally_when_youtube_allows_it(tmp_path, monkeypatch):
+    monkeypatch.setattr(publish_mod, "embeddable", lambda url: True)
+    plan = PagePlan(page_id="e2868fa2-06ff-8387-a4ce-018c082c51d5", title="제목", slug="melasma-laser-sessions",
+                    images=[], thumbnail_alt="썸네일 설명")
+    plan.video = VideoChoice(url="https://www.youtube.com/watch?v=kN0iB58w_6I", anchor=2, note="설명")
+    plan.save(tmp_path / plan.page_id.replace("-", ""))
+    wp = FakeWordPress()
+    outcomes = Publisher(CONFIG, notion=FakeNotion([complete_page()], sample_page()), wp=wp, plan_root=tmp_path).run()
+    assert "wp:embed" in next(iter(wp.posts.values()))["content"]
+    assert not any("임베드" in w for o in outcomes for w in o.warnings)
+
+
+def test_a_chosen_url_outside_the_candidate_list_is_flagged_as_a_possible_typo(tmp_path, monkeypatch):
+    """I 와 l 처럼 헷갈리는 글자를 옮겨 적다 틀리면 후보에 없는 주소가 됩니다."""
+    from notionwp.plan import VideoCandidate
+    monkeypatch.setattr(publish_mod, "embeddable", lambda url: None)
+    plan = PagePlan(page_id="e2868fa2-06ff-8387-a4ce-018c082c51d5", title="제목", slug="melasma-laser-sessions",
+                    images=[], thumbnail_alt="썸네일 설명")
+    plan.video_candidates = [VideoCandidate(title="진짜", url="https://www.youtube.com/watch?v=rEekgNZIwpw")]
+    plan.video = VideoChoice(url="https://www.youtube.com/watch?v=rEekgNZlwpw", anchor=2)  # l 로 잘못 적음
+    plan.save(tmp_path / plan.page_id.replace("-", ""))
+    wp = FakeWordPress()
+    outcomes = Publisher(CONFIG, notion=FakeNotion([complete_page()], sample_page()), wp=wp, plan_root=tmp_path).run()
+    assert any("후보 목록에 없습니다" in w for o in outcomes for w in o.warnings)

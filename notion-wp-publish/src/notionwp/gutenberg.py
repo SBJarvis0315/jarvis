@@ -33,9 +33,10 @@ class RenderOptions:
     center_tables: bool = True
 
 
-def video_block(*, url: str, note: str = "") -> Block:
-    """유튜브 영상을 본문에 끼워 넣기 위한 가상 블록."""
-    return {"object": "block", "type": WP_VIDEO, WP_VIDEO: {"url": url, "note": note}}
+def video_block(*, url: str, note: str = "", link_only: bool = False) -> Block:
+    """유튜브 영상을 본문에 끼워 넣기 위한 가상 블록. `link_only` 면 임베드 대신 링크."""
+    return {"object": "block", "type": WP_VIDEO,
+            WP_VIDEO: {"url": url, "note": note, "link_only": link_only}}
 
 
 def image_block(*, url: str, media_id: int, alt: str, caption: str = "") -> Block:
@@ -148,6 +149,8 @@ def _render_block(block: Block, opts: RenderOptions) -> str:
         return render(children, opts) if children else ""
 
     if btype == WP_VIDEO:
+        if payload.get("link_only"):
+            return youtube_link(payload.get("url", ""), payload.get("note", ""))
         return youtube_embed(payload.get("url", ""), payload.get("note", ""))
 
     if btype == "image":
@@ -214,6 +217,19 @@ def youtube_embed(url: str, note: str = "") -> str:
         f"{safe}\n"
         f"</div></figure>\n"
         f"<!-- /wp:embed -->"
+    )
+
+
+def youtube_link(url: str, note: str = "") -> str:
+    """임베드할 수 없는 영상을 대신 보여 주는 링크 문단.
+
+    퍼가기가 막힌 영상을 embed 블록으로 넣으면 빈 상자만 남습니다. 그보다는
+    안내 문구와 링크 한 줄이 낫습니다. 자리와 안내 문구는 임베드와 같게 둡니다.
+    """
+    safe = html.escape(url, quote=True)
+    lead = f"<strong>{html.escape(note, quote=False)}</strong><br>" if note.strip() else ""
+    return _paragraph(
+        f'{lead}<a href="{safe}" target="_blank" rel="noopener">▶ 유튜브에서 영상 보기</a>'
     )
 
 

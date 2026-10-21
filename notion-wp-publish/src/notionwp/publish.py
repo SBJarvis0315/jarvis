@@ -57,6 +57,7 @@ from .tail import load as load_tail
 from .schema import build_schemas, extract_faqs, has_faq_heading
 from .wordpress import WordPressClient, WordPressError, download
 from .youtube import api_key as youtube_key
+from .youtube import embeddable, video_id_of
 from .youtube import list_videos
 
 
@@ -682,10 +683,25 @@ class Publisher:
             # 억지로 붙이는 것보다 없는 편이 낫습니다.
             video = page_plan.video if page_plan else None
             if video and video.url.strip():
+                url = video.url.strip()
                 at = video.anchor if video.anchor >= 0 else len(body) // 2
                 at = max(0, min(at + len(uploaded), len(body)))
-                body.insert(at, video_block(url=video.url.strip(), note=video.note))
-                log.info("영상을 본문에 넣었습니다: %s", video.url.strip())
+
+                # 고른 주소가 후보 목록에 없으면 옮겨 적다 틀렸을 가능성이 큽니다
+                # (I/l 처럼 헷갈리는 글자). 막지는 않되 눈에 띄게 남깁니다.
+                known = {video_id_of(c.url) for c in page_plan.video_candidates}
+                if known and video_id_of(url) not in known:
+                    out.warnings.append(f"고른 영상이 후보 목록에 없습니다 — 주소를 옮겨 적다 틀렸는지 확인하세요: {url}")
+
+                # 퍼가기가 막힌 영상은 embed 로 넣으면 빈 상자만 남습니다. 먼저 물어보고,
+                # 안 되면 같은 자리에 링크로 넣습니다.
+                link_only = embeddable(url) is False
+                body.insert(at, video_block(url=url, note=video.note, link_only=link_only))
+                if link_only:
+                    out.warnings.append(f"영상이 임베드를 허용하지 않아 링크로 넣었습니다 (채널에서 '퍼가기 허용'을 켜면 임베드됩니다): {url}")
+                    log.warning("임베드 불가 영상 → 링크로 대체: %s", url)
+                else:
+                    log.info("영상을 본문에 넣었습니다: %s", url)
 
             # 글 끝 '참고 자료'·'관련 글' 줄에 링크를 겁니다. 원고는 글자로만 쓰고,
             # 지금까지는 사람이 발행 뒤 손으로 걸어 빠지거나 엇나갔습니다. 규칙 파일이
