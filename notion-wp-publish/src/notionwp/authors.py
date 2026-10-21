@@ -1,10 +1,18 @@
-"""글 작성자 지정 (고객사별).
+"""글 작성자 정하기.
 
 발행 스크립트는 워드프레스에 **우리 작업 계정(Growth)** 으로 로그인합니다. 고객사
-계정은 공유받지 못하는 경우가 대부분이라 그렇습니다. 그대로 두면 모든 글의 작성자가
-작업 계정으로 찍히는데, 저자명은 GEO·AEO 에서 중요한 신호이므로 그러면 안 됩니다.
+계정은 공유받지 못하는 경우가 대부분이라 그렇습니다. 그대로 두면 글의 작성자가
+Growth 로 찍히는데, 저자명은 GEO·AEO 에서 중요한 신호라 그러면 안 됩니다.
 
-그래서 고객사마다 **누구 이름으로 올릴지**를 저장소에 적어 둡니다.
+그래서 **표시 이름에 `growth` 가 들어간 사용자는 절대 저자로 쓰지 않습니다.**
+사람이 미리 정해 줄 필요는 없습니다. 아래 순서로 스크립트가 알아서 고릅니다.
+
+    1. authors/<고객사>.json 의 author 가 있으면 그 사용자 (직접 정하고 싶을 때만)
+    2. 로그인 계정의 표시 이름이 Growth 가 아니면 그 계정
+       (고객사 이름이나 대표원장 이름으로 만들어 둔 계정이 이 경우입니다)
+    3. 아니면 그 사이트에서 Growth 가 아닌 사용자 중 ID 가 가장 작은 사용자
+       (보통 사이트를 처음 만든 계정)
+    4. 그런 사용자가 하나도 없으면 발행하지 않습니다 — 사이트에 저자용 사용자를 만들어야 합니다
 
     authors/
       지혜로운 필라테스.json     {"client": "지혜로운 필라테스", "author": "이지혜"}
@@ -12,10 +20,9 @@
 `author` 는 그 사이트 워드프레스 사용자의 표시 이름·사용자명(slug)·숫자 ID 중
 무엇이든 됩니다. 설정표에 칸을 늘리지 않으려고 `tails/`·`designs/` 처럼 저장소에 둡니다.
 
-**지정이 없으면 그 고객사는 발행하지 않습니다.** 작업 계정 이름으로 조용히 올라가는
-것이 가장 나쁜 결과이기 때문입니다. 지정된 사용자의 이름이나 사용자명(slug)에 `growth` 가
-들어 있어도 거부합니다. 고객사 사이트에 따라 로그인 계정의 표시 이름이 고객사 이름이어도
-사용자명은 `growth…` 이고, 그 사용자명이 저자 주소(/author/…)로 노출되기 때문입니다. 막히면 그 사이트의 사용자 목록을 메시지에 함께 보여 줍니다.
+주의: 저자 주소(/author/<사용자명>/)에는 표시 이름이 아니라 사용자명이 노출됩니다.
+로그인 계정의 사용자명이 `growth…` 이면 표시 이름이 괜찮아도 주소에는 그대로 보이므로,
+그런 사이트는 파일로 사용자명이 깨끗한 사용자를 직접 지정하는 편이 낫습니다.
 """
 
 from __future__ import annotations
@@ -71,45 +78,51 @@ def load(client: str, directory: Path | None = None) -> Author | None:
 
 
 def is_work_account(user: dict[str, Any]) -> bool:
-    text = f"{user.get('name', '')} {user.get('slug', '')}".lower()
+    """표시 이름에 작업 계정 표시가 들어 있는가. 저자명으로 보이는 것은 표시 이름입니다."""
+    text = str(user.get("name", "")).lower()
     return any(m in text for m in WORK_ACCOUNT_MARKERS)
 
 
 def resolve(wp: Any, spec: Author | None, client: str) -> int:
-    """지정된 작성자의 워드프레스 사용자 ID. 규칙을 어기면 AuthorError.
+    """글에 올릴 작성자의 워드프레스 사용자 ID. 쓸 수 있는 사용자가 없으면 AuthorError.
 
     발행을 시작하기 전에 한 번 부르세요. 글을 하나라도 만든 뒤에 알게 되면
-    이미 작업 계정 이름으로 올라간 글이 남습니다.
+    이미 Growth 이름으로 올라간 글이 남습니다.
     """
     me = wp.current_user()
+    users = wp.list_users()
+    usable = [u for u in users if not is_work_account(u)]
 
-    def candidates() -> str:
-        try:
-            names = [
-                f"{u.get('name')}(slug {u.get('slug')}, id {u.get('id')})"
-                for u in wp.list_users()
-                if not is_work_account(u)
-            ]
-        except Exception:  # noqa: BLE001 - 안내용이라 실패해도 본문 오류가 우선입니다.
-            names = []
-        return ", ".join(names) if names else "(조회하지 못했습니다)"
+    def listing() -> str:
+        return ", ".join(f"{u.get('name')}(slug {u.get('slug')}, id {u.get('id')})" for u in users) or "(없음)"
 
-    if spec is None:
+    if spec is not None:
+        user = wp.find_user(spec.author)
+        if user is None:
+            raise AuthorError(
+                f"작성자 '{spec.author}' 를 워드프레스에서 찾지 못했습니다 ('{client}'). "
+                f"이 사이트의 사용자: {listing()}"
+            )
+        if is_work_account(user):
+            raise AuthorError(
+                f"작성자 '{spec.author}' 는 작업 계정입니다 ('{client}'). "
+                f"저자명은 작업 계정이 아닌 사용자여야 합니다. 이 사이트의 사용자: {listing()}"
+            )
+        log.info("[%s] 작성자(지정): %s", client, user.get("name"))
+        return int(user["id"])
+
+    if not usable:
         raise AuthorError(
-            f"'{client}' 의 글 작성자가 지정되지 않아 발행하지 않습니다. "
-            f"authors/{safe_name(client)}.json 에 author 를 적어 주세요. "
-            f"작업 계정(로그인: {me.get('name')}) 외에 이 사이트에 있는 사용자: {candidates()}"
+            f"'{client}' 사이트에 Growth 가 아닌 사용자가 없어 발행하지 않습니다. "
+            f"저자로 쓸 사용자를 워드프레스에 만들어 주세요. 이 사이트의 사용자: {listing()}"
         )
 
-    user = wp.find_user(spec.author)
-    if user is None:
-        raise AuthorError(
-            f"작성자 '{spec.author}' 를 워드프레스에서 찾지 못했습니다 ('{client}'). "
-            f"쓸 수 있는 사용자: {candidates()}"
-        )
-    if is_work_account(user):
-        raise AuthorError(
-            f"작성자 '{spec.author}' 는 작업 계정입니다 ('{client}', 로그인: {me.get('name')}). "
-            f"저자명은 작업 계정이 아닌 사용자여야 합니다. 쓸 수 있는 사용자: {candidates()}"
-        )
+    mine = next((u for u in usable if u.get("id") == me.get("id")), None)
+    user = mine or min(usable, key=lambda u: int(u.get("id", 0)))
+    log.info(
+        "[%s] 작성자(자동): %s (%s)",
+        client,
+        user.get("name"),
+        "로그인 계정" if mine else "Growth 가 아닌 사용자 중 가장 오래된 계정",
+    )
     return int(user["id"])
