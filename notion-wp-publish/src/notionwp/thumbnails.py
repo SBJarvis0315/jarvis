@@ -150,7 +150,8 @@ def make_for_row(
     title = napi.read_text(props.get(name("title"))).strip()
     keywords = napi.read_text(props.get(name("keywords")))
 
-    chosen = design.pick(ordinal)
+    kind = napi.read_select(props.get(name("type")))
+    chosen = design.pick(ordinal, kind)
     main, sub = split_title(title, design.client)
     png = render(
         main,
