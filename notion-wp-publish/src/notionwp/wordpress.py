@@ -258,6 +258,30 @@ class WordPressClient:
 
         return Media(id=media_id, url=created.get("source_url", ""))
 
+    # ------------------------------------------------------------------ 사용자
+
+    def current_user(self) -> dict[str, Any]:
+        """지금 로그인한 계정(우리 작업 계정)."""
+        return self._request("GET", "/wp/v2/users/me", params={"context": "edit"})
+
+    def list_users(self) -> list[dict[str, Any]]:
+        users = self._request(
+            "GET", "/wp/v2/users", params={"context": "edit", "per_page": 100}
+        )
+        return users if isinstance(users, list) else []
+
+    def find_user(self, spec: str) -> dict[str, Any] | None:
+        """표시 이름 · 사용자명 · 숫자 ID 로 사용자를 찾습니다. 모호하면 에러입니다."""
+        want = str(spec).strip().lower()
+        hits = [
+            u
+            for u in self.list_users()
+            if want in (str(u.get("name", "")).lower(), str(u.get("slug", "")).lower(), str(u.get("id")))
+        ]
+        if len(hits) > 1:
+            raise WordPressError(f"작성자 '{spec}' 와 일치하는 사용자가 {len(hits)}명입니다. ID 로 지정해 주세요.")
+        return hits[0] if hits else None
+
     # ---------------------------------------------------------------------- 글
 
     def create_post(
@@ -269,6 +293,7 @@ class WordPressClient:
         status: str = "publish",
         categories: list[int] | None = None,
         featured_media: int | None = None,
+        author: int | None = None,
         target: Target = DEFAULT_TARGET,
     ) -> Post:
         payload: dict[str, Any] = {
@@ -282,6 +307,8 @@ class WordPressClient:
             payload[target.taxonomy_field] = categories
         if featured_media:
             payload["featured_media"] = featured_media
+        if author:
+            payload["author"] = author
 
         created = self._request("POST", target.posts_path, json=payload)
         return Post(

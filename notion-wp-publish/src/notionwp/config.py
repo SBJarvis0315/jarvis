@@ -92,6 +92,7 @@ class RegistryConfig:
             "types": "대상 유형",
             "wp_url": "워드프레스 주소",
             "youtube": "유튜브 채널",
+            "tier": "고객사 유형",
             # 워드프레스가 아닌 자체 홈페이지 게시판. 관리자 목록 화면 주소를 적습니다.
             "board_url": "게시판 주소",
         }
@@ -150,6 +151,8 @@ class Config:
     run_log: RunLogConfig = field(default_factory=RunLogConfig)
     registry: RegistryConfig = field(default_factory=RegistryConfig)
     board: BoardConfig = field(default_factory=BoardConfig)
+    #: 설정표의 '고객사 유형'(일반·저단가). 비어 있으면 일반으로 봅니다.
+    tier: str = ""
 
     @property
     def platform(self) -> str:

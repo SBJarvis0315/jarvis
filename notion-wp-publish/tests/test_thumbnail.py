@@ -253,3 +253,11 @@ def test_card_scales_with_the_requested_width():
     html = build_html("제목", "", Brand(name="x"), Fonts(), width=600, height=314,
                       palette=CARD_PALETTE, skeleton="card", layout={"pad_x": 60})
     assert "left:30.00px" in html  # 1200 기준 60px 이 절반 폭에서는 30px
+
+
+def test_journal_skeleton_keeps_text_inside_the_safe_band():
+    # 카드(4:3)와 상세 커버(2:1) 양쪽에서 안 잘리도록 위아래 여백이 150px 보다 커야 합니다.
+    html = build_html("기미", "부제", Brand(name=CLIENT, domain="x.kr"), Fonts(),
+                      badge="기미", skeleton="journal", width=1200, height=900)
+    assert "top:190.00px" in html and "bottom:190.00px" in html
+    assert "x.kr" in html and "기미" in html

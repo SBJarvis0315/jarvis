@@ -404,6 +404,7 @@ MINIMAL_LAYOUT = {
     "pad_top": 160,
     "pad_bottom": 120,
     "logo_shift": 0,  # 로고만 좌우로 미는 값. 레퍼런스가 로고를 글자보다 왼쪽에 둘 때 씁니다
+    "logo_upscale": 0,  # 1 이면 로고 원본이 logo_w 보다 작아도 그 폭까지 키웁니다. 기본은 원본보다 키우지 않습니다
     "logo_w": 600,
     "logo_h": 155,
     "main_size": MINIMAL_MAX_MAIN,
@@ -454,7 +455,7 @@ def _minimal_html(
 body{{font-family:'Latin','Hangul',sans-serif}}
 .frame{{width:{width}px;height:{height}px;background:{p.background};
   overflow:hidden;padding:{px(L["pad_top"])} {px(L["pad_x"])} {px(L["pad_bottom"])}}}
-.logo{{max-width:{px(L["logo_w"])};max-height:{px(L["logo_h"])};object-fit:contain;
+.logo{{{"width" if L["logo_upscale"] else "max-width"}:{px(L["logo_w"])};max-height:{px(L["logo_h"])};object-fit:contain;
   object-position:left top;display:block;margin-left:{px(L["logo_shift"])}}}
 .wordmark{{color:{p.title};font-size:{px(76)};font-weight:700;letter-spacing:{px(8)}}}
 .worden{{color:{p.sub};font-size:{px(26)};font-weight:600;letter-spacing:{px(9)};
@@ -623,11 +624,100 @@ body{{font-family:'Latin','Hangul',sans-serif}}
 </script>"""
 
 
+JOURNAL_WIDTH = 1200
+JOURNAL_HEIGHT = 900
+JOURNAL_MIN_MAIN = 48
+JOURNAL_MAX_MAIN = 76
+
+#: journal 골격 기본 치수(1200x900 기준). 디자인 파일의 `layout` 이 항목별로 덮어씁니다.
+JOURNAL_LAYOUT = {
+    "pad_x": 130,       # 좌우 여백
+    "pad_y": 190,       # 위아래 여백 — 150 보다 커야 2:1 커버에서 안 잘립니다
+    "logo_w": 300,
+    "main_size": JOURNAL_MAX_MAIN,
+    "sub_size": 32,
+}
+
+
+def _journal_html(
+    main: str,
+    sub: str,
+    brand: Brand,
+    fonts: Fonts,
+    badge: str,
+    width: int,
+    height: int,
+    palette: Palette | None,
+    layout: dict[str, float] | None = None,
+) -> str:
+    """밝은 바탕·로고 위·제목 가운데·도메인 아래. 1200x900(4:3) 기준.
+
+    사이트가 글 목록 카드는 4:3, 글 상세 커버는 2:1 로 잘라 보여 줍니다.
+    워드프레스도 카드용으로 가운데를 한 번 더 자릅니다. 그래서 글자는 전부
+    세로 중앙 2:1 띠(위아래 150px 안쪽)와 좌우 여백 안에만 둡니다.
+    """
+    p = palette or Palette.derive(brand.color)
+    lay = {**JOURNAL_LAYOUT, **(layout or {})}
+    u = width / JOURNAL_WIDTH
+
+    def px(v: float) -> str:
+        return f"{v * u:.2f}px"
+
+    if brand.has_logo:
+        src = f"data:{brand.logo_mime};base64,{base64.b64encode(brand.logo).decode()}"
+        mark = f'<img class="logo" src="{src}">'
+    else:
+        mark = f'<div class="wordmark">{_escape(brand.name)}</div>'
+
+    return f"""<!doctype html><meta charset="utf-8"><style>
+{fonts.faces()}
+*{{margin:0;padding:0;box-sizing:border-box}}
+body{{font-family:'Latin','Hangul',sans-serif}}
+.frame{{position:relative;width:{width}px;height:{height}px;background:{p.background};overflow:hidden}}
+.in{{position:absolute;left:{px(lay['pad_x'])};right:{px(lay['pad_x'])};
+  top:{px(lay['pad_y'])};bottom:{px(lay['pad_y'])};display:flex;flex-direction:column}}
+.logo{{width:{px(lay['logo_w'])};height:auto;display:block}}
+.wordmark{{color:{p.brand};font-size:{px(30)};font-weight:700}}
+.mid{{margin-top:auto;margin-bottom:auto}}
+.pill{{display:inline-block;background:{p.pill_bg};color:{p.pill_fg};font-size:{px(22)};
+  font-weight:700;padding:{px(9)} {px(22)};border-radius:999px;margin-bottom:{px(26)}}}
+.rule{{width:{px(64)};height:{px(5)};background:{p.accent};margin-bottom:{px(28)}}}
+.main{{color:{p.title};font-weight:700;font-size:{px(lay['main_size'])};line-height:1.2;
+  letter-spacing:-0.03em;word-break:keep-all}}
+.sub{{color:{p.sub};font-weight:600;font-size:{px(lay['sub_size'])};line-height:1.45;
+  margin-top:{px(22)};word-break:keep-all}}
+.foot{{border-top:1px solid {p.rule};padding-top:{px(18)};color:{p.muted};
+  font-size:{px(20)};font-weight:600;letter-spacing:.04em}}
+</style>
+<div class="frame"><div class="in">
+  {mark}
+  <div class="mid">
+    {f'<div class="pill">{_escape(badge)}</div>' if badge else '<div class="rule"></div>'}
+    <div class="main" id="m">{_escape(main)}</div>
+    {f'<div class="sub">{_escape(sub)}</div>' if sub else ''}
+  </div>
+  <div class="foot">{_escape(brand.domain)}</div>
+</div></div>
+<script>
+// 제목이 길어 상자를 넘으면 들어올 때까지 글자를 줄입니다.
+(function () {{
+  const box = document.querySelector('.in'), m = document.getElementById('m');
+  let size = {lay['main_size'] * u:.2f};
+  const floor = {JOURNAL_MIN_MAIN * u:.2f};
+  while (box.scrollHeight > box.clientHeight + 1 && size > floor) {{
+    size -= 2;
+    m.style.fontSize = size + 'px';
+  }}
+}})();
+</script>"""
+
+
 #: 쓸 수 있는 골격. 고객사 디자인 파일의 `skeleton` 값이 여기서 하나를 고릅니다.
 SKELETONS = {
     "band": _band_html,
     "minimal": _minimal_html,
     "card": _card_html,
+    "journal": _journal_html,
 }
 
 

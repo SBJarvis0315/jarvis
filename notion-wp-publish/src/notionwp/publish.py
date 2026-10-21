@@ -25,6 +25,7 @@ from typing import Any
 from urllib.parse import unquote, urlparse
 from zoneinfo import ZoneInfo
 
+from . import authors as authors_mod
 from . import notion_api as napi
 from .config import Config, Secrets, credential_key, wp_credentials
 from .extract import Extracted, extract
@@ -448,6 +449,10 @@ class Publisher:
         self.wp = wp
         self.runlog = RunLogger(cfg.run_log, cfg.client, self.notion)
         self.tail = load_tail(cfg.client)
+        # 글 작성자. 지정이 없거나 작업 계정이면 발행하지 않습니다(authors.py).
+        self.author = authors_mod.load(cfg.client)
+        self.author_id: int | None = None
+        self.author_warning = ""
         # 글 끝 '참고 자료'·'관련 글' 줄에 링크를 거는 규칙. 파일이 없으면 None.
         self.links = load_links(cfg.client)
         self._related_resolver = None
@@ -483,6 +488,11 @@ class Publisher:
             if not cand.ok:
                 outcomes.append(skipped_outcome(cand))
                 continue
+            if self.author_id is None:
+                # 글을 만들기 전에 한 번 정합니다. Growth 밖에 없어도 멈추지 않고,
+                # 이유를 경고로 남겨 각 글의 로그에 붙입니다.
+                choice = authors_mod.resolve(self.wp, self.author, self.cfg.client)
+                self.author_id, self.author_warning = choice.user_id, choice.warning
             outcomes.append(self._publish(cand))
 
         # --dry-run 은 아무것도 하지 않았고, --draft 는 공개하지도 노션을 건드리지도
@@ -588,6 +598,8 @@ class Publisher:
     def _publish(self, cand: Candidate) -> Outcome:
         nc = self.cfg.notion
         out = Outcome(page_id=cand.page_id, title=cand.title)
+        if self.author_warning:
+            out.warnings.append(self.author_warning)
 
         def prop(key: str) -> dict[str, Any] | None:
             return cand.props.get(nc.prop(key))
@@ -737,6 +749,7 @@ class Publisher:
                     status="draft",
                     categories=category_ids,
                     featured_media=thumb.id,
+                    author=self.author_id,
                     target=target,
                 )
                 post_id = post.id
@@ -757,6 +770,7 @@ class Publisher:
                         "slug": slug,
                         "categories": category_ids,
                         "featured_media": thumb.id,
+                        "author": self.author_id,
                     },
                     target=target,
                 )
