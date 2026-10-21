@@ -12,7 +12,8 @@ Growth 로 찍히는데, 저자명은 GEO·AEO 에서 중요한 신호라 그러
        (고객사 이름이나 대표원장 이름으로 만들어 둔 계정이 이 경우입니다)
     3. 아니면 그 사이트에서 Growth 가 아닌 사용자 중 ID 가 가장 작은 사용자
        (보통 사이트를 처음 만든 계정)
-    4. 그런 사용자가 하나도 없으면 발행하지 않습니다 — 사이트에 저자용 사용자를 만들어야 합니다
+    4. Growth 밖에 없으면 어쩔 수 없이 로그인 계정(Growth)으로 올립니다. 멈추지 않고,
+       대신 실행 로그에 경고를 남깁니다 — 사이트에 저자용 사용자를 만들면 다음 글부터 바뀝니다
 
     authors/
       지혜로운 필라테스.json     {"client": "지혜로운 필라테스", "author": "이지혜"}
@@ -45,6 +46,14 @@ WORK_ACCOUNT_MARKERS = ("growth",)
 
 class AuthorError(RuntimeError):
     pass
+
+
+@dataclass
+class Choice:
+    """고른 작성자와, 사람이 알아야 할 사정(경고)."""
+
+    user_id: int
+    warning: str = ""
 
 
 @dataclass
@@ -83,11 +92,11 @@ def is_work_account(user: dict[str, Any]) -> bool:
     return any(m in text for m in WORK_ACCOUNT_MARKERS)
 
 
-def resolve(wp: Any, spec: Author | None, client: str) -> int:
-    """글에 올릴 작성자의 워드프레스 사용자 ID. 쓸 수 있는 사용자가 없으면 AuthorError.
+def resolve(wp: Any, spec: Author | None, client: str) -> Choice:
+    """글에 올릴 작성자. Growth 가 아닌 사용자를 우선하고, 없으면 로그인 계정으로 올립니다.
 
-    발행을 시작하기 전에 한 번 부르세요. 글을 하나라도 만든 뒤에 알게 되면
-    이미 Growth 이름으로 올라간 글이 남습니다.
+    발행을 시작하기 전에 한 번 부르세요. 지정이 잘못됐거나 쓸 사용자가 없어도 발행은
+    멈추지 않습니다. 대신 `Choice.warning` 에 이유가 담기니 실행 로그에 남기세요.
     """
     me = wp.current_user()
     users = wp.list_users()
@@ -96,26 +105,32 @@ def resolve(wp: Any, spec: Author | None, client: str) -> int:
     def listing() -> str:
         return ", ".join(f"{u.get('name')}(slug {u.get('slug')}, id {u.get('id')})" for u in users) or "(없음)"
 
+    warning = ""
     if spec is not None:
         user = wp.find_user(spec.author)
         if user is None:
-            raise AuthorError(
-                f"작성자 '{spec.author}' 를 워드프레스에서 찾지 못했습니다 ('{client}'). "
-                f"이 사이트의 사용자: {listing()}"
+            warning = (
+                f"authors/ 에 적은 작성자 '{spec.author}' 를 워드프레스에서 찾지 못해 "
+                f"자동으로 골랐습니다. 이 사이트의 사용자: {listing()}"
             )
-        if is_work_account(user):
-            raise AuthorError(
-                f"작성자 '{spec.author}' 는 작업 계정입니다 ('{client}'). "
-                f"저자명은 작업 계정이 아닌 사용자여야 합니다. 이 사이트의 사용자: {listing()}"
+        elif is_work_account(user):
+            warning = (
+                f"authors/ 에 적은 작성자 '{spec.author}' 는 작업 계정이라 쓰지 않고 "
+                f"자동으로 골랐습니다. 이 사이트의 사용자: {listing()}"
             )
-        log.info("[%s] 작성자(지정): %s", client, user.get("name"))
-        return int(user["id"])
+        else:
+            log.info("[%s] 작성자(지정): %s", client, user.get("name"))
+            return Choice(int(user["id"]))
 
     if not usable:
-        raise AuthorError(
-            f"'{client}' 사이트에 Growth 가 아닌 사용자가 없어 발행하지 않습니다. "
-            f"저자로 쓸 사용자를 워드프레스에 만들어 주세요. 이 사이트의 사용자: {listing()}"
+        warning = (
+            warning
+            or f"'{client}' 사이트에 Growth 가 아닌 사용자가 없어 로그인 계정"
+            f"({me.get('name')})으로 올렸습니다. 저자명이 Growth 로 보입니다. "
+            "워드프레스에 대표원장·담당자 이름의 사용자를 만들면 다음 글부터 바뀝니다"
         )
+        log.warning("[%s] %s", client, warning)
+        return Choice(int(me["id"]), warning)
 
     mine = next((u for u in usable if u.get("id") == me.get("id")), None)
     user = mine or min(usable, key=lambda u: int(u.get("id", 0)))
@@ -125,4 +140,6 @@ def resolve(wp: Any, spec: Author | None, client: str) -> int:
         user.get("name"),
         "로그인 계정" if mine else "Growth 가 아닌 사용자 중 가장 오래된 계정",
     )
-    return int(user["id"])
+    if warning:
+        log.warning("[%s] %s", client, warning)
+    return Choice(int(user["id"]), warning)

@@ -36,12 +36,13 @@ def test_load_rejects_an_empty_author(tmp_path):
 def test_resolve_returns_the_user_id_by_name_slug_or_id():
     wp = FakeWordPress()
     for spec in ("테스트 저자", "author", "1"):
-        assert authors.resolve(wp, Author("c", spec), "c") == 1
+        choice = authors.resolve(wp, Author("c", spec), "c")
+        assert (choice.user_id, choice.warning) == (1, "")
 
 
 def test_resolve_picks_a_non_growth_user_automatically_without_a_file():
     # 로그인 계정이 Growth 라서 제외되고, 남은 사용자(id 1)가 저자가 된다.
-    assert authors.resolve(FakeWordPress(), None, "고객") == 1
+    assert authors.resolve(FakeWordPress(), None, "고객").user_id == 1
 
 
 def test_resolve_prefers_the_login_account_when_it_is_not_growth():
@@ -50,7 +51,7 @@ def test_resolve_prefers_the_login_account_when_it_is_not_growth():
         {"id": 2, "name": "클리어톤의원 대표원장", "slug": "cleartone"},
         {"id": 1, "name": "yuri", "slug": "yuri"},
     ]
-    assert authors.resolve(wp, None, "고객") == 2  # 로그인 계정(id 2) 우선
+    assert authors.resolve(wp, None, "고객").user_id == 2  # 로그인 계정(id 2) 우선
 
 
 def test_resolve_falls_back_to_the_lowest_id_when_login_is_growth():
@@ -60,24 +61,23 @@ def test_resolve_falls_back_to_the_lowest_id_when_login_is_growth():
         {"id": 3, "name": "yuri park", "slug": "yuri-park"},
         {"id": 1, "name": "이지혜", "slug": "yuri"},
     ]
-    assert authors.resolve(wp, None, "고객") == 1
+    assert authors.resolve(wp, None, "고객").user_id == 1
 
 
-def test_resolve_never_returns_a_growth_user_even_if_it_is_the_only_one():
+def test_resolve_uses_the_login_account_with_a_warning_when_only_growth_exists():
     wp = FakeWordPress()
     wp.USERS = [{"id": 2, "name": "Growth", "slug": "growth-team"}]
-    with pytest.raises(AuthorError) as err:
-        authors.resolve(wp, None, "고객")
-    assert "Growth 가 아닌 사용자가 없어" in str(err.value)
+    choice = authors.resolve(wp, None, "고객")
+    assert choice.user_id == 2  # 멈추지 않고 로그인 계정으로
+    assert "Growth 로 보입니다" in choice.warning
 
 
-def test_resolve_refuses_an_explicit_growth_author_and_an_unknown_one():
+def test_resolve_falls_back_with_a_warning_for_a_bad_explicit_author():
     wp = FakeWordPress()
-    for spec in ("Growth", "2"):
-        with pytest.raises(AuthorError):
-            authors.resolve(wp, Author("c", spec), "c")
-    with pytest.raises(AuthorError):
-        authors.resolve(wp, Author("c", "없는사람"), "c")
+    for spec in ("Growth", "2", "없는사람"):
+        choice = authors.resolve(wp, Author("c", spec), "c")
+        assert choice.user_id == 1  # 자동 선택(Growth 가 아닌 사용자)
+        assert "자동으로 골랐습니다" in choice.warning
 
 
 def test_publisher_sets_the_author_on_the_post():
@@ -101,7 +101,7 @@ def test_publisher_picks_an_author_automatically_without_a_file(monkeypatch):
     assert [p["author"] for p in wp.posts.values()] == [1]  # Growth(id 2)가 아니다
 
 
-def test_publisher_stops_before_creating_anything_when_only_growth_exists(monkeypatch):
+def test_publisher_does_not_stop_when_only_growth_exists(monkeypatch):
     from types import SimpleNamespace
 
     from notionwp import publish as publish_mod
@@ -114,6 +114,6 @@ def test_publisher_stops_before_creating_anything_when_only_growth_exists(monkey
     wp = FakeWordPress()
     wp.USERS = [{"id": 2, "name": "Growth", "slug": "growth-team"}]
     pub = Publisher(CONFIG, notion=FakeNotion([complete_page()], sample_page()), wp=wp)
-    with pytest.raises(AuthorError):
-        pub.run()
-    assert wp.posts == {} and wp.media == []
+    outcomes = pub.run()
+    assert [p["author"] for p in wp.posts.values()] == [2]
+    assert any("Growth 로 보입니다" in w for w in outcomes[0].warnings)  # 로그에 경고가 남는다
