@@ -221,9 +221,13 @@ class WordPressClient:
     # -------------------------------------------------------------------- 미디어
 
     def upload_media(self, filename: str, data: bytes, alt: str = "") -> Media:
-        from .images import web_ready
+        from .images import ImageFormatError, web_ready
 
-        data, filename = web_ready(data, filename)
+        try:
+            data, filename = web_ready(data, filename)
+        except ImageFormatError as exc:
+            # 깨진 그림(대체 텍스트만 보이는 빈 자리)을 올리느니 이 글의 발행을 멈춥니다.
+            raise WordPressError(f"이미지 형식 변환 실패 — {exc}") from exc
         mime = mimetypes.guess_type(filename)[0] or "application/octet-stream"
         started = datetime.now(timezone.utc) - timedelta(minutes=1)
 

@@ -33,47 +33,101 @@ UPLOAD_MAX_BYTES = 1_500_000
 UPLOAD_JPEG_QUALITY = 82
 
 
-def web_ready(data: bytes, filename: str) -> tuple[bytes, str]:
-    """업로드 전에 사진을 웹에 맞는 크기로 줄입니다.
+#: 브라우저가 그리지 못하는 형식. 크기와 상관없이 올리기 전에 JPEG/PNG 로 바꿉니다.
+#: 아이폰 사진(HEIC)이 노션에 그대로 올라오면 워드프레스는 받아 주지만 글에서는
+#: 대체 텍스트만 보입니다 (peakpilateskr.com 777번 글에서 실제로 일어났습니다).
+NON_WEB_SUFFIXES = frozenset({".heic", ".heif", ".hif", ".tif", ".tiff", ".bmp"})
 
-    노션에 올라오는 원본은 10MB를 넘기도 합니다. 그대로 올리면 워드프레스가 받아서
-    여러 크기로 재가공하는 사이에 응답 시간을 넘겨 업로드가 실패하고, 성공하더라도
+
+class ImageFormatError(RuntimeError):
+    """브라우저용 형식으로 바꾸지 못한 이미지. 깨진 그림을 올리느니 발행을 멈춥니다."""
+
+
+def _enable_heif() -> None:
+    try:
+        import pillow_heif  # type: ignore
+
+        pillow_heif.register_heif_opener()
+    except ImportError:
+        pass
+
+
+def is_web_format(filename: str) -> bool:
+    return posixpath.splitext(filename.lower())[1] not in NON_WEB_SUFFIXES
+
+
+def _reencode(data: bytes, filename: str, *, shrink: bool) -> tuple[bytes, str]:
+    from PIL import Image
+
+    _enable_heif()
+    with Image.open(io.BytesIO(data)) as im:
+        transparent = im.mode in ("RGBA", "LA") or (im.mode == "P" and "transparency" in im.info)
+        if shrink:
+            im.thumbnail((UPLOAD_MAX_EDGE, UPLOAD_MAX_EDGE))
+        buffer = io.BytesIO()
+        stem = re.sub(r"\.[^.]+$", "", filename)
+        if transparent:
+            # 투명도가 있는 그림은 JPEG로 바꾸면 배경이 검게 칠해집니다.
+            im.convert("RGBA").save(buffer, "PNG", optimize=True)
+            return buffer.getvalue(), stem + ".png"
+        im.convert("RGB").save(buffer, "JPEG", quality=UPLOAD_JPEG_QUALITY, optimize=True)
+        return buffer.getvalue(), stem + ".jpg"
+
+
+def to_web_format(data: bytes, filename: str) -> tuple[bytes, str]:
+    """HEIC·TIFF·BMP 처럼 브라우저가 못 그리는 파일을 JPEG/PNG 로 바꿉니다.
+
+    웹 형식이면 손대지 않고 그대로 돌려줍니다. 바꾸지 못하면 ImageFormatError 를
+    냅니다 — 이 경우만큼은 원본을 그대로 올리는 쪽이 더 나쁩니다. 올라가긴 하는데
+    독자에게는 빈 자리와 대체 텍스트만 보이기 때문입니다.
+    """
+    if is_web_format(filename):
+        return data, filename
+    try:
+        # 어차피 다시 인코딩하므로 크기도 같이 맞춥니다. HEIC 는 작게 압축돼 있어도
+        # 풀면 4000px 급이라, 그대로 올리면 워드프레스가 다시 줄이느라 시간을 씁니다.
+        out, new_name = _reencode(data, filename, shrink=True)
+    except ImportError as exc:
+        raise ImageFormatError(
+            f"{filename}: Pillow 가 없어 브라우저용 형식으로 바꾸지 못했습니다. "
+            "`pip install -r requirements.txt` 뒤 다시 실행하세요."
+        ) from exc
+    except Exception as exc:
+        hint = ""
+        if posixpath.splitext(filename.lower())[1] in (".heic", ".heif", ".hif"):
+            hint = " HEIC 를 읽으려면 `pip install pillow-heif` 가 필요합니다."
+        raise ImageFormatError(
+            f"{filename}: 브라우저용 형식으로 바꾸지 못했습니다 ({exc}).{hint}"
+        ) from exc
+    log.info("브라우저용 형식으로 바꿨습니다: %s → %s", filename, new_name)
+    return out, new_name
+
+
+def web_ready(data: bytes, filename: str) -> tuple[bytes, str]:
+    """업로드 전에 사진을 웹에 맞는 형식·크기로 만듭니다.
+
+    먼저 HEIC 같은 비웹 형식을 바꾸고(실패하면 ImageFormatError), 그다음 큰 파일을
+    줄입니다. 노션에 올라오는 원본은 10MB를 넘기도 합니다. 그대로 올리면 워드프레스가
+    받아서 여러 크기로 재가공하는 사이에 응답 시간을 넘겨 업로드가 실패하고, 성공하더라도
     방문자가 그 큰 파일을 그대로 내려받게 됩니다.
 
-    줄이지 못하는 상황(Pillow 없음·형식 미지원)에서는 원본을 그대로 돌려줍니다.
+    줄이기만 못하는 상황(Pillow 없음·형식 미지원)에서는 원본을 그대로 돌려줍니다.
     화질보다 발행이 되는 쪽이 중요합니다.
     """
+    data, filename = to_web_format(data, filename)
+
     if len(data) <= UPLOAD_MAX_BYTES:
         return data, filename
 
     try:
-        from PIL import Image
+        shrunk, new_name = _reencode(data, filename, shrink=True)
     except ImportError:
         log.warning("Pillow 가 없어 이미지를 줄이지 못했습니다. 원본을 그대로 올립니다: %s", filename)
         return data, filename
-
-    try:
-        with Image.open(io.BytesIO(data)) as im:
-            transparent = im.mode in ("RGBA", "LA") or (
-                im.mode == "P" and "transparency" in im.info
-            )
-            im.thumbnail((UPLOAD_MAX_EDGE, UPLOAD_MAX_EDGE))
-
-            buffer = io.BytesIO()
-            if transparent:
-                # 투명도가 있는 그림은 JPEG로 바꾸면 배경이 검게 칠해집니다.
-                im.convert("RGBA").save(buffer, "PNG", optimize=True)
-                new_name = re.sub(r"\.[^.]+$", "", filename) + ".png"
-            else:
-                im.convert("RGB").save(
-                    buffer, "JPEG", quality=UPLOAD_JPEG_QUALITY, optimize=True
-                )
-                new_name = re.sub(r"\.[^.]+$", "", filename) + ".jpg"
     except Exception as exc:
         log.warning("이미지를 줄이지 못해 원본을 올립니다 (%s): %s", filename, exc)
         return data, filename
 
-    shrunk = buffer.getvalue()
     if len(shrunk) >= len(data):
         return data, filename
 
@@ -84,6 +138,7 @@ def web_ready(data: bytes, filename: str) -> tuple[bytes, str]:
         len(shrunk) / 1_048_576,
     )
     return shrunk, new_name
+
 
 Block = dict[str, Any]
 

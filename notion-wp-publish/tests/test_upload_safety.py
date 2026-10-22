@@ -151,3 +151,62 @@ def test_failure_surfaces_when_nothing_landed():
         wp.upload_media("what-is-clinic-2.jpg", b"small")
 
     assert session.posts == 1
+
+
+# ------------------------------------------------------------------ 비웹 형식 (HEIC 등)
+
+
+def heic_bytes(w: int = 64, h: int = 48) -> bytes:
+    import pillow_heif
+
+    pillow_heif.register_heif_opener()
+    buf = io.BytesIO()
+    PIL.new("RGB", (w, h), (200, 90, 40)).save(buf, "HEIF")
+    return buf.getvalue()
+
+
+def test_heic_is_converted_to_jpeg_even_when_small():
+    # peakpilateskr.com 777번 글: 1.5MB 아래라 손대지 않았고, 그대로 올라가 빈 자리로 보였습니다.
+    original = heic_bytes()
+    assert len(original) < 1_500_000
+
+    data, name = web_ready(original, "gangnam-pilates-lesson-types-4.heic")
+
+    assert name == "gangnam-pilates-lesson-types-4.jpg"
+    with PIL.open(io.BytesIO(data)) as im:
+        assert im.format == "JPEG" and im.size == (64, 48)
+
+
+def test_big_heic_is_shrunk_while_converting():
+    # HEIC 는 작게 압축돼 있어도 풀면 4000px 급입니다. 바꾸는 김에 크기도 맞춥니다.
+    data, name = web_ready(heic_bytes(3200, 2400), "iphone.heic")
+    with PIL.open(io.BytesIO(data)) as im:
+        assert max(im.size) <= UPLOAD_MAX_EDGE
+
+
+def test_web_formats_pass_through_untouched():
+    from notionwp.images import to_web_format
+
+    original = photo(80, 80)
+    assert to_web_format(original, "logo.png") == (original, "logo.png")
+    assert to_web_format(original, "photo.JPG") == (original, "photo.JPG")
+
+
+def test_unreadable_heic_stops_the_upload_instead_of_posting_a_broken_image():
+    import pytest
+
+    from notionwp.images import ImageFormatError, to_web_format
+
+    with pytest.raises(ImageFormatError, match="pillow-heif"):
+        to_web_format(b"\x00" * 100, "iphone.heic")
+
+
+def test_upload_media_refuses_a_broken_image(monkeypatch):
+    import pytest
+
+    from notionwp import images
+    from notionwp.wordpress import WordPressClient, WordPressError
+
+    client = WordPressClient.__new__(WordPressClient)
+    with pytest.raises(WordPressError, match="이미지 형식 변환 실패"):
+        client.upload_media("iphone.heic", b"\x00" * 100, alt="x")

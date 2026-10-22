@@ -36,6 +36,7 @@ from .images import (
     plan_placements,
     spread_evenly,
     target_filename,
+    to_web_format,
 )
 from .notion_api import NotionClient
 from .plan import (
@@ -276,8 +277,12 @@ def prepare_page(
     )
 
     # 썸네일
-    thumb_path = Path("images") / f"thumbnail{_suffix(thumb_files[0].url, thumb_files[0].name)}"
-    (directory / thumb_path).write_bytes(download(thumb_files[0].url))
+    thumb_data, thumb_name = to_web_format(
+        download(thumb_files[0].url),
+        f"thumbnail{_suffix(thumb_files[0].url, thumb_files[0].name)}",
+    )
+    thumb_path = Path("images") / thumb_name
+    (directory / thumb_path).write_bytes(thumb_data)
     page_plan.thumbnail = str(thumb_path)
     thumb_marker = next((m for m in cand.extracted.markers if m.is_thumbnail), None)
     if thumb_marker:
@@ -288,8 +293,10 @@ def prepare_page(
 
     # 본문 이미지
     for n, file in enumerate(body_files, start=1):
-        original = Path("images") / f"{n}{_suffix(file.url, file.name)}"
-        (directory / original).write_bytes(download(file.url))
+        # HEIC 같은 비웹 형식은 여기서 JPEG 로 바꿔 둡니다. 미리보기도, 업로드도 그 파일을 씁니다.
+        data, name = to_web_format(download(file.url), f"{n}{_suffix(file.url, file.name)}")
+        original = Path("images") / name
+        (directory / original).write_bytes(data)
 
         preview = Path("images") / f"{n}-preview.jpg"
         has_preview = make_preview(directory / original, directory / preview)
