@@ -60,7 +60,9 @@ def test_lists_become_paragraph_lines():
     assert "<p>1. 하나</p>" in html and "<p>2. 둘</p>" in html
 
 
-def test_table_shape_matches_the_published_article():
+def test_table_gets_the_inline_borders_the_team_uses():
+    # 사이트 CSS 에는 표 테두리 규칙이 없어, 맨 <table> 은 선 없이 글자만 보입니다.
+    # 팀이 손으로 올린 롱폼(id=473)의 인라인 서식을 그대로 답니다.
     header = {"object": "block", "type": "table_row",
               "table_row": {"cells": [[rt("유형")], [rt("특성")]]}}
     row = {"object": "block", "type": "table_row",
@@ -72,13 +74,28 @@ def test_table_shape_matches_the_published_article():
         "_children": [header, row],
     }
     html = render_blocks([table])
-    assert html.startswith("<table>\n<thead>\n<tr>\n<th>유형</th>\n<th>특성</th>\n</tr>\n</thead>")
-    body = (
-        "<tbody>\n<tr>\n<td><strong>부종형</strong></td>\n<td>림프 순환 저하</td>\n</tr>\n"
-        "</tbody>\n</table>"
+    assert html.startswith(
+        '<table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;">\n'
+        "<thead>\n<tr>\n"
+        '<th style="border: 1px solid #ddd; padding: 8px; text-align: left; background-color: #f5f5f5;">유형</th>\n'
     )
-    assert body in html
-    assert "style=" not in html  # 표는 사이트 CSS 에 맡깁니다.
+    assert (
+        '<tbody>\n<tr>\n<td style="border: 1px solid #ddd; padding: 8px;"><strong>부종형</strong></td>\n'
+        '<td style="border: 1px solid #ddd; padding: 8px;">림프 순환 저하</td>\n</tr>\n</tbody>\n</table>'
+    ) in html
+
+
+def test_table_row_header_becomes_a_shaded_first_column():
+    rows = [
+        {"object": "block", "type": "table_row", "table_row": {"cells": [[rt("방식")], [rt("약물 주입")]]}},
+        {"object": "block", "type": "table_row", "table_row": {"cells": [[rt("대상")], [rt("피하지방")]]}},
+    ]
+    table = {"object": "block", "type": "table",
+             "table": {"has_column_header": False, "has_row_header": True}, "_children": rows}
+    html = render_blocks([table])
+    assert "<thead>" not in html
+    assert html.count("<th style=") == 2 and html.count("<td style=") == 2
+    assert '<th style="border: 1px solid #ddd; padding: 8px; text-align: left; background-color: #f5f5f5;">방식</th>' in html
 
 
 def test_uploaded_image_is_wrapped_like_the_team_did():

@@ -9,7 +9,7 @@
     <h1 style="font-size: 20px; margin-bottom: 14px;">…</h1>
     <p>…</p>
     <h2 style="font-size: 18px; margin-top: 28px; margin-bottom: 14px;">…</h2>
-    <table><thead>…</thead><tbody>…</tbody></table>
+    <table style="width: 100%; border-collapse: collapse; …"><thead>…</thead><tbody>…</tbody></table>
     <p><br></p><div><img src="/files/editor/….jpg" alt="…"></div>
 
 팀이 겪은 함정도 여기서 걸러냅니다.
@@ -17,6 +17,8 @@
   · 헤딩 간격은 <br> 이 아니라 인라인 margin 으로 줍니다. 텍스트 보기에서 엔터를
     치면 h 태그가 씹힙니다.
   · <ul>/<ol> 은 사이트 템플릿에서 서식이 깨져 <p> 로 풉니다.
+  · 표는 사이트 CSS 에 테두리 규칙이 없어 맨 <table> 로 넣으면 선 없이 글자만
+    보입니다. 팀이 손으로 올린 롱폼처럼 칸마다 인라인 테두리·여백을 답니다.
   · 이모지는 BMP(세 바이트) 범위만 살아남습니다. 📚·👉 처럼 네 바이트인 문자는
     게시판 DB가 담지 못해 '?' 로 바뀌거나 통째로 사라집니다. 여기서 걸러 냅니다.
 """
@@ -35,6 +37,11 @@ Block = dict[str, Any]
 H1_STYLE = "font-size: 20px; margin-bottom: 14px;"
 H2_STYLE = "font-size: 18px; margin-top: 28px; margin-bottom: 14px;"
 H3_STYLE = "font-size: 16px; margin-top: 22px; margin-bottom: 10px;"
+
+#: 팀이 손으로 올린 롱폼(boardseo_read.php?id=473 등)의 표 서식 그대로입니다.
+TABLE_STYLE = "width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px;"
+TH_STYLE = "border: 1px solid #ddd; padding: 8px; text-align: left; background-color: #f5f5f5;"
+TD_STYLE = "border: 1px solid #ddd; padding: 8px;"
 
 BULLET = "•"
 
@@ -229,16 +236,18 @@ def _render_table(block: Block) -> str:
     rows = [c for c in (block.get("_children") or []) if c.get("type") == "table_row"]
     if not rows:
         return ""
+    row_header = bool(payload.get("has_row_header"))
 
     def cells(row: Block, tag: str) -> str:
-        parts = [
-            f"<{tag}>{to_html(cell)}</{tag}>"
-            for cell in (row.get("table_row") or {}).get("cells") or []
-        ]
+        parts = []
+        for idx, cell in enumerate((row.get("table_row") or {}).get("cells") or []):
+            t = "th" if tag == "th" or (row_header and idx == 0) else "td"
+            style = TH_STYLE if t == "th" else TD_STYLE
+            parts.append(f'<{t} style="{style}">{to_html(cell)}</{t}>')
         return "<tr>\n" + "\n".join(parts) + "\n</tr>"
 
     body_rows = rows
-    out = ["<table>"]
+    out = [f'<table style="{TABLE_STYLE}">']
     if payload.get("has_column_header"):
         out.append("<thead>\n" + cells(rows[0], "th") + "\n</thead>")
         body_rows = rows[1:]
