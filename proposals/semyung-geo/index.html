@@ -7,941 +7,899 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="description" content="리드젠랩이 세명종합병원에 드리는 경산·청도·영천 권역 GEO·AEO·SEO 운영 제안서">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <!--
-  ┌─ 발송 전 내부 확인 (고객 화면에는 보이지 않습니다) ─────────────────────────┐
-  │ 1. "작업 전후 노출률" 5개 사례 수치는 원본 PPT의 제안용 가안입니다.            │
-  │    실제 운영 데이터로 바꾼 뒤 발송하세요. (섹션 id="cases", JS의 CASES 배열)   │
-  │ 2. 히어로 시뮬레이션의 2·3순위 병원 순서는 SoV 예비 스캔 명단을 바탕으로       │
-  │    재구성한 예시입니다. 실제 답변 캡처와 맞춰 주세요. (JS의 SIM 배열)          │
-  │ 3. 제안일·진단 기준일은 2026.08.05 로 통일돼 있습니다. 발송일에 맞춰 바꾸세요.   │
-  │ 4. 가격·발행량·KPI 범위는 원본 PPT 값을 그대로 옮겼습니다.                    │
-  └──────────────────────────────────────────────────────────────────────┘
+  발송 전 내부 확인 (고객 화면에는 보이지 않습니다)
+  1. "작업 전후 노출률" 5개 사례 수치는 원본 PPT의 제안용 가안입니다. 실제 운영 데이터로 바꾼 뒤 발송하세요. (스크립트의 CASES 배열)
+  2. 도입부 AI 답변 시뮬레이션의 2, 3순위 병원 순서는 예비 스캔 명단을 바탕으로 재구성한 예시입니다. 실제 캡처와 맞춰 주세요. (스크립트의 SIM 배열)
+  3. 제안일과 진단 기준일은 2026.08.05 로 통일돼 있습니다. 발송일에 맞춰 바꾸세요.
+  4. 가격, 발행량, KPI 범위는 원본 PPT 값을 그대로 옮겼습니다.
 -->
 <style>
-/* 레이아웃: 한 줄 스크롤. 어두운 띠(도입·마무리) 사이에 밝은 본문. 진단→실행→목표→플랜 순서로 내려간다. */
-@font-face{
-  font-family:'Pretendard Variable';
-  src:url('assets/fonts/PretendardVariable.woff2') format('woff2-variations'), url('assets/fonts/PretendardVariable.woff2') format('woff2');
-  font-weight:45 920; font-style:normal; font-display:swap;
-}
+/* 레이아웃: 괘선 그리드 위에 세리프 디스플레이. 밝은 종이색 본문, 검은 띠(사례·로드맵·마무리)로 리듬. 로드맵은 데스크톱에서 가로 핀 스크롤. */
+@font-face{font-family:'Hahmlet';src:url('assets/fonts/HahmletVariable.woff2') format('woff2-variations'),url('assets/fonts/HahmletVariable.woff2') format('woff2');font-weight:100 900;font-display:swap}
+@font-face{font-family:'Wanted Sans';src:url('assets/fonts/WantedSansVariable.woff2') format('woff2-variations'),url('assets/fonts/WantedSansVariable.woff2') format('woff2');font-weight:400 1000;font-display:swap}
 :root{
-  --ink:#1A2227; --ink-2:#3B4850; --mute:#6F7C85; --faint:#A6B0B8;
-  --paper:#FFFFFF; --paper-2:#F4F6F8; --paper-3:#E9EDF1; --line:#DDE3E8;
-  --cobalt:#1140D3; --cobalt-deep:#0C2F9E; --cobalt-soft:#E6EBFB; --cobalt-tint:#F4F6FD;
-  --navy:#0A1120; --navy-2:#111A31; --navy-3:#182243; --navy-line:rgba(255,255,255,.10);
-  --on-navy:#F2F5F9; --on-navy-2:#C3CCDA; --on-navy-mute:#8C98AD;
-  --alert:#CF4238; --alert-soft:#FBE9E7; --amber:#B9700F; --amber-soft:#FBF1DE; --ok:#1C8F60; --ok-soft:#E2F4EA;
-  --font:'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', system-ui, -apple-system, sans-serif;
-  --mono:'IBM Plex Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
-  --wrap:1120px; --r:14px; --r-s:8px;
-  --ease:cubic-bezier(.22,1,.36,1);
+  --bg:#F2F2EE; --bg-2:#E9EAE4; --ink:#0F1012; --ink-2:#44474C; --mute:#7C8086; --faint:#B4B7BC;
+  --line:rgba(15,16,18,.14); --line-2:rgba(15,16,18,.08);
+  --accent:#1140D3; --accent-ink:#0B2C96; --accent-soft:rgba(17,64,211,.08);
+  --black:#0F1012; --black-2:#17181B; --on-black:#F2F2EE; --on-black-2:#B4B7BC; --on-black-mute:#7C8086; --line-d:rgba(242,242,238,.14);
+  --alert:#C73B2F; --amber:#B07410; --ok:#1B8A5A;
+  --serif:'Hahmlet','Noto Serif KR','Apple SD Gothic Neo',serif;
+  --sans:'Wanted Sans','Apple SD Gothic Neo','Malgun Gothic',system-ui,sans-serif;
+  --mono:'JetBrains Mono','SFMono-Regular',Menlo,Consolas,monospace;
+  --wrap:1280px; --gut:clamp(16px,4vw,56px);
+  --ease:cubic-bezier(.16,1,.3,1);
   color-scheme:light;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.6;font-feature-settings:'ss05','tnum';letter-spacing:-.005em;overflow-x:hidden;word-break:keep-all}
+html{-webkit-text-size-adjust:100%}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-stopped{overflow:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.65;letter-spacing:-.005em;word-break:keep-all;overflow-x:hidden;font-feature-settings:'tnum'}
 img{max-width:100%;display:block}
-a{color:inherit}
-h1,h2,h3,h4{margin:0;line-height:1.25;letter-spacing:-.02em;text-wrap:balance}
+a{color:inherit;text-decoration:none}
+h1,h2,h3,h4{margin:0;font-weight:500;line-height:1.2;letter-spacing:-.02em;text-wrap:balance}
 p{margin:0}
 ul,ol{margin:0;padding:0;list-style:none}
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
-:focus-visible{outline:2px solid var(--cobalt);outline-offset:3px;border-radius:4px}
-.wrap{max-width:var(--wrap);margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-@media(min-width:760px){.wrap{padding-left:max(32px,env(safe-area-inset-left,0px));padding-right:max(32px,env(safe-area-inset-right,0px))}}
-.mono{font-family:var(--mono);letter-spacing:.02em}
-.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--cobalt);display:flex;align-items:center;gap:10px}
-.eyebrow::before{content:"";width:18px;height:1px;background:currentColor}
-.dark .eyebrow{color:#7D9BFF}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.wrap{max-width:var(--wrap);margin:0 auto;padding-left:max(var(--gut),env(safe-area-inset-left,0px));padding-right:max(var(--gut),env(safe-area-inset-right,0px))}
+.serif{font-family:var(--serif)}
+.mono{font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;font-size:11.5px}
 .num{font-variant-numeric:tabular-nums}
-.b{font-weight:700}
-.hl{color:var(--cobalt)}
-.bad{color:var(--alert)}
-.good{color:var(--ok)}
+.ac{color:var(--accent)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+::selection{background:var(--accent);color:#fff}
 
-/* 상단 내비 */
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--navy)}
-.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:rgba(255,255,255,.86);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid var(--line);transition:background .3s,border-color .3s}
-.nav.on-dark{background:rgba(10,17,32,.78);border-color:var(--navy-line);color:var(--on-navy)}
-.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:58px;gap:16px}
-.nav-logo{height:17px;width:auto}
-.nav .logo-d{display:block}.nav .logo-w{display:none}
-.nav.on-dark .logo-d{display:none}.nav.on-dark .logo-w{display:block}
-.nav-links{display:none;gap:4px}
-@media(min-width:900px){.nav-links{display:flex}}
-.nav-links a{font-size:13.5px;color:var(--mute);text-decoration:none;padding:7px 11px;border-radius:999px;transition:color .2s,background .2s}
-.nav.on-dark .nav-links a{color:var(--on-navy-mute)}
-.nav-links a:hover{color:var(--ink)}
-.nav.on-dark .nav-links a:hover{color:var(--on-navy)}
-.nav-links a.active{color:var(--cobalt);background:var(--cobalt-soft)}
-.nav.on-dark .nav-links a.active{color:#fff;background:rgba(255,255,255,.12)}
-.nav-meta{font-family:var(--mono);font-size:11.5px;color:var(--mute);letter-spacing:.04em;white-space:nowrap}
-.nav.on-dark .nav-meta{color:var(--on-navy-mute)}
-.progress{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:var(--cobalt)}
-.nav.on-dark .progress{background:#7D9BFF}
+/* 그레인 · 커서 */
+.grain{position:fixed;inset:-50%;width:200%;height:200%;pointer-events:none;z-index:60;opacity:.055;mix-blend-mode:multiply;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");animation:grain 1.2s steps(4) infinite}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-2%,1%)}50%{transform:translate(1%,-2%)}75%{transform:translate(-1%,-1%)}100%{transform:translate(2%,2%)}}
+.cursor{position:fixed;top:0;left:0;pointer-events:none;z-index:70;display:none;mix-blend-mode:difference}
+.cursor-dot{width:8px;height:8px;border-radius:50%;background:#fff;transform:translate(-50%,-50%)}
+.cursor-ring{position:fixed;top:0;left:0;width:36px;height:36px;border-radius:50%;border:1px solid #fff;transform:translate(-50%,-50%);transition:width .3s var(--ease),height .3s var(--ease),opacity .3s}
+@media(pointer:fine){.cursor{display:block}body.has-cursor,body.has-cursor a,body.has-cursor button{cursor:none}}
+body.cur-hover .cursor-ring{width:64px;height:64px;opacity:.7}
+
+/* 프리로더 */
+.pre{position:fixed;inset:0;z-index:90;background:var(--black);color:var(--on-black);display:flex;flex-direction:column;justify-content:flex-end;padding:clamp(20px,4vw,48px)}
+.pre .pre-n{font-family:var(--serif);font-weight:300;font-size:clamp(72px,16vw,200px);line-height:.9;letter-spacing:-.04em}
+.pre .pre-l{margin-top:16px;display:flex;justify-content:space-between;color:var(--on-black-2)}
+.pre.done{display:none}
+
+/* 상단 바 */
+.top{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:50;height:64px;display:flex;align-items:center;transition:background .4s,backdrop-filter .4s;padding-left:max(var(--gut),env(safe-area-inset-left,0px));padding-right:max(var(--gut),env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:51;background:var(--bg)}
+.top.scrolled{background:rgba(242,242,238,.72);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3)}
+.top.on-dark{color:var(--on-black)}
+.top.on-dark.scrolled{background:rgba(15,16,18,.6)}
+.top-in{width:100%;max-width:var(--wrap);margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.top-logo img{height:16px;width:auto}
+.top .logo-w{display:none}.top.on-dark .logo-d{display:none}.top.on-dark .logo-w{display:block}
+.top-mid{display:none;gap:28px;font-size:13.5px;color:var(--mute)}
+.top.on-dark .top-mid{color:var(--on-black-mute)}
+@media(min-width:1100px){.top-mid{display:flex}}
+.top-mid a{position:relative;padding:4px 0;transition:color .25s}
+.top-mid a::after{content:"";position:absolute;left:0;right:100%;bottom:0;height:1px;background:currentColor;transition:right .35s var(--ease)}
+.top-mid a:hover::after,.top-mid a.active::after{right:0}
+.top-mid a.active,.top-mid a:hover{color:var(--ink)}
+.top.on-dark .top-mid a.active,.top.on-dark .top-mid a:hover{color:var(--on-black)}
+.top-r{display:flex;align-items:center;gap:18px}
+.top-r .ct{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:var(--mute)}
+.top.on-dark .top-r .ct{color:var(--on-black-mute)}
+.menu-btn{display:inline-flex;align-items:center;gap:10px;font-size:13.5px;font-weight:500}
+.menu-btn i{width:28px;height:10px;position:relative;display:block}
+.menu-btn i::before,.menu-btn i::after{content:"";position:absolute;left:0;right:0;height:1.5px;background:currentColor;transition:transform .4s var(--ease),top .4s var(--ease)}
+.menu-btn i::before{top:0}.menu-btn i::after{top:8px}
+body.menu-open .menu-btn i::before{top:4px;transform:rotate(45deg)}
+body.menu-open .menu-btn i::after{top:4px;transform:rotate(-45deg)}
+.prog{position:absolute;left:0;bottom:0;height:1px;width:0;background:var(--accent)}
+.top.on-dark .prog{background:var(--on-black)}
+
+/* 전체 메뉴 */
+.menu{position:fixed;inset:0;z-index:45;background:var(--black);color:var(--on-black);clip-path:inset(0 0 100% 0);transition:clip-path .7s var(--ease);display:flex;align-items:center}
+body.menu-open .menu{clip-path:inset(0 0 0 0)}
+.menu ol{display:grid;gap:4px;counter-reset:m}
+.menu li a{display:flex;align-items:baseline;gap:22px;padding:8px 0;font-family:var(--serif);font-size:clamp(28px,5vw,56px);font-weight:400;letter-spacing:-.02em;line-height:1.1;opacity:0;transform:translateY(24px);transition:opacity .5s,transform .6s var(--ease)}
+body.menu-open .menu li a{opacity:1;transform:none}
+.menu li a::before{counter-increment:m;content:counter(m,decimal-leading-zero);font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--on-black-mute);min-width:28px}
+.menu li a:hover{color:var(--on-black-2)}
+.menu-foot{position:absolute;bottom:clamp(20px,4vw,40px);left:var(--gut);right:var(--gut);display:flex;justify-content:space-between;color:var(--on-black-mute);font-family:var(--mono);font-size:11.5px;letter-spacing:.08em}
 
 /* 섹션 공통 */
 section{position:relative}
-.sec{padding-block:clamp(72px,10vw,128px)}
-.sec-head{display:grid;gap:14px;max-width:760px;margin-bottom:clamp(36px,5vw,56px)}
-.sec-head h2{font-size:clamp(26px,3.4vw,40px);font-weight:750}
-.sec-head p{font-size:clamp(15px,1.3vw,17.5px);color:var(--ink-2);line-height:1.65}
-.sec-head .eyebrow{margin-bottom:4px}
-.dark{background:var(--navy);color:var(--on-navy)}
-.dark .sec-head p{color:var(--on-navy-2)}
-.tint{background:var(--paper-2)}
-.foot{font-size:12.5px;color:var(--mute);line-height:1.6;margin-top:22px}
-.dark .foot{color:var(--on-navy-mute)}
-.foot b{font-weight:600;color:var(--ink-2)}
+.sec{padding-block:clamp(72px,9vw,140px)}
+.rule{border-top:1px solid var(--line)}
+.dark{background:var(--black);color:var(--on-black)}
+.dark .rule,.dark .sh{border-color:var(--line-d)}
+.tint{background:var(--bg-2)}
+.sh{display:grid;gap:18px 40px;border-top:1px solid var(--line);padding-top:24px;margin-bottom:clamp(40px,6vw,80px)}
+@media(min-width:900px){.sh{grid-template-columns:minmax(180px,1fr) 3fr}}
+.sh .idx{font-family:var(--serif);font-weight:300;font-size:clamp(40px,5vw,64px);line-height:1;letter-spacing:-.03em;color:var(--ink)}
+.dark .sh .idx{color:var(--on-black)}
+.sh .lab{display:block;margin-top:10px;font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.sh h2{font-family:var(--serif);font-size:clamp(30px,4.2vw,58px);font-weight:500;line-height:1.14;letter-spacing:-.03em;max-width:20ch}
+.sh .lede{margin-top:20px;font-size:clamp(16px,1.3vw,19px);line-height:1.65;color:var(--ink-2);max-width:62ch}
+.dark .sh .lede{color:var(--on-black-2)}
+.note{font-size:12.5px;line-height:1.6;color:var(--mute);margin-top:28px;max-width:90ch}
+.dark .note{color:var(--on-black-mute)}
+.q{font-family:var(--mono);font-size:.85em;letter-spacing:0;border:1px solid var(--line);border-radius:3px;padding:1px 7px;white-space:nowrap;color:var(--ink-2)}
+.dark .q,.ink .q{border-color:var(--line-d);color:var(--on-black-2)}
+
+/* 버튼 */
+.btn{display:inline-flex;align-items:center;gap:12px;height:52px;padding:0 8px 0 24px;border-radius:999px;background:var(--ink);color:var(--on-black);font-size:15px;font-weight:500;transition:background .3s,color .3s;position:relative;overflow:hidden}
+.btn .ic{width:36px;height:36px;border-radius:50%;background:var(--on-black);color:var(--ink);display:grid;place-items:center;transition:transform .45s var(--ease)}
+.btn .ic svg{width:14px;height:14px}
+.btn:hover .ic{transform:rotate(45deg)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.ghost .ic{background:var(--ink);color:var(--on-black)}
+.dark .btn{background:var(--on-black);color:var(--ink)}
+.dark .btn .ic{background:var(--ink);color:var(--on-black)}
+.dark .btn.ghost{background:transparent;color:var(--on-black);border-color:var(--line-d)}
+.dark .btn.ghost .ic{background:var(--on-black);color:var(--ink)}
 
 /* 히어로 */
-.hero{background:radial-gradient(1100px 600px at 80% -10%,rgba(17,64,211,.45),transparent 60%),radial-gradient(700px 500px at 0% 100%,rgba(17,64,211,.18),transparent 60%),var(--navy);color:var(--on-navy);overflow:hidden}
-.hero .wrap{padding-block:clamp(56px,8vw,110px) clamp(56px,7vw,96px);display:grid;gap:48px;align-items:center}
-@media(min-width:960px){.hero .wrap{grid-template-columns:1.05fr .95fr;gap:56px}}
-.hero-to{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--on-navy-mute);display:flex;flex-wrap:wrap;gap:6px 14px;margin-bottom:28px}
-.hero h1{font-size:clamp(30px,4.3vw,54px);font-weight:800;line-height:1.18;letter-spacing:-.03em}
-.hero h1 .hl{color:#8DA8FF}
-.hero-sub{margin-top:22px;font-size:clamp(15.5px,1.35vw,18px);color:var(--on-navy-2);max-width:560px;line-height:1.7}
+.hero{padding-top:calc(64px + env(safe-area-inset-top,0px) + clamp(56px,8vw,120px));padding-bottom:clamp(56px,7vw,100px)}
+.hero-meta{display:flex;flex-wrap:wrap;gap:8px 28px;font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);padding-bottom:22px;border-bottom:1px solid var(--line)}
+.hero h1{font-family:var(--serif);font-size:clamp(42px,7.4vw,112px);font-weight:500;line-height:1.04;letter-spacing:-.04em;margin-top:clamp(28px,4vw,56px);max-width:14ch}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero-grid{display:grid;gap:40px;margin-top:clamp(40px,5vw,72px);align-items:start}
+@media(min-width:1000px){.hero-grid{grid-template-columns:5fr 6fr;gap:64px}}
+.hero .lede{font-size:clamp(16px,1.35vw,19px);line-height:1.7;color:var(--ink-2);max-width:52ch}
 .hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:13px 20px;border-radius:999px;font-weight:600;font-size:15px;text-decoration:none;transition:transform .25s var(--ease),background .2s,box-shadow .25s}
-.btn:hover{transform:translateY(-2px)}
-.btn-p{background:#fff;color:var(--navy)}
-.btn-p:hover{box-shadow:0 10px 30px rgba(255,255,255,.18)}
-.btn-g{border:1px solid rgba(255,255,255,.28);color:var(--on-navy)}
-.btn-g:hover{background:rgba(255,255,255,.08)}
-.btn svg{width:16px;height:16px}
-.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:44px;border-top:1px solid var(--navy-line);padding-top:24px;max-width:600px}
-.hero-stats div{padding-right:16px}
-.hero-stats .v{font-size:clamp(24px,2.6vw,34px);font-weight:750;letter-spacing:-.03em;line-height:1.1}
-.hero-stats .k{font-size:12.5px;color:var(--on-navy-mute);margin-top:6px;line-height:1.4}
+.hero-stats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:48px;border-top:1px solid var(--line)}
+.hero-stats>div{padding:20px 20px 0 0;border-right:1px solid var(--line)}
+.hero-stats>div:last-child{border-right:0}
+.hero-stats>div+div{padding-left:20px}
+.hero-stats .v{font-family:var(--serif);font-weight:400;font-size:clamp(30px,3.4vw,48px);line-height:1;letter-spacing:-.03em}
+.hero-stats .v small{font-family:var(--sans);font-size:.4em;color:var(--mute);letter-spacing:0;margin-left:4px}
+.hero-stats .k{font-size:12.5px;color:var(--mute);margin-top:10px;line-height:1.45}
 
-/* AI 검색 시뮬레이션 */
-.sim{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08);overflow:hidden;position:relative}
-.sim-top{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);font-family:var(--mono);font-size:12px;color:var(--on-navy-mute)}
-.sim-top .dots{display:flex;gap:6px}
-.sim-top .dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.14)}
-.sim-top .tag{margin-left:auto;font-size:11px;letter-spacing:.06em;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:3px 9px;white-space:nowrap;flex:none}
-.sim-top>span:not(.tag){min-width:0}
-.sim-q{display:flex;align-items:center;gap:12px;margin:18px 16px 0;padding:13px 16px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:12px;font-size:15.5px;min-height:50px}
-.sim-q svg{width:18px;height:18px;flex:none;color:var(--on-navy-mute)}
-.sim-typed{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.caret{width:2px;height:20px;background:#8DA8FF;flex:none;animation:blink 1s steps(2) infinite}
+/* AI 답변 시뮬레이션 */
+.sim{background:var(--black);color:var(--on-black);position:relative;overflow:hidden;border-radius:6px}
+.sim-top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line-d);font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--on-black-mute)}
+.sim-top span{min-width:0}
+.sim-top .live{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;flex:none}
+.sim-top .live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(17,64,211,.6);animation:pulse 1.8s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 8px rgba(17,64,211,0)}100%{box-shadow:0 0 0 0 rgba(17,64,211,0)}}
+.sim-q{padding:28px 20px 10px;font-family:var(--serif);font-size:clamp(20px,2vw,28px);font-weight:400;letter-spacing:-.02em;line-height:1.3;min-height:84px;display:flex;align-items:flex-end;gap:2px}
+.sim-q .pre-q{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--on-black-mute);display:block;margin-bottom:8px}
+.caret{display:inline-block;width:2px;height:1em;background:var(--on-black);margin-left:4px;vertical-align:-2px;animation:blink 1s steps(2) infinite}
 @keyframes blink{50%{opacity:0}}
-.sim-body{padding:18px 16px 16px;min-height:280px}
-.sim-label{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:var(--on-navy-mute);text-transform:uppercase;margin-bottom:12px}
-.sim-list li{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;background:rgba(255,255,255,.04);margin-bottom:8px;opacity:0;transform:translateY(8px)}
-.sim-list .rk{font-family:var(--mono);font-size:12px;color:var(--on-navy-mute);width:18px}
-.sim-list .nm{font-weight:600;font-size:15px}
-.sim-list .src{margin-left:auto;font-size:12px;color:var(--on-navy-mute);text-align:right}
-.sim-list li.bad{background:rgba(207,66,56,.14);border:1px solid rgba(207,66,56,.35)}
-.sim-list li.bad .src{color:#FFB3AC}
-.sim-list li.weak{background:rgba(185,112,15,.14);border:1px solid rgba(185,112,15,.4)}
-.sim-list li.weak .src{color:#FFD28A}
-.sim-verdict{margin-top:14px;padding:13px 14px;border-radius:10px;display:flex;align-items:center;gap:12px;opacity:0;transform:translateY(8px);background:rgba(207,66,56,.16);border:1px dashed rgba(207,66,56,.5)}
-.sim-verdict.weak{background:rgba(185,112,15,.14);border-color:rgba(185,112,15,.5)}
-.sim-verdict .nm{font-weight:700;font-size:15px}
-.sim-verdict .st{margin-left:auto;font-family:var(--mono);font-size:12px;color:#FFB3AC;letter-spacing:.04em}
-.sim-verdict.weak .st{color:#FFD28A}
-.sim-nav{display:flex;gap:8px;padding:0 16px 16px}
-.sim-nav button{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.14);position:relative;overflow:hidden}
-.sim-nav button i{position:absolute;inset:0;width:0;background:#8DA8FF}
+.sim-body{padding:10px 20px 20px;min-height:250px}
+.sim-list li{display:grid;grid-template-columns:28px 1fr auto;align-items:baseline;gap:12px;padding:13px 0;border-top:1px solid var(--line-d);opacity:0;transform:translateY(8px)}
+.sim-list .rk{font-family:var(--mono);font-size:11.5px;color:var(--on-black-mute)}
+.sim-list .nm{font-size:16px;font-weight:500}
+.sim-list .src{font-size:12px;color:var(--on-black-mute);text-align:right}
+.sim-list li.bad .nm{color:#FF8F84}
+.sim-list li.bad .src{color:#FF8F84}
+.sim-list li.weak .nm{color:#F0B64A}.sim-list li.weak .src{color:#F0B64A}
+.sim-verdict{margin-top:14px;padding:14px 16px;display:flex;align-items:center;gap:12px;border:1px dashed rgba(255,143,132,.6);color:#FF8F84;opacity:0;transform:translateY(8px);border-radius:4px}
+.sim-verdict.weak{border-color:rgba(240,182,74,.6);color:#F0B64A}
+.sim-verdict .nm{font-weight:600;font-size:15px}
+.sim-verdict .st{margin-left:auto;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase}
+.sim-nav{display:flex;gap:6px;padding:0 20px 20px}
+.sim-nav button{flex:1;height:2px;background:var(--line-d);position:relative;overflow:hidden}
+.sim-nav button i{position:absolute;inset:0;width:0;background:var(--on-black)}
 .sim-nav button.done i{width:100%}
-.sim-note{position:absolute;right:16px;bottom:22px;font-family:var(--mono);font-size:10.5px;color:var(--on-navy-mute);letter-spacing:.04em}
-@media(max-width:520px){.sim-note{display:none}.sim-list .src{display:none}}
+@media(max-width:520px){.sim-list .src{display:none}.sim-list li{grid-template-columns:28px 1fr}}
 
-/* 3줄 요약 */
-.sum{display:grid;gap:14px}
-.sum-row{display:grid;grid-template-columns:52px 1fr;gap:18px;padding:26px 26px 26px 20px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper);transition:transform .35s var(--ease),box-shadow .35s var(--ease),border-color .3s}
-.sum-row:hover{transform:translateY(-3px);box-shadow:0 18px 40px rgba(26,34,39,.08);border-color:transparent}
-.sum-row .n{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--mute);padding-top:6px}
-.sum-row .n b{display:block;font-size:22px;font-weight:600;color:var(--ink);letter-spacing:-.02em;line-height:1}
-.sum-row h3{font-size:clamp(17.5px,1.6vw,21px);font-weight:700;line-height:1.4}
-.sum-row p{margin-top:8px;color:var(--ink-2);font-size:15px;line-height:1.65}
-.sum-row.gain{background:var(--cobalt);color:#fff;border-color:var(--cobalt)}
-.sum-row.gain .n,.sum-row.gain .n b{color:#fff}
-.sum-row.gain p{color:rgba(255,255,255,.86)}
-.sum-row.gain:hover{box-shadow:0 20px 44px rgba(17,64,211,.3)}
-.q{font-family:var(--mono);font-size:.9em;background:var(--paper-2);border:1px solid var(--line);border-radius:6px;padding:1px 7px;white-space:nowrap}
-.gain .q{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.3)}
-@media(max-width:600px){.sum-row{grid-template-columns:1fr;gap:8px;padding:22px 20px}.sum-row .n b{display:inline;margin-right:8px}}
-
-/* 리드젠랩 */
-.marquee{overflow:hidden;position:relative;padding-block:10px;mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
-.marquee-track{display:flex;gap:14px;width:max-content;animation:mq 60s linear infinite}
-.marquee.rev .marquee-track{animation-direction:reverse;animation-duration:70s}
-.marquee:hover .marquee-track{animation-play-state:paused}
+/* 질의 티커 */
+.ticker{background:var(--black);color:var(--on-black);overflow:hidden;padding:18px 0;border-top:1px solid var(--line-d);border-bottom:1px solid var(--line-d)}
+.ticker-track{display:flex;gap:0;width:max-content;animation:mq 90s linear infinite;font-family:var(--serif);font-size:clamp(18px,2.2vw,30px);font-weight:300;letter-spacing:-.01em;white-space:nowrap}
+.ticker-track span{padding:0 28px;display:inline-flex;align-items:center;gap:28px}
+.ticker-track span::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.ticker:hover .ticker-track{animation-play-state:paused}
 @keyframes mq{to{transform:translateX(-50%)}}
-.logo-tile{height:64px;width:170px;flex:none;display:grid;place-items:center;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:0 20px}
-.logo-tile img{max-height:30px;max-width:124px;width:auto;height:auto;filter:grayscale(1) contrast(1.05);opacity:.78;transition:filter .3s,opacity .3s}
-.check code{overflow-wrap:anywhere}
+
+/* 3줄 요약 : 장부형 */
+.ledger{border-top:1px solid var(--line)}
+.lrow{display:grid;gap:12px 40px;padding:clamp(28px,3.5vw,44px) 0;border-bottom:1px solid var(--line);position:relative;isolation:isolate}
+@media(min-width:900px){.lrow{grid-template-columns:minmax(180px,1fr) 3fr}}
+.lrow::before{content:"";position:absolute;inset:0 calc(-1*var(--gut));background:var(--bg-2);transform:scaleY(0);transform-origin:top;transition:transform .5s var(--ease);z-index:-1}
+.lrow:hover::before{transform:scaleY(1)}
+.lrow .ln{display:flex;align-items:baseline;gap:16px}
+.lrow .ln b{font-family:var(--serif);font-weight:300;font-size:clamp(40px,5vw,72px);line-height:.9;letter-spacing:-.04em}
+.lrow .ln span{font-family:var(--mono);font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.lrow h3{font-family:var(--serif);font-size:clamp(20px,2.2vw,30px);font-weight:500;line-height:1.35;letter-spacing:-.02em;max-width:34ch}
+.lrow p{margin-top:14px;font-size:15.5px;line-height:1.7;color:var(--ink-2);max-width:66ch}
+.lrow.gain h3{color:var(--accent)}
+
+/* 고객사 */
+.mq-wrap{position:relative;border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+.mq-wrap+.mq-wrap{border-top:0}
+.mq-track{display:flex;width:max-content;animation:mq 70s linear infinite}
+.mq-wrap.rev .mq-track{animation-direction:reverse;animation-duration:80s}
+.mq-wrap:hover .mq-track{animation-play-state:paused}
+.logo-tile{height:96px;width:200px;flex:none;display:grid;place-items:center;border-right:1px solid var(--line);padding:0 28px}
+.logo-tile img{max-height:30px;max-width:130px;width:auto;height:auto;filter:grayscale(1);opacity:.7;transition:filter .35s,opacity .35s}
 .logo-tile:hover img{filter:none;opacity:1}
-.mq-label{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:var(--mute);text-transform:uppercase;margin:26px 0 6px}
-.mq-label:first-of-type{margin-top:0}
-.trust-grid{display:grid;gap:12px;margin-top:40px}
-@media(min-width:720px){.trust-grid{grid-template-columns:repeat(3,1fr)}}
-.trust{padding:22px 22px 20px;border-radius:var(--r);background:var(--paper);border:1px solid var(--line)}
-.trust .v{font-size:30px;font-weight:750;letter-spacing:-.03em;line-height:1.1}
-.trust .k{color:var(--ink-2);font-size:14px;margin-top:8px;line-height:1.5}
+.mq-lab{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin:0 0 12px}
+.mq-wrap+.mq-lab{margin-top:36px}
+.facts{display:grid;margin-top:56px;border-top:1px solid var(--line)}
+@media(min-width:760px){.facts{grid-template-columns:repeat(3,1fr)}}
+.fact{padding:28px 28px 28px 0;border-bottom:1px solid var(--line)}
+@media(min-width:760px){.fact{border-right:1px solid var(--line);padding-right:28px}.fact+.fact{padding-left:28px}.fact:last-child{border-right:0}}
+.fact .v{font-family:var(--serif);font-weight:400;font-size:clamp(34px,3.6vw,52px);line-height:1;letter-spacing:-.03em}
+.fact .k{margin-top:12px;font-size:14px;line-height:1.55;color:var(--ink-2)}
 
 /* 사례 */
-.cases{display:grid;gap:12px}
-@media(min-width:640px){.cases{grid-template-columns:repeat(2,1fr)}}
-@media(min-width:1000px){.cases{grid-template-columns:repeat(5,1fr)}}
-.case{background:var(--navy-2);border:1px solid var(--navy-line);border-radius:var(--r);padding:20px 18px 18px;display:grid;gap:14px;align-content:start;transition:transform .35s var(--ease),border-color .3s}
-.case:hover{transform:translateY(-4px);border-color:rgba(141,168,255,.5)}
-.case .nm{font-weight:700;font-size:15.5px;line-height:1.35}
-.case .nm small{display:block;font-weight:400;color:var(--on-navy-mute);font-size:12.5px;margin-top:3px}
-.case .ba{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:8px}
-.case .ba .lab{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--on-navy-mute)}
-.case .ba .val{font-size:26px;font-weight:750;letter-spacing:-.03em;line-height:1.05;margin-top:4px}
-.case .ba .after .val{color:#8DA8FF;font-size:32px}
-.case .ba .arrow{color:var(--on-navy-mute);padding-bottom:8px}
-.case .bars{display:grid;gap:5px}
-.case .bar{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}
-.case .bar i{display:block;height:100%;width:0;border-radius:3px;background:rgba(255,255,255,.35)}
-.case .bar.a i{background:#8DA8FF}
-.case .memo{font-size:12.5px;color:var(--on-navy-2);line-height:1.55;border-top:1px solid var(--navy-line);padding-top:12px}
+.cases{display:grid;border-top:1px solid var(--line-d)}
+@media(min-width:720px){.cases{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1100px){.cases{grid-template-columns:repeat(5,1fr)}}
+.case{padding:28px 24px 28px 0;border-bottom:1px solid var(--line-d);display:grid;gap:22px;align-content:start}
+@media(min-width:720px){.case{border-right:1px solid var(--line-d);padding-right:24px}.case+.case{padding-left:24px}}
+@media(min-width:720px) and (max-width:1099px){.case:nth-child(2n){border-right:0}}
+@media(min-width:1100px){.case:last-child{border-right:0}}
+.case .nm{font-size:16px;font-weight:600}
+.case .nm small{display:block;font-weight:400;font-size:12.5px;color:var(--on-black-mute);margin-top:4px;font-family:var(--mono);letter-spacing:.04em}
+.case .after{font-family:var(--serif);font-weight:300;font-size:clamp(56px,5.6vw,84px);line-height:.9;letter-spacing:-.045em}
+.case .after small{font-size:.38em;letter-spacing:-.02em;margin-left:2px}
+.case .before{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--on-black-mute);text-transform:uppercase;margin-top:12px}
+.case .before b{font-family:var(--serif);font-size:20px;font-weight:400;color:var(--on-black-2);letter-spacing:-.02em;margin-left:8px;text-decoration:line-through;text-decoration-color:rgba(255,255,255,.3);text-decoration-thickness:1px}
+.case .bar{height:2px;background:var(--line-d);position:relative;overflow:hidden}
+.case .bar i{position:absolute;inset:0 auto 0 0;width:0;background:var(--on-black)}
+.case .memo{font-size:13.5px;line-height:1.6;color:var(--on-black-2)}
 
 /* 왜 지금 */
-.why{display:grid;gap:12px}
-@media(min-width:800px){.why{grid-template-columns:repeat(3,1fr)}}
-.why-card{padding:28px 26px;border-radius:var(--r);background:var(--paper);border:1px solid var(--line);display:grid;gap:12px;align-content:start}
-.why-card .k{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:var(--mute);text-transform:uppercase}
-.why-card h3{font-size:19px;font-weight:700}
-.why-card p{color:var(--ink-2);font-size:14.5px;line-height:1.65}
-.why-card .fig{font-size:34px;font-weight:750;letter-spacing:-.03em;color:var(--cobalt);line-height:1}
-.why-card .fig small{font-size:14px;font-weight:500;color:var(--mute);letter-spacing:0;margin-left:6px}
-.lag{margin-top:14px;display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;padding:20px 24px;border-radius:var(--r);background:var(--cobalt-tint);border:1px solid var(--cobalt-soft)}
-.lag .v{font-size:28px;font-weight:750;letter-spacing:-.03em;color:var(--cobalt);white-space:nowrap}
-.lag p{color:var(--ink-2);font-size:15px;flex:1;min-width:240px}
+.why{display:grid;border-top:1px solid var(--line)}
+@media(min-width:900px){.why{grid-template-columns:repeat(3,1fr)}}
+.why>div{padding:32px 32px 36px 0;border-bottom:1px solid var(--line)}
+@media(min-width:900px){.why>div{border-right:1px solid var(--line)}.why>div+div{padding-left:32px}.why>div:last-child{border-right:0}}
+.why .k{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.why .fig{font-family:var(--serif);font-weight:400;font-size:clamp(44px,4.6vw,68px);line-height:1;letter-spacing:-.035em;margin-top:22px}
+.why .fig small{font-family:var(--sans);font-size:14px;letter-spacing:0;color:var(--mute);margin-left:8px}
+.why h3{font-size:19px;font-weight:600;margin-top:22px;letter-spacing:-.015em}
+.why p{margin-top:10px;font-size:15px;line-height:1.7;color:var(--ink-2)}
+.lag{display:grid;gap:12px 40px;align-items:center;padding:32px 0;border-bottom:1px solid var(--line)}
+@media(min-width:900px){.lag{grid-template-columns:minmax(180px,1fr) 3fr}}
+.lag .v{font-family:var(--serif);font-weight:400;font-size:clamp(40px,4.6vw,64px);letter-spacing:-.035em;line-height:1;color:var(--accent)}
+.lag p{font-size:clamp(16px,1.3vw,19px);color:var(--ink-2);line-height:1.6;max-width:56ch}
 
 /* 진단 */
-.diag-grid{display:grid;gap:24px}
-@media(min-width:960px){.diag-grid{grid-template-columns:1fr 1fr;gap:28px}}
-.diag-grid>*,.tech>*,.tech>div>*{min-width:0}
-.panel{border:1px solid var(--line);border-radius:var(--r);background:var(--paper);padding:28px;min-width:0}
-.panel h3{font-size:20px;font-weight:700}
-.panel .sub{color:var(--mute);font-size:14px;margin-top:6px}
-.chart{margin-top:24px;display:grid;gap:10px}
-.row{display:grid;grid-template-columns:136px 1fr 52px;align-items:center;gap:12px;font-size:14.5px}
-.row .lab{color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .trk{height:22px;background:var(--paper-2);border-radius:4px;overflow:hidden;position:relative}
-.row .trk i{position:absolute;inset:0 auto 0 0;width:0;background:#A4AFB9;border-radius:4px}
-.row .v{text-align:right;color:var(--ink-2);font-weight:600}
-.row.me .lab{color:var(--cobalt);font-weight:700}
-.row.me .trk i{background:var(--cobalt)}
-.row.me .v{color:var(--cobalt)}
-@media(max-width:480px){.row{grid-template-columns:104px 1fr 48px;font-size:13.5px}}
-.chart-note{margin-top:18px;padding:14px 16px;border-radius:10px;background:var(--alert-soft);color:#8E2B23;font-size:14px;line-height:1.55;font-weight:500}
+.dg{display:grid;gap:56px}
+@media(min-width:1000px){.dg{grid-template-columns:1fr 1fr;gap:72px}}
+.dg>*{min-width:0}
+.blk-t{font-size:19px;font-weight:600;letter-spacing:-.015em}
+.blk-s{font-size:13.5px;color:var(--mute);margin-top:6px}
+.sov{margin-top:22px;border-top:1px solid var(--line)}
+.sov .row{display:grid;grid-template-columns:150px 1fr 70px;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--line)}
+.sov .lab{font-size:14.5px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sov .trk{height:14px;position:relative}
+.sov .trk i{position:absolute;inset:0 auto 0 0;width:0;background:#8E939A}
+.sov .v{font-family:var(--serif);font-size:22px;text-align:right;letter-spacing:-.02em}
+.sov .row.me .lab{color:var(--accent);font-weight:600}
+.sov .row.me .trk i{background:var(--accent)}
+.sov .row.me .v{color:var(--accent)}
+@media(max-width:480px){.sov .row{grid-template-columns:110px 1fr 56px}.sov .lab{font-size:13px}}
+.sov-note{margin-top:20px;padding:16px 18px;background:rgba(199,59,47,.07);color:#8F2A21;font-size:14.5px;line-height:1.55;border-left:2px solid var(--alert)}
 
-.axes{display:grid;gap:12px}
-@media(min-width:720px){.axes{grid-template-columns:repeat(2,1fr)}}
-.axis{border:1px solid var(--line);border-radius:var(--r);background:var(--paper);padding:22px 22px 20px;display:grid;gap:12px;align-content:start;transition:transform .35s var(--ease),box-shadow .35s var(--ease)}
-.axis:hover{transform:translateY(-3px);box-shadow:0 18px 40px rgba(26,34,39,.08)}
-.axis .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.axis h4{font-size:17.5px;font-weight:700}
-.axis .own{font-size:13px;color:var(--mute);margin-top:3px}
-.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap;flex:none}
-.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
-.chip.no{background:var(--alert-soft);color:var(--alert)}
-.chip.weak{background:var(--amber-soft);color:var(--amber)}
-.chip.ok{background:var(--ok-soft);color:var(--ok)}
-.chip.p{background:var(--cobalt-soft);color:var(--cobalt)}
-.axis dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px;margin:0}
-.axis dt{color:var(--mute);white-space:nowrap}
-.axis dd{margin:0;color:var(--ink-2)}
-.axis .pri{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute);border-top:1px solid var(--line);padding-top:12px}
+.areas{display:grid;border-top:1px solid var(--line)}
+@media(min-width:640px){.areas{grid-template-columns:1fr 1fr}}
+.area{padding:24px 24px 22px 0;border-bottom:1px solid var(--line);display:grid;gap:14px;align-content:start}
+@media(min-width:640px){.area:nth-child(odd){border-right:1px solid var(--line)}.area:nth-child(even){padding-left:24px}}
+.area .area-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.area h4{font-size:17px;font-weight:600;letter-spacing:-.015em}
+.area .own{font-size:12.5px;color:var(--mute);margin-top:4px}
+.st{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;flex:none}
+.st::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.st.no{color:var(--alert)}.st.weak{color:var(--amber)}.st.p{color:var(--accent)}
+.area dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:14px}
+.area dt{color:var(--mute);white-space:nowrap}
+.area dd{margin:0;color:var(--ink-2)}
+.area .pri{display:flex;gap:10px;align-items:center;font-size:13px;color:var(--mute);border-top:1px solid var(--line-2);padding-top:12px}
 
-.tech{display:grid;gap:24px;margin-top:28px}
-@media(min-width:960px){.tech{grid-template-columns:1.1fr .9fr}}
-.checks{display:grid;gap:8px;margin-top:20px}
-.check{display:grid;grid-template-columns:26px 1fr;gap:12px;padding:13px 14px;border-radius:10px;background:var(--paper-2);font-size:14.5px;line-height:1.5}
-.check .x{width:22px;height:22px;border-radius:50%;background:var(--alert-soft);color:var(--alert);display:grid;place-items:center;font-size:12px;font-weight:700;margin-top:1px}
-.check code{font-family:var(--mono);font-size:12.5px;background:#fff;border:1px solid var(--line);border-radius:5px;padding:0 5px}
-.check small{display:block;color:var(--mute);font-size:13px;margin-top:2px}
-.callout{padding:22px 24px;border-radius:var(--r);background:var(--navy);color:var(--on-navy);display:grid;gap:8px;align-content:center}
-.callout b{font-size:19px;font-weight:700;letter-spacing:-.02em}
-.callout p{color:var(--on-navy-2);font-size:14.5px;line-height:1.6}
-
-.assets{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:24px}
-.assets th{text-align:left;font-family:var(--mono);font-weight:500;font-size:11.5px;letter-spacing:.06em;color:var(--mute);padding:0 12px 12px 0;border-bottom:1px solid var(--line);text-transform:uppercase}
+.tech{display:grid;gap:56px;margin-top:clamp(56px,7vw,96px)}
+@media(min-width:1000px){.tech{grid-template-columns:1.05fr .95fr;gap:72px}}
+.tech>*{min-width:0}
+.checks{margin-top:22px;border-top:1px solid var(--line)}
+.check{display:grid;grid-template-columns:22px 1fr;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);font-size:14.5px;line-height:1.55}
+.check .x{color:var(--alert);font-family:var(--mono);font-size:13px;padding-top:2px}
+.check code{font-family:var(--mono);font-size:12.5px;background:var(--bg-2);padding:0 5px;border-radius:3px;overflow-wrap:anywhere}
+.check small{display:block;color:var(--mute);font-size:13px;margin-top:3px}
+.callout{padding:28px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.callout b{display:block;font-family:var(--serif);font-size:clamp(22px,2.2vw,30px);font-weight:500;letter-spacing:-.025em;line-height:1.3}
+.callout p{margin-top:14px;font-size:15px;line-height:1.7;color:var(--ink-2)}
+.assets-wrap{margin-top:40px}
+.assets{width:100%;border-collapse:collapse;font-size:14.5px}
+.assets th{text-align:left;font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);padding:0 12px 12px 0;border-bottom:1px solid var(--line)}
 .assets td{padding:14px 12px 14px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
-.assets td:first-child{color:var(--ink);font-weight:600}
-.assets .when{font-family:var(--mono);font-size:12.5px;color:var(--mute);white-space:nowrap}
-.assets .st{display:flex;gap:8px;align-items:flex-start}
-.assets .st i{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-style:normal;font-weight:700;margin-top:1px}
-.assets .st.no i{background:var(--alert-soft);color:var(--alert)}
-.assets .st.half i{background:var(--amber-soft);color:var(--amber)}
-.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.tbl-wrap table{min-width:640px}
+.assets td:first-child{color:var(--ink);font-weight:500}
+.assets .when{font-family:var(--mono);font-size:12px;color:var(--mute);white-space:nowrap}
+.assets .no::before{content:"×";color:var(--alert);font-family:var(--mono);margin-right:10px}
+.assets .half::before{content:"△";color:var(--amber);font-family:var(--mono);margin-right:10px}
+.tbl{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl table{min-width:620px}
+.tbl table.assets{min-width:0}
 
-/* 실행 */
-.steps{display:grid;gap:14px}
-.step{display:grid;grid-template-columns:64px 1fr;gap:20px;padding:28px 28px 26px 22px;border-radius:var(--r);background:var(--paper);border:1px solid var(--line)}
-.step .idx{font-family:var(--mono);font-size:12px;color:var(--mute);letter-spacing:.06em}
-.step .idx b{display:block;font-size:28px;font-weight:600;color:var(--cobalt);letter-spacing:-.02em;line-height:1;margin-bottom:6px}
-.step h3{font-size:20px;font-weight:700;display:flex;flex-wrap:wrap;align-items:center;gap:10px}
-.step .when{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:var(--cobalt);background:var(--cobalt-soft);border-radius:999px;padding:3px 10px;font-weight:500}
-.step p{color:var(--ink-2);font-size:15px;margin-top:10px;line-height:1.65}
-.step .spec{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-.spec span{font-size:13px;padding:6px 11px;border-radius:8px;background:var(--paper-2);color:var(--ink-2);border:1px solid var(--line)}
-.spec span b{color:var(--ink);font-weight:650}
-@media(max-width:600px){.step{grid-template-columns:1fr;gap:10px;padding:22px 20px}}
-.volume{display:grid;gap:12px;margin-top:28px}
-@media(min-width:720px){.volume{grid-template-columns:repeat(4,1fr)}}
-.vol{padding:20px 20px 18px;border-radius:var(--r);background:var(--cobalt-tint);border:1px solid var(--cobalt-soft)}
-.vol .v{font-size:30px;font-weight:750;letter-spacing:-.03em;color:var(--cobalt);line-height:1}
-.vol .v small{font-size:14px;font-weight:600;margin-left:3px}
-.vol .k{font-size:13.5px;color:var(--ink-2);margin-top:8px;line-height:1.45}
+/* 실행 : 아코디언 */
+.acc{border-top:1px solid var(--line)}
+.acc-i{border-bottom:1px solid var(--line)}
+.acc-h{width:100%;display:grid;grid-template-columns:64px 1fr auto 40px;align-items:center;gap:16px;padding:26px 0;text-align:left;transition:color .3s}
+.acc-h .n{font-family:var(--serif);font-weight:300;font-size:30px;letter-spacing:-.03em;line-height:1}
+.acc-h .t{font-size:clamp(18px,1.9vw,24px);font-weight:500;letter-spacing:-.015em}
+.acc-h .w{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);white-space:nowrap}
+.acc-h .pm{width:40px;height:40px;border:1px solid var(--line);border-radius:50%;position:relative;transition:background .3s,border-color .3s}
+.acc-h .pm::before,.acc-h .pm::after{content:"";position:absolute;left:50%;top:50%;width:12px;height:1px;background:currentColor;transform:translate(-50%,-50%);transition:transform .4s var(--ease)}
+.acc-h .pm::after{transform:translate(-50%,-50%) rotate(90deg)}
+.acc-i.open .acc-h .pm{background:var(--ink);border-color:var(--ink);color:var(--on-black)}
+.acc-i.open .acc-h .pm::after{transform:translate(-50%,-50%) rotate(0)}
+.acc-h:hover{color:var(--accent)}
+.acc-b{display:grid;grid-template-rows:0fr;transition:grid-template-rows .55s var(--ease)}
+.acc-i.open .acc-b{grid-template-rows:1fr}
+.acc-b>div{overflow:hidden}
+.acc-in{padding:0 0 32px 80px;display:grid;gap:18px;max-width:900px}
+.acc-in p{font-size:15.5px;line-height:1.7;color:var(--ink-2)}
+.spec{display:flex;flex-wrap:wrap;gap:8px 10px}
+.spec span{font-size:13px;padding:7px 12px;border:1px solid var(--line);color:var(--ink-2);border-radius:3px}
+.spec span b{color:var(--ink);font-weight:600}
+@media(max-width:640px){.acc-h{grid-template-columns:44px 1fr 36px;gap:12px}.acc-h .w{display:none}.acc-h .n{font-size:24px}.acc-in{padding-left:0}}
+.vols{display:grid;margin-top:56px;border-top:1px solid var(--line)}
+@media(min-width:720px){.vols{grid-template-columns:repeat(4,1fr)}}
+.vol{padding:24px 24px 24px 0;border-bottom:1px solid var(--line)}
+@media(min-width:720px){.vol{border-right:1px solid var(--line)}.vol+.vol{padding-left:24px}.vol:last-child{border-right:0}}
+.vol .v{font-family:var(--serif);font-weight:400;font-size:clamp(36px,3.6vw,52px);line-height:1;letter-spacing:-.035em;color:var(--accent)}
+.vol .v small{font-size:.4em;letter-spacing:0;margin-left:2px}
+.vol .k{margin-top:10px;font-size:13.5px;line-height:1.5;color:var(--ink-2)}
 
 /* 질의 탭 */
-.tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
-.tab{padding:9px 16px;border-radius:999px;border:1px solid var(--line);font-size:14px;font-weight:600;color:var(--ink-2);background:var(--paper);transition:background .2s,color .2s,border-color .2s}
-.tab[aria-selected="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
-.qpanel{display:none;grid-template-columns:1fr;gap:16px}
-.qpanel.on{display:grid}
-@media(min-width:760px){.qpanel{grid-template-columns:1fr 1fr}}
-.qbox{padding:22px;border-radius:var(--r);border:1px solid var(--line);background:var(--paper)}
-.qbox .k{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:var(--mute);text-transform:uppercase;margin-bottom:12px}
-.qbox ul{display:flex;flex-wrap:wrap;gap:8px}
-.qbox li{font-size:13.5px;padding:7px 12px;border-radius:8px;background:var(--paper-2);border:1px solid var(--line);display:flex;align-items:center;gap:8px}
-.qbox li::before{content:"";width:12px;height:12px;border-radius:50%;border:1.5px solid var(--faint);flex:none}
-.qbox li.first::before{background:var(--cobalt);border-color:var(--cobalt)}
-.qlegend{display:flex;gap:16px;font-size:12.5px;color:var(--mute);margin-top:14px;align-items:center}
-.qlegend i{width:10px;height:10px;border-radius:50%;background:var(--cobalt);display:inline-block;margin-right:6px;vertical-align:-1px}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:14px 20px 14px 0;margin-right:24px;font-size:15px;color:var(--mute);white-space:nowrap;position:relative;transition:color .3s}
+.tab::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .4s var(--ease)}
+.tab[aria-selected="true"]{color:var(--ink);font-weight:600}
+.tab[aria-selected="true"]::after{transform:scaleX(1)}
+.qp{display:none;gap:40px;padding-top:32px}
+.qp.on{display:grid}
+@media(min-width:800px){.qp{grid-template-columns:1fr 1fr}}
+.qb .k{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);margin-bottom:14px}
+.qb li{display:flex;align-items:baseline;gap:14px;padding:12px 0;border-top:1px solid var(--line);font-family:var(--serif);font-size:clamp(17px,1.7vw,22px);letter-spacing:-.015em}
+.qb li:last-child{border-bottom:1px solid var(--line)}
+.qb li::before{content:"";width:8px;height:8px;border-radius:50%;border:1px solid var(--faint);flex:none;transform:translateY(-2px)}
+.qb li.first::before{background:var(--accent);border-color:var(--accent)}
+.qlegend{display:flex;gap:10px;align-items:center;font-size:12.5px;color:var(--mute);margin-top:22px}
+.qlegend i{width:8px;height:8px;border-radius:50%;background:var(--accent)}
 
 /* 콘텐츠 2트랙 */
-.tracks{display:grid;gap:12px}
-@media(min-width:800px){.tracks{grid-template-columns:repeat(3,1fr)}}
-.track{padding:26px 24px;border-radius:var(--r);border:1px solid var(--line);background:var(--paper);display:grid;gap:10px;align-content:start}
-.track .k{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:var(--cobalt);text-transform:uppercase}
-.track h4{font-size:18px;font-weight:700}
-.track p{color:var(--ink-2);font-size:14.5px;line-height:1.6}
-.track .price{font-size:13px;color:var(--mute);border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
-.track .price b{color:var(--ink);font-weight:650}
-.bench{margin-top:28px}
-.bench table{width:100%;border-collapse:collapse;font-size:14px}
-.bench th{text-align:left;font-family:var(--mono);font-weight:500;font-size:11.5px;letter-spacing:.06em;color:var(--mute);padding:0 12px 12px 0;border-bottom:1px solid var(--line);text-transform:uppercase}
-.bench td{padding:13px 12px 13px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
+.tracks{display:grid;border-top:1px solid var(--line)}
+@media(min-width:900px){.tracks{grid-template-columns:repeat(3,1fr)}}
+.track{padding:28px 28px 32px 0;border-bottom:1px solid var(--line);display:grid;gap:12px;align-content:start}
+@media(min-width:900px){.track{border-right:1px solid var(--line)}.track+.track{padding-left:28px}.track:last-child{border-right:0}}
+.track .k{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.track h4{font-family:var(--serif);font-size:clamp(22px,2.2vw,30px);font-weight:500;letter-spacing:-.025em}
+.track p{font-size:15px;line-height:1.7;color:var(--ink-2)}
+.track .price{font-size:13.5px;color:var(--mute);margin-top:6px}
+.track .price b{font-family:var(--serif);font-size:22px;font-weight:400;color:var(--ink);margin-left:6px;letter-spacing:-.02em}
+.bench{margin-top:64px}
+.bench table{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:22px}
+.bench th{text-align:left;font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);padding:0 12px 12px 0;border-bottom:1px solid var(--line)}
+.bench td{padding:14px 12px 14px 0;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
 .bench td:first-child{font-weight:600;color:var(--ink);white-space:nowrap}
-.bench td:last-child{color:var(--cobalt);font-weight:600}
+.bench td:last-child{color:var(--accent);font-weight:500}
 
-/* 로드맵 */
-.road{display:grid;gap:10px}
-@media(min-width:720px){.road{grid-template-columns:repeat(3,1fr)}}
-@media(min-width:1040px){.road{grid-template-columns:repeat(6,1fr)}}
-.month{padding:20px 18px 18px;border-radius:var(--r);background:var(--paper);border:1px solid var(--line);display:grid;gap:10px;align-content:start;position:relative}
-.month .m{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:var(--mute)}
-.month .m b{display:block;font-size:26px;font-weight:600;color:var(--ink);letter-spacing:-.02em;line-height:1;margin-top:4px}
-.month h4{font-size:15px;font-weight:700;line-height:1.4}
-.month p{font-size:13px;color:var(--ink-2);line-height:1.55}
-.month .out{display:flex;flex-wrap:wrap;gap:5px;border-top:1px solid var(--line);padding-top:10px}
-.month .out span{font-size:11.5px;padding:3px 8px;border-radius:6px;background:var(--paper-2);color:var(--ink-2)}
-.month .out span.hi{background:var(--cobalt-soft);color:var(--cobalt);font-weight:600}
-.month.mark::after{content:"첫 인용 확보 구간";position:absolute;top:-10px;right:12px;font-family:var(--mono);font-size:10px;letter-spacing:.05em;background:var(--cobalt);color:#fff;border-radius:999px;padding:2px 8px}
-.cadence{display:grid;gap:12px;margin-top:40px}
-@media(min-width:720px){.cadence{grid-template-columns:repeat(3,1fr)}}
-.cad{padding:20px 22px;border-radius:var(--r);background:var(--paper);border:1px solid var(--line);display:grid;grid-template-columns:auto 1fr;gap:4px 16px;align-items:baseline}
-.cad .k{font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;color:var(--cobalt);text-transform:uppercase;grid-row:span 2;align-self:start;padding-top:4px}
-.cad b{font-size:16px;font-weight:700}
-.cad p{font-size:13.5px;color:var(--ink-2);line-height:1.5}
+/* 로드맵 : 가로 핀 스크롤 */
+.road-sec{overflow:hidden}
+.road-stage{padding-top:clamp(72px,9vw,120px);padding-bottom:clamp(40px,5vw,64px);display:flex;flex-direction:column;justify-content:center}
+@media(min-width:1024px){.road-stage{min-height:100vh;padding-top:96px;padding-bottom:32px}}
+.road-sh{margin-bottom:28px}
+.road-sh h2{font-size:clamp(28px,3.4vw,46px)}
+.road-track{display:flex;padding:0 var(--gut);border-top:1px solid var(--line-d);width:max-content;max-width:none}
+.month{width:min(400px,82vw);flex:none;padding:26px 26px 26px 0;border-right:1px solid var(--line-d);display:grid;gap:16px;align-content:start}
+.month+.month{padding-left:26px}
+.month .m{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-black-mute)}
+.month .m b{display:block;font-family:var(--serif);font-weight:300;font-size:clamp(56px,6vw,88px);line-height:.9;letter-spacing:-.045em;color:var(--on-black);margin-top:8px}
+.month h4{font-size:18px;font-weight:600;letter-spacing:-.015em}
+.month p{font-size:14px;line-height:1.65;color:var(--on-black-2)}
+.month .out{display:flex;flex-wrap:wrap;gap:6px;padding-top:14px;border-top:1px solid var(--line-d)}
+.month .out span{font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:5px 9px;border:1px solid var(--line-d);color:var(--on-black-2);border-radius:3px}
+.month .out span.hi{border-color:var(--on-black);color:var(--on-black)}
+.month.mark h4::after{content:"첫 인용 확보 구간";display:inline-block;margin-left:10px;font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--accent);border:1px solid var(--accent);padding:2px 7px;vertical-align:middle;border-radius:3px}
+.road-hint{display:none;font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-black-mute);margin-bottom:18px;align-items:center;gap:12px}
+.road-hint i{width:48px;height:1px;background:var(--on-black-mute);display:block}
+@media(min-width:1024px){.road-hint{display:flex}}
+@media(max-width:1023px){
+  .road-track{overflow-x:auto;width:auto;max-width:100%;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .road-track::-webkit-scrollbar{display:none}
+  .month{scroll-snap-align:start}
+}
+.cadence{margin-top:clamp(48px,6vw,80px)}
+.cadence{display:grid;border-top:1px solid var(--line-d)}
+@media(min-width:760px){.cadence{grid-template-columns:repeat(3,1fr)}}
+.cad{padding:24px 24px 24px 0;border-bottom:1px solid var(--line-d)}
+@media(min-width:760px){.cad{border-right:1px solid var(--line-d)}.cad+.cad{padding-left:24px}.cad:last-child{border-right:0}}
+.cad .k{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--on-black-mute)}
+.cad b{display:block;font-size:17px;font-weight:600;margin-top:12px}
+.cad p{font-size:13.5px;line-height:1.6;color:var(--on-black-2);margin-top:6px}
 
 /* 목표 */
-.kpi{width:100%;border-collapse:collapse;font-size:15px}
-.kpi th{text-align:left;font-family:var(--mono);font-weight:500;font-size:11.5px;letter-spacing:.06em;color:var(--on-navy-mute);padding:0 12px 14px 0;border-bottom:1px solid var(--navy-line);text-transform:uppercase}
+.kh{display:grid;border-top:1px solid var(--line)}
+@media(min-width:760px){.kh{grid-template-columns:repeat(4,1fr)}}
+.kh>div{padding:24px 24px 28px 0;border-bottom:1px solid var(--line)}
+@media(min-width:760px){.kh>div{border-right:1px solid var(--line)}.kh>div+div{padding-left:24px}.kh>div:last-child{border-right:0}}
+.kh .k{font-size:13px;color:var(--mute)}
+.kh .v{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:14px}
+.kh .from{font-family:var(--serif);font-size:18px;color:var(--mute);text-decoration:line-through;text-decoration-thickness:1px}
+.kh .to{font-family:var(--serif);font-weight:400;font-size:clamp(34px,3.4vw,48px);line-height:1;letter-spacing:-.035em;color:var(--accent)}
+.kh .d{font-size:12.5px;color:var(--mute);margin-top:12px}
+.kpi{width:100%;border-collapse:collapse;font-size:15px;margin-top:48px}
+.kpi th{text-align:left;font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);padding:0 12px 14px 0;border-bottom:1px solid var(--line)}
 .kpi th.r,.kpi td.r{text-align:right}
-.kpi td{padding:18px 12px 18px 0;border-bottom:1px solid var(--navy-line);vertical-align:middle}
-.kpi td:first-child{font-weight:600}
-.kpi td:first-child small{display:block;font-weight:400;color:var(--on-navy-mute);font-size:12.5px;margin-top:2px}
-.kpi .cur{color:var(--on-navy-mute)}
-.kpi .t6{font-weight:750;color:#8DA8FF;font-size:17px;white-space:nowrap}
-.kpi .t3{color:var(--on-navy-2);white-space:nowrap}
-.kpi .cur{white-space:nowrap}
-.kpi .track{display:none}
-@media(min-width:900px){
-  .kpi .track{display:block;height:6px;border-radius:3px;background:rgba(255,255,255,.08);position:relative;overflow:hidden;min-width:140px}
-  .kpi .track i{position:absolute;inset:0 auto 0 0;width:0;border-radius:3px;background:linear-gradient(90deg,rgba(141,168,255,.4),#8DA8FF)}
-  .kpi .track em{position:absolute;top:-3px;bottom:-3px;width:2px;background:rgba(255,255,255,.5)}
-}
-.kpi-wrap{overflow-x:auto}
-.kpi-wrap table{min-width:620px}
-.kpi-hero{display:grid;gap:12px;margin-bottom:36px}
-@media(min-width:720px){.kpi-hero{grid-template-columns:repeat(4,1fr)}}
-.kh{padding:22px 20px 20px;border-radius:var(--r);background:var(--navy-2);border:1px solid var(--navy-line)}
-.kh .k{font-size:12.5px;color:var(--on-navy-mute)}
-.kh .v{display:flex;align-items:baseline;gap:8px;margin-top:8px;flex-wrap:wrap}
-.kh .from{font-size:15px;color:var(--on-navy-mute);text-decoration:line-through;text-decoration-color:rgba(255,255,255,.3)}
-.kh .to{font-size:clamp(24px,2.4vw,32px);font-weight:750;letter-spacing:-.03em;color:#8DA8FF;line-height:1}
-.kh .d{font-size:12px;color:var(--on-navy-2);margin-top:8px}
+.kpi td{padding:18px 12px 18px 0;border-bottom:1px solid var(--line);vertical-align:middle}
+.kpi td:first-child{font-weight:500}
+.kpi td:first-child small{display:block;font-weight:400;font-size:12.5px;color:var(--mute);margin-top:2px}
+.kpi .cur{color:var(--mute);white-space:nowrap}
+.kpi .t3{color:var(--ink-2);white-space:nowrap}
+.kpi .t6{font-family:var(--serif);font-size:22px;letter-spacing:-.02em;white-space:nowrap;color:var(--accent)}
+.kpi .trk{display:none}
+@media(min-width:900px){.kpi .trk{display:block;height:2px;background:var(--line);position:relative;min-width:140px}.kpi .trk i{position:absolute;inset:0 auto 0 0;width:0;background:var(--accent)}.kpi .trk em{position:absolute;top:-4px;bottom:-4px;width:1px;background:var(--ink)}}
+.kpi-wrap{overflow-x:auto}.kpi-wrap table{min-width:620px}
 
 /* 플랜 */
-.plans{display:grid;gap:14px;align-items:stretch}
+.plans{display:grid;border-top:1px solid var(--line)}
 @media(min-width:900px){.plans{grid-template-columns:repeat(3,1fr)}}
-.plan{border:1px solid var(--line);border-radius:18px;background:var(--paper);padding:30px 28px 26px;display:grid;gap:22px;align-content:start;position:relative;transition:transform .35s var(--ease),box-shadow .35s var(--ease)}
-.plan:hover{transform:translateY(-4px);box-shadow:0 22px 50px rgba(26,34,39,.1)}
-.plan.rec{border:2px solid var(--cobalt);box-shadow:0 22px 50px rgba(17,64,211,.14)}
-.plan .badge{position:absolute;top:-13px;left:26px;font-size:12px;font-weight:700;background:var(--cobalt);color:#fff;border-radius:999px;padding:4px 12px;letter-spacing:.02em}
-.plan .nm{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--mute);text-transform:uppercase}
-.plan .price{display:flex;align-items:baseline;gap:6px;margin-top:8px}
-.plan .price b{font-size:36px;font-weight:750;letter-spacing:-.03em;line-height:1}
-.plan .price span{color:var(--mute);font-size:14px}
-.plan .fit{font-size:14px;color:var(--ink-2);line-height:1.55;min-height:44px}
-.plan.rec .fit{color:var(--cobalt);font-weight:600}
-.plan ul{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:20px}
-.plan li{display:flex;justify-content:space-between;gap:14px;font-size:14.5px}
+.plan{padding:36px 32px 36px 0;border-bottom:1px solid var(--line);display:grid;gap:26px;align-content:start;position:relative}
+@media(min-width:900px){.plan{border-right:1px solid var(--line)}.plan+.plan{padding-left:32px}.plan:last-child{border-right:0}}
+.plan .nm{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);display:flex;justify-content:space-between;align-items:center}
+.plan .nm .rec{color:var(--accent);border:1px solid var(--accent);padding:3px 8px;border-radius:3px}
+.plan .price{font-family:var(--serif);font-weight:400;font-size:clamp(44px,4.4vw,64px);line-height:1;letter-spacing:-.04em;margin-top:14px}
+.plan .price small{font-size:.36em;letter-spacing:-.01em;margin-left:2px}
+.plan .price span{font-family:var(--sans);font-size:14px;color:var(--mute);letter-spacing:0;margin-left:8px}
+.plan .fit{font-size:14.5px;line-height:1.6;color:var(--ink-2);min-height:48px}
+.plan.is-rec .fit{color:var(--ink);font-weight:500}
+.plan ul{border-top:1px solid var(--line)}
+.plan li{display:flex;justify-content:space-between;gap:14px;font-size:14.5px;padding:11px 0;border-bottom:1px solid var(--line-2)}
 .plan li span:first-child{color:var(--mute)}
-.plan li span:last-child{font-weight:600;text-align:right}
+.plan li span:last-child{font-weight:500;text-align:right}
 .plan li.off span:last-child{color:var(--faint);font-weight:400}
-.plan .sum{display:flex;gap:12px;font-size:13.5px;color:var(--ink-2);padding:12px 14px;border-radius:10px;background:var(--paper-2)}
-.plan .sum b{font-size:20px;letter-spacing:-.02em;color:var(--ink)}
+.plan .tot{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;color:var(--mute)}
+.plan .tot b{font-family:var(--serif);font-size:26px;font-weight:400;letter-spacing:-.02em;color:var(--ink)}
+.plan.is-rec::before{content:"";position:absolute;inset:-1px -1px -1px -1px;background:var(--bg);z-index:-1}
+@media(min-width:900px){.plan.is-rec{padding-left:32px;padding-right:32px}}
 
 /* 마무리 */
-.cta{background:radial-gradient(900px 500px at 20% 110%,rgba(17,64,211,.5),transparent 60%),var(--navy);color:var(--on-navy)}
-.cta .wrap{padding-block:clamp(80px,10vw,128px);display:grid;gap:40px}
-@media(min-width:900px){.cta .wrap{grid-template-columns:1.1fr .9fr;align-items:start}}
-.cta h2{font-size:clamp(30px,4vw,48px);font-weight:800;letter-spacing:-.03em;line-height:1.15}
-.cta .lead{margin-top:18px;color:var(--on-navy-2);font-size:17px;max-width:520px;line-height:1.7}
-.next{display:grid;gap:10px}
-.next li{display:grid;grid-template-columns:40px 1fr;gap:14px;padding:18px 18px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--navy-line);align-items:start}
-.next .n{font-family:var(--mono);font-size:13px;color:#8DA8FF;padding-top:3px}
-.next b{font-size:16px;font-weight:700;display:block}
-.next p{font-size:13.5px;color:var(--on-navy-2);margin-top:4px;line-height:1.55}
-.contact{margin-top:28px;display:flex;flex-wrap:wrap;gap:10px}
-.contact .pill{display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid var(--navy-line);font-family:var(--mono);font-size:13px}
-.contact .pill button{font-family:var(--font);font-size:12px;color:#8DA8FF;font-weight:600}
-footer{background:var(--navy);color:var(--on-navy-mute);border-top:1px solid var(--navy-line)}
-footer .wrap{padding-block:26px 40px;display:flex;flex-wrap:wrap;gap:14px 28px;align-items:center;justify-content:space-between;font-size:12.5px;line-height:1.6}
-footer img{height:16px;width:auto;opacity:.7}
+.end{padding-top:clamp(80px,10vw,150px);padding-bottom:clamp(40px,5vw,64px)}
+.end h2{font-family:var(--serif);font-size:clamp(44px,8vw,128px);font-weight:400;line-height:.98;letter-spacing:-.045em;max-width:10ch}
+.end-grid{display:grid;gap:48px;margin-top:clamp(40px,6vw,80px);border-top:1px solid var(--line-d);padding-top:40px}
+@media(min-width:900px){.end-grid{grid-template-columns:1fr 1fr;gap:72px}}
+.end .lede{font-size:clamp(16px,1.3vw,19px);line-height:1.7;color:var(--on-black-2);max-width:48ch}
+.contact{margin-top:32px;display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.contact .mail{font-family:var(--serif);font-size:clamp(20px,2.2vw,28px);letter-spacing:-.02em}
+.contact .cp{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;border:1px solid var(--line-d);padding:8px 12px;border-radius:999px;transition:background .3s,color .3s}
+.contact .cp:hover{background:var(--on-black);color:var(--ink)}
+.next li{display:grid;grid-template-columns:48px 1fr;gap:16px;padding:22px 0;border-bottom:1px solid var(--line-d)}
+.next li:first-child{border-top:1px solid var(--line-d)}
+.next .n{font-family:var(--serif);font-weight:300;font-size:28px;letter-spacing:-.03em;line-height:1;color:var(--on-black-2)}
+.next b{font-size:16.5px;font-weight:600;display:block}
+.next p{font-size:13.5px;line-height:1.6;color:var(--on-black-2);margin-top:6px}
+footer{background:var(--black);color:var(--on-black-mute)}
+footer .wrap{padding-block:24px 36px;display:flex;flex-wrap:wrap;gap:12px 32px;align-items:center;justify-content:space-between;font-size:12.5px;line-height:1.6;border-top:1px solid var(--line-d)}
+footer img{height:14px;width:auto;opacity:.6}
 
-/* 등장 애니메이션 기본값: JS가 없어도 전부 보인다 */
+/* 텍스트 리빌 */
+.split .line{overflow:hidden}
 .rv{will-change:transform,opacity}
 @media(prefers-reduced-motion:reduce){
-  html{scroll-behavior:auto}
-  .marquee-track{animation:none;flex-wrap:wrap;width:auto}
+  .grain,.cur{display:none!important}
+  .ticker-track,.mq-track{animation:none}
   .caret{animation:none}
   *{transition-duration:.01ms!important}
 }
 </style>
 </head>
 <body>
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"><div class="cursor-dot"></div></div><div class="cursor-ring" aria-hidden="true" style="position:fixed;pointer-events:none;z-index:70;mix-blend-mode:difference;display:none"></div>
 
-<header class="nav" id="nav">
-  <div class="wrap">
-    <a href="#top" aria-label="리드젠랩">
-      <img class="nav-logo logo-d" src="assets/logo-h-dark.png" alt="LEADGEN LAB">
-      <img class="nav-logo logo-w" src="assets/logo-h-white.png" alt="">
+<div class="pre" id="pre" aria-hidden="true">
+  <div class="pre-n num" id="preN">0</div>
+  <div class="pre-l mono"><span>세명종합병원 × 리드젠랩</span><span>GEO · AEO · SEO 제안</span></div>
+</div>
+
+<header class="top" id="top">
+  <div class="top-in">
+    <a class="top-logo" href="#hero" data-scroll aria-label="리드젠랩">
+      <img class="logo-d" src="assets/logo-h-dark.png" alt="LEADGEN LAB">
+      <img class="logo-w" src="assets/logo-h-white.png" alt="">
     </a>
-    <nav class="nav-links" aria-label="섹션">
-      <a href="#summary">요약</a>
-      <a href="#leadgen">리드젠랩</a>
-      <a href="#why">왜 지금</a>
-      <a href="#diagnosis">진단</a>
-      <a href="#plan">실행</a>
-      <a href="#target">목표</a>
-      <a href="#pricing">플랜</a>
+    <nav class="top-mid" aria-label="섹션">
+      <a href="#summary" data-scroll>요약</a><a href="#leadgen" data-scroll>리드젠랩</a><a href="#why" data-scroll>왜 지금</a><a href="#diagnosis" data-scroll>진단</a><a href="#plan" data-scroll>실행</a><a href="#roadmap" data-scroll>로드맵</a><a href="#target" data-scroll>목표</a><a href="#pricing" data-scroll>플랜</a>
     </nav>
-    <div class="nav-meta">세명종합병원 · P-2026-0805</div>
+    <div class="top-r">
+      <span class="ct" id="ct">01 / 10</span>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="menu"><span>목차</span><i></i></button>
+    </div>
   </div>
-  <div class="progress" id="progress"></div>
+  <div class="prog" id="prog"></div>
 </header>
 
-<main id="top">
+<div class="menu" id="menu" aria-hidden="true">
+  <div class="wrap" style="width:100%">
+    <ol>
+      <li><a href="#summary" data-scroll>먼저 3줄 요약</a></li>
+      <li><a href="#leadgen" data-scroll>리드젠랩과 고객사</a></li>
+      <li><a href="#cases" data-scroll>작업 전후 사례</a></li>
+      <li><a href="#why" data-scroll>왜 지금인가</a></li>
+      <li><a href="#diagnosis" data-scroll>세명종합병원 진단</a></li>
+      <li><a href="#plan" data-scroll>실행 계획</a></li>
+      <li><a href="#roadmap" data-scroll>6개월 로드맵</a></li>
+      <li><a href="#target" data-scroll>목표 수치</a></li>
+      <li><a href="#pricing" data-scroll>플랜과 견적</a></li>
+      <li><a href="#next" data-scroll>다음 단계</a></li>
+    </ol>
+  </div>
+  <div class="menu-foot"><span>P-2026-0805</span><span>growth@lead-gen.team</span></div>
+</div>
 
-<!-- ───────── 도입 ───────── -->
-<section class="hero dark" id="hero" data-dark>
+<main>
+
+<!-- 도입 -->
+<section class="hero" id="hero">
   <div class="wrap">
-    <div>
-      <div class="hero-to">
-        <span>세명종합병원 이사장님 · 대표원장님 귀중</span>
-        <span>경산 · 청도 · 영천 권역 GEO · AEO · SEO 운영 제안</span>
-        <span>2026. 08. 05</span>
-      </div>
-      <h1>환자가 AI에 묻는 질문 40개 중 <span class="hl">34개</span>에서 세명종합병원은 답에 없습니다.</h1>
-      <p class="hero-sub">그 자리는 경산중앙병원이 1순위로 가져갔고, 「경산 인공관절」 질의에는 진해에 있는 다른 세명병원이 뜹니다. 6개월 안에 이 답변을 세명종합병원 이름으로 바꾸는 계획을 담았습니다.</p>
-      <div class="hero-cta">
-        <a class="btn btn-p" href="#summary">3줄 요약부터 보기 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3v10M4 9l4 4 4-4"/></svg></a>
-        <a class="btn btn-g" href="#pricing">플랜과 견적</a>
-      </div>
-      <div class="hero-stats">
-        <div><div class="v num"><span data-count="2.8" data-dec="1">0</span>%</div><div class="k">AI 답변 점유율<br>7개 AI × 40질의</div></div>
-        <div><div class="v num"><span data-count="6">0</span><span style="font-size:.55em;color:var(--on-navy-mute)"> / 40</span></div><div class="k">세명종합병원이<br>등장한 질의 수</div></div>
-        <div><div class="v num"><span data-count="0">0</span>건</div><div class="k">홈페이지 구조화 데이터<br>경쟁 병원도 아직 0건</div></div>
-      </div>
+    <div class="hero-meta rv">
+      <span>세명종합병원 이사장님 · 대표원장님 귀중</span>
+      <span>경산 · 청도 · 영천 권역 GEO · AEO · SEO 운영 제안</span>
+      <span>2026. 08. 05</span>
+      <span>P-2026-0805</span>
     </div>
-
-    <div class="sim" id="sim" aria-label="AI 검색 답변 재구성">
-      <div class="sim-top"><div class="dots"><i></i><i></i><i></i></div><span>AI 답변 재구성 · 2026.08.05 예비 스캔</span><span class="tag">7 AI</span></div>
-      <div class="sim-q">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <span class="sim-typed" id="simTyped"></span><span class="caret" aria-hidden="true"></span>
+    <h1 class="split">환자가 AI에 물으면<br>세명종합병원은 아직<br><em>답에 없습니다.</em></h1>
+    <div class="hero-grid">
+      <div>
+        <p class="lede rv">경산 · 청도 · 영천 환자가 묻는 질문 40개 가운데 34개에서 그렇습니다. 그 답에는 경산중앙병원이 먼저 나오고, 「경산 인공관절」 질문에는 진해에 있는 다른 세명병원이 나옵니다. 여섯 달 안에 이 답을 바꾸는 방법을 정리했습니다.</p>
+        <div class="hero-cta rv">
+          <a class="btn magnet" href="#summary" data-scroll><span>3줄 요약부터</span><span class="ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 13 13 3M5 3h8v8"/></svg></span></a>
+          <a class="btn ghost magnet" href="#pricing" data-scroll><span>플랜과 견적</span><span class="ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 13 13 3M5 3h8v8"/></svg></span></a>
+        </div>
+        <div class="hero-stats rv">
+          <div><div class="v num"><span data-count="2.8" data-dec="1">0</span>%</div><div class="k">AI 답변 점유율<br>7개 AI × 40질의</div></div>
+          <div><div class="v num"><span data-count="6">0</span><small>/ 40</small></div><div class="k">세명종합병원이<br>등장한 질의 수</div></div>
+          <div><div class="v num"><span data-count="0">0</span><small>건</small></div><div class="k">홈페이지 구조화 데이터<br>경쟁 병원도 아직 0건</div></div>
+        </div>
       </div>
-      <div class="sim-body">
-        <div class="sim-label">답변에 인용된 병원</div>
-        <ol class="sim-list" id="simList"></ol>
-        <div class="sim-verdict" id="simVerdict"><span class="nm"></span><span class="st"></span></div>
+      <div class="sim rv" id="sim" aria-label="AI 검색 답변 재구성">
+        <div class="sim-top"><span>AI 답변 재구성 · 2026.08.05 예비 스캔</span><span class="live">7 AI</span></div>
+        <div class="sim-q"><div><span class="pre-q">환자의 질문</span><span id="simTyped"></span><span class="caret" aria-hidden="true"></span></div></div>
+        <div class="sim-body">
+          <ol class="sim-list" id="simList"></ol>
+          <div class="sim-verdict" id="simVerdict"><span class="nm"></span><span class="st"></span></div>
+        </div>
+        <div class="sim-nav" id="simNav" aria-hidden="true"></div>
       </div>
-      <div class="sim-nav" id="simNav" aria-hidden="true"></div>
     </div>
   </div>
 </section>
 
-<!-- ───────── 3줄 요약 ───────── -->
+<div class="ticker" aria-hidden="true" style="position:relative">
+  <div class="ticker-track" id="ticker"></div>
+</div>
+
+<!-- 요약 -->
 <section class="sec" id="summary">
   <div class="wrap">
-    <div class="sec-head rv">
-      <div class="eyebrow">Summary</div>
-      <h2>먼저 3줄로 요약드립니다</h2>
-      <p>2026년 8월 5일에 홈페이지, 구글 검색결과, AI 답변을 함께 확인한 결과입니다.</p>
-    </div>
-    <div class="sum">
-      <article class="sum-row rv">
-        <div class="n">격차<b>1</b></div>
+    <header class="sh"><div><span class="idx">01</span><span class="lab">Summary</span></div><div><h2 class="split">먼저 세 줄로 요약드립니다.</h2><p class="lede rv">2026년 8월 5일에 홈페이지와 구글 검색결과, AI 답변을 함께 확인한 결과입니다.</p></div></header>
+    <div class="ledger">
+      <article class="lrow rv">
+        <div class="ln"><b>1</b><span>격차</span></div>
         <div>
-          <h3>요청하신 4대 축 가운데 3개에서 세명종합병원은 AI 답변에 등장하지 않습니다.</h3>
-          <p><span class="q">경산 인공관절 수술 잘하는 병원</span> <span class="q">경산 종합건강검진 병원 추천</span> 두 질의 모두 경산중앙병원이 전용 센터 페이지로 1순위에 인용됩니다. 세명종합병원은 후보에도 없습니다.</p>
+          <h3>요청하신 네 가지 진료 분야 가운데 세 곳에서 세명종합병원은 AI 답변에 나오지 않습니다.</h3>
+          <p><span class="q">경산 인공관절 수술 잘하는 병원</span> <span class="q">경산 종합건강검진 병원 추천</span> 두 질문 모두 경산중앙병원이 전용 센터 페이지로 첫 번째에 인용됩니다. 세명종합병원은 후보에도 오르지 않습니다.</p>
         </div>
       </article>
-      <article class="sum-row rv">
-        <div class="n">유출<b>2</b></div>
+      <article class="lrow rv">
+        <div class="ln"><b>2</b><span>유출</span></div>
         <div>
-          <h3>그 자리를 같은 이름의 다른 병원이 가져가고 있습니다.</h3>
-          <p><span class="q">경산 인공관절</span> 질의에 창원 진해 세명병원(smhospital.co.kr) 정형외과 페이지가 상위에 뜹니다. 경산에서 쌓아 온 이름값이 다른 병원으로 새고 있는 셈입니다.</p>
+          <h3>비어 있는 그 자리에 같은 이름의 다른 병원이 들어와 있습니다.</h3>
+          <p><span class="q">경산 인공관절</span> 질문에 창원 진해 세명병원(smhospital.co.kr)의 정형외과 페이지가 위에 뜹니다. 경산에서 쌓은 이름값이 엉뚱한 곳으로 흘러가는 셈입니다.</p>
         </div>
       </article>
-      <article class="sum-row gain rv">
-        <div class="n">기회<b>3</b></div>
+      <article class="lrow gain rv">
+        <div class="ln"><b>3</b><span>기회</span></div>
         <div>
-          <h3>6개월 안에 관절 · 투석 · 검진 · 수술장비 4개 축 모두에서 AI 추천 1~3위, 답변 점유율 2.8%에서 15~20%까지 올립니다.</h3>
-          <p>경산중앙병원을 포함해 권역 어느 병원도 아직 구조화 데이터가 0건입니다. 경쟁 병원이 손대기 전인 지금이 가장 싸게 선점할 수 있는 구간이고, <span class="q">경산 인공관절</span> <span class="q">경산 건강검진</span> <span class="q">경산 혈액투석</span> 세 질의부터 가져옵니다.</p>
+          <h3>여섯 달 안에 관절 · 투석 · 검진 · 수술장비 네 분야 모두 AI 추천 1~3위에 올리고, 답변 점유율을 2.8%에서 15~20%로 끌어올리겠습니다.</h3>
+          <p>경산중앙병원을 포함해 권역 어느 병원도 아직 구조화 데이터가 한 건도 없습니다. 먼저 손대는 쪽이 자리를 잡는 구간이고, <span class="q">경산 인공관절</span> <span class="q">경산 건강검진</span> <span class="q">경산 혈액투석</span> 세 질문부터 시작합니다.</p>
         </div>
       </article>
     </div>
-    <p class="foot">* 2026.08.05 구글 검색결과와 smhospital.kr 실측 기준입니다. 계약 후 SOHA.ai 정식 진단(7개 AI × 40질의 × 5회)으로 대체합니다.</p>
+    <p class="note">* 2026.08.05 구글 검색결과와 smhospital.kr 실측 기준입니다. 계약 후 SOHA.ai 정식 진단(7개 AI × 40질의 × 5회)으로 대체합니다.</p>
   </div>
 </section>
 
-<!-- ───────── 리드젠랩 ───────── -->
+<!-- 리드젠랩 -->
 <section class="sec tint" id="leadgen">
   <div class="wrap">
-    <div class="sec-head rv">
-      <div class="eyebrow">Leadgen Lab</div>
-      <h2>삼성전자 · GS · 두산 · 한화가 맡기는<br>GEO · AEO 전문 기업, 리드젠랩입니다</h2>
-      <p>제약 · 의료기기 · 헬스케어 플랫폼부터 종합병원과 개원가까지, 진료과를 가리지 않고 운영해 왔습니다.</p>
-    </div>
-
-    <div class="mq-label">대기업 · 글로벌 브랜드</div>
-    <div class="marquee" aria-label="고객사 로고">
-      <div class="marquee-track" id="mq1"></div>
-    </div>
-    <div class="mq-label">병원 · 의료 · 헬스케어</div>
-    <div class="marquee rev" aria-label="병원 및 의료 고객사 로고">
-      <div class="marquee-track" id="mq2"></div>
-    </div>
-
-    <div class="trust-grid">
-      <div class="trust rv"><div class="v num"><span data-count="32">0</span>+</div><div class="k">현재 · 이전 고객사. 대기업 16곳, 병원 · 의료 16곳.</div></div>
-      <div class="trust rv"><div class="v">SOHA.ai</div><div class="k">리드젠랩이 직접 개발한 AI 인용 추적 플랫폼. 7개 AI의 답변 점유율을 주 단위로 잽니다.</div></div>
-      <div class="trust rv"><div class="v num"><span data-count="7">0</span>개 AI</div><div class="k">ChatGPT · Gemini · Claude · Perplexity · 네이버 AI 브리핑 등 7개 AI 답변을 한 번에 봅니다.</div></div>
+    <header class="sh"><div><span class="idx">02</span><span class="lab">Leadgen Lab</span></div><div><h2 class="split">삼성전자, GS, 두산, 한화가 검색과 AI 노출을 맡기는 곳입니다.</h2><p class="lede rv">제약 · 의료기기 · 헬스케어 플랫폼부터 종합병원과 개원가까지, 진료과를 가리지 않고 운영해 왔습니다.</p></div></header>
+    <p class="mq-lab">대기업 · 글로벌 브랜드</p>
+    <div class="mq-wrap"><div class="mq-track" id="mq1"></div></div>
+    <p class="mq-lab">병원 · 의료 · 헬스케어</p>
+    <div class="mq-wrap rev"><div class="mq-track" id="mq2"></div></div>
+    <div class="facts">
+      <div class="fact rv"><div class="v num"><span data-count="32">0</span>+</div><div class="k">현재와 이전 고객사. 대기업 16곳, 병원과 의료 16곳.</div></div>
+      <div class="fact rv"><div class="v">SOHA.ai</div><div class="k">리드젠랩이 직접 개발한 AI 인용 추적 플랫폼. 7개 AI의 답변 점유율을 매주 잽니다.</div></div>
+      <div class="fact rv"><div class="v num"><span data-count="7">0</span><small style="font-family:var(--sans);font-size:.4em;color:var(--mute);margin-left:6px">AI</small></div><div class="k">ChatGPT · Gemini · Claude · Perplexity · 네이버 AI 브리핑을 포함한 7개 AI 답변을 한 화면에서 봅니다.</div></div>
     </div>
   </div>
 </section>
 
-<!-- ───────── 사례 ───────── -->
+<!-- 사례 -->
 <section class="sec dark" id="cases" data-dark>
   <div class="wrap">
-    <div class="sec-head rv">
-      <div class="eyebrow">Before · After</div>
-      <h2>병원 고객사의 AI 답변 노출률은<br>작업 전후로 이렇게 달라졌습니다</h2>
-      <p>단일 진료과 기준 운영 사례입니다. 종합병원은 진료과가 많아 축별로 더 빨리 퍼지는 편이라, 보수적인 참고치로 보셔도 됩니다.</p>
-    </div>
+    <header class="sh"><div><span class="idx">03</span><span class="lab">Before · After</span></div><div><h2 class="split">병원 고객사에서 작업 전과 후, AI 답변 노출률은 이렇게 달라졌습니다.</h2><p class="lede rv">단일 진료과 기준 사례입니다. 종합병원은 진료과가 많아 분야별로 더 빨리 번지는 편이라 보수적으로 보셔도 됩니다.</p></div></header>
     <div class="cases" id="caseGrid"></div>
-    <p class="foot">* 운영 기간 중 SOHA.ai로 측정한 AI 답변 노출률입니다. 검색 순위와 AI 인용은 보장되지 않습니다.</p>
+    <p class="note">* 운영 기간 중 SOHA.ai로 측정한 AI 답변 노출률입니다. 검색 순위와 AI 인용은 보장되지 않습니다.</p>
   </div>
 </section>
 
-<!-- ───────── 왜 지금 ───────── -->
+<!-- 왜 지금 -->
 <section class="sec" id="why">
   <div class="wrap">
-    <div class="sec-head rv">
-      <div class="eyebrow">Why now</div>
-      <h2>검색이 바뀌는 속도가<br>병원이 대응하는 속도보다 빠릅니다</h2>
-    </div>
+    <header class="sh"><div><span class="idx">04</span><span class="lab">Why now</span></div><div><h2 class="split">검색이 바뀌는 속도가 병원이 따라가는 속도보다 빠릅니다.</h2></div></header>
     <div class="why">
-      <article class="why-card rv">
-        <div class="k">Market</div>
-        <div class="fig">4 : 3 : 3</div>
-        <h3>검색이 셋으로 나뉩니다</h3>
-        <p>한국 검색 시장은 네이버 4, ChatGPT 3, Gemini 3 구도로 재편되는 중입니다. 네이버 검색 답변의 40~50%에도 이미 AI가 끼어듭니다.</p>
-      </article>
-      <article class="why-card rv">
-        <div class="k">How AI answers</div>
-        <div class="fig">1페이지<small>안 봅니다</small></div>
-        <h3>AI는 검색 순위를 보지 않습니다</h3>
-        <p>질문을 여러 세부 질의로 쪼개 동시에 찾은 뒤 답을 조립합니다. 기존 검색 순위와 AI 추천은 따로 움직입니다.</p>
-      </article>
-      <article class="why-card rv">
-        <div class="k">Naver</div>
-        <div class="fig">2025. 08</div>
-        <h3>네이버 블로그만으로는 닿지 않습니다</h3>
-        <p>2025년 8월 네이버가 해외 AI의 크롤링을 막았습니다. 블로그 · 카페 · 플레이스 전부입니다. 네이버에만 기대면 ChatGPT · Gemini가 배울 자료가 없습니다.</p>
-      </article>
+      <div class="rv"><div class="k">Market</div><div class="fig">4 : 3 : 3</div><h3>검색이 셋으로 갈라집니다</h3><p>국내 검색은 네이버 4, ChatGPT 3, Gemini 3 구도로 재편되고 있습니다. 네이버 검색 답변의 40~50%에도 이미 AI가 들어와 있습니다.</p></div>
+      <div class="rv"><div class="k">How AI answers</div><div class="fig">1페이지<small>보지 않습니다</small></div><h3>AI는 검색 순위를 보지 않습니다</h3><p>질문을 여러 개로 쪼개 동시에 찾은 뒤 답을 조립합니다. 기존 검색 순위와 AI 추천은 따로 움직입니다.</p></div>
+      <div class="rv"><div class="k">Naver</div><div class="fig">2025. 08</div><h3>네이버 블로그만으로는 닿지 않습니다</h3><p>2025년 8월 네이버가 해외 AI의 크롤링을 막았습니다. 블로그, 카페, 플레이스 전부입니다. 네이버에만 기대면 ChatGPT와 Gemini가 배울 자료가 없습니다.</p></div>
     </div>
-    <div class="lag rv">
-      <div class="v num">8~12주</div>
-      <p>색인에서 AI 답변 반영까지 걸리는 시차입니다. 오늘 시작해도 답변에 보이는 건 다음 분기입니다.</p>
-    </div>
-    <p class="foot">* 시장 수치는 리드젠랩 자체 조사와 업계 전망 기준입니다.</p>
+    <div class="lag rv"><div class="v num">8~12주</div><p>색인에서 AI 답변 반영까지 걸리는 시차입니다. 오늘 시작해도 답변에 보이는 것은 다음 분기입니다.</p></div>
+    <p class="note">* 시장 수치는 리드젠랩 자체 조사와 업계 전망 기준입니다.</p>
   </div>
 </section>
 
-<!-- ───────── 진단 ───────── -->
-<section class="sec tint" id="diagnosis">
+<!-- 진단 -->
+<section class="sec" id="diagnosis">
   <div class="wrap">
-    <div class="sec-head rv">
-      <div class="eyebrow">Diagnosis</div>
-      <h2>같은 질문에 지금 누가 인용되고 있나</h2>
-      <p>경산 · 청도 · 영천 권역 핵심 질의 40개를 7개 AI에 던져 답변 안 언급 점유율을 쟀습니다.</p>
-    </div>
-
-    <div class="diag-grid">
-      <div class="panel rv">
-        <h3>AI 답변 내 언급 점유율</h3>
-        <div class="sub">예비 스캔 · 40질의 × 7개 AI · 단위 %</div>
-        <div class="chart" id="sov"></div>
-        <div class="chart-note">세명종합병원은 40개 중 6개 질의에서만, 그것도 「병원소개」 페이지를 출처로 등장합니다.</div>
-        <p class="foot">출처: 리드젠랩 AI 인용 추적 플랫폼 SOHA.ai 예비 스캔값. 계약 후 정식 진단으로 대체합니다.</p>
+    <header class="sh"><div><span class="idx">05</span><span class="lab">Diagnosis</span></div><div><h2 class="split">같은 질문에 지금은 누가 인용되고 있는지부터 봤습니다.</h2><p class="lede rv">경산 · 청도 · 영천 권역 핵심 질의 40개를 7개 AI에 물어, 답변 안에서 각 병원이 언급된 비중을 쟀습니다.</p></div></header>
+    <div class="dg">
+      <div class="rv">
+        <div class="blk-t">AI 답변 내 언급 점유율</div>
+        <div class="blk-s">예비 스캔 · 40질의 × 7개 AI · 단위 %</div>
+        <div class="sov" id="sov"></div>
+        <div class="sov-note">세명종합병원은 40개 중 6개 질문에서만, 그것도 「병원소개」 페이지를 출처로 나옵니다.</div>
+        <p class="note">출처: 리드젠랩 AI 인용 추적 플랫폼 SOHA.ai 예비 스캔값. 계약 후 정식 진단으로 대체합니다.</p>
       </div>
-
-      <div class="axes">
-        <article class="axis rv">
-          <div class="top"><div><h4>① 인공관절 · 관절</h4><div class="own">정형외과 · 관절센터 · 척추센터</div></div><span class="chip no">미노출</span></div>
-          <dl><dt>현재</dt><dd>경산중앙병원 관절센터 페이지가 선점</dd><dt>할 일</dt><dd>전용 상세 페이지 + 수술법 비교 롱폼</dd></dl>
-          <div class="pri"><span class="chip p">1순위</span> 2개월차 착수</div>
-        </article>
-        <article class="axis rv">
-          <div class="top"><div><h4>② 인공신장센터 · 혈액투석</h4><div class="own">인공신장센터 (2007 개설)</div></div><span class="chip weak">노출 · 출처 약함</span></div>
-          <dl><dt>현재</dt><dd>출처가 「병원소개」 페이지뿐</dd><dt>할 일</dt><dd>센터 전용 페이지 + 심평원 선정 이력 명시</dd></dl>
-          <div class="pri"><span class="chip p">1순위</span> 2개월차 착수</div>
-        </article>
-        <article class="axis rv">
-          <div class="top"><div><h4>③ 종합건강검진</h4><div class="own">건강증진센터 · 내시경센터</div></div><span class="chip no">미노출</span></div>
-          <dl><dt>현재</dt><dd>연관검색어에 「세명병원 건강검진」은 있음</dd><dt>할 일</dt><dd>검진 항목별 페이지 + 비용 · 소요시간 FAQ</dd></dl>
-          <div class="pri"><span class="chip p">2순위</span> 3개월차 확대</div>
-        </article>
-        <article class="axis rv">
-          <div class="top"><div><h4>④ 수술 로봇 · 수술 기기</h4><div class="own">중앙수술센터 · 인공관절 내비게이션</div></div><span class="chip no">미노출</span></div>
-          <dl><dt>현재</dt><dd>장비 페이지가 텍스트 설명 위주</dd><dt>할 일</dt><dd>장비별 상세 페이지 + Schema(MedicalDevice)</dd></dl>
-          <div class="pri"><span class="chip p">2순위</span> 3개월차 확대</div>
-        </article>
+      <div class="rv">
+        <div class="blk-t">요청하신 네 가지 진료 분야, 지금 상태</div>
+        <div class="blk-s">병원이 알리고 싶다고 주신 키워드와 현재 AI 답변을 하나씩 대조했습니다.</div>
+        <div class="areas" style="margin-top:22px">
+          <article class="area"><div class="area-top"><div><h4>① 인공관절 · 관절</h4><div class="own">정형외과 · 관절센터 · 척추센터</div></div><span class="st no">미노출</span></div><dl><dt>현재</dt><dd>경산중앙병원 관절센터 페이지가 선점</dd><dt>할 일</dt><dd>전용 상세 페이지와 수술법 비교 롱폼</dd></dl><div class="pri"><span class="st p">1순위</span>2개월차 착수</div></article>
+          <article class="area"><div class="area-top"><div><h4>② 인공신장센터 · 혈액투석</h4><div class="own">인공신장센터 (2007 개설)</div></div><span class="st weak">출처 약함</span></div><dl><dt>현재</dt><dd>출처가 「병원소개」 페이지뿐</dd><dt>할 일</dt><dd>센터 전용 페이지, 심평원 선정 이력 명시</dd></dl><div class="pri"><span class="st p">1순위</span>2개월차 착수</div></article>
+          <article class="area"><div class="area-top"><div><h4>③ 종합건강검진</h4><div class="own">건강증진센터 · 내시경센터</div></div><span class="st no">미노출</span></div><dl><dt>현재</dt><dd>연관검색어에 「세명병원 건강검진」은 있음</dd><dt>할 일</dt><dd>검진 항목별 페이지, 비용 · 소요시간 FAQ</dd></dl><div class="pri"><span class="st p">2순위</span>3개월차 확대</div></article>
+          <article class="area"><div class="area-top"><div><h4>④ 수술 로봇 · 수술 기기</h4><div class="own">중앙수술센터 · 인공관절 내비게이션</div></div><span class="st no">미노출</span></div><dl><dt>현재</dt><dd>장비 페이지가 텍스트 설명 위주</dd><dt>할 일</dt><dd>장비별 상세 페이지, Schema(MedicalDevice)</dd></dl><div class="pri"><span class="st p">2순위</span>3개월차 확대</div></article>
+        </div>
       </div>
     </div>
 
     <div class="tech">
-      <div class="panel rv">
-        <h3>현재 홈페이지는 AI가 읽을 수 없는 구조입니다</h3>
-        <div class="sub">smhospital.kr 전수 점검. 콘텐츠는 있는데 기계에 전달되지 않습니다.</div>
+      <div class="rv">
+        <div class="blk-t">현재 홈페이지는 AI가 읽을 수 없는 구조입니다</div>
+        <div class="blk-s">smhospital.kr 전수 점검. 콘텐츠는 있는데 기계에 전달되지 않습니다.</div>
         <div class="checks">
-          <div class="check"><span class="x">✕</span><div>구조화 데이터(JSON-LD) 0건<small>Hospital · Physician · FAQPage 전무. AI가 「관절센터」를 병원 진료 센터로 알아볼 근거가 코드에 없습니다.</small></div></div>
-          <div class="check"><span class="x">✕</span><div>H1 비어 있음 · canonical 없음 · <code>lang="kr"</code><small>표준 언어 코드는 ko입니다. tab=1/2/3 중복 페이지에 canonical이 없어 색인 평가가 흩어집니다.</small></div></div>
-          <div class="check"><span class="x">✕</span><div>이미지 64개 중 30개(47%)에 alt 텍스트 없음</div></div>
-          <div class="check"><span class="x">✕</span><div>URL이 <code>subject_con.php?code=001&amp;tab=1</code> 형태<small>의미 없는 숫자 파라미터라 페이지 주제를 URL로 전달하지 못합니다.</small></div></div>
-          <div class="check"><span class="x">✕</span><div>sitemap.xml 330개 URL 전부 <code>http://</code>로 등재<small>실제 사이트는 https입니다.</small></div></div>
-          <div class="check"><span class="x">✕</span><div>진료센터 10개 중 관절 · 인공신장 · 건강증진 전용 상세 페이지 없음</div></div>
+          <div class="check"><span class="x">×</span><div>구조화 데이터(JSON-LD) 0건<small>Hospital · Physician · FAQPage 전무. AI가 「관절센터」를 병원 진료 센터로 알아볼 근거가 코드에 없습니다.</small></div></div>
+          <div class="check"><span class="x">×</span><div>H1 비어 있음 · canonical 없음 · <code>lang="kr"</code><small>표준 언어 코드는 ko입니다. tab=1/2/3 중복 페이지에 canonical이 없어 색인 평가가 흩어집니다.</small></div></div>
+          <div class="check"><span class="x">×</span><div>이미지 64개 중 30개(47%)에 alt 텍스트 없음</div></div>
+          <div class="check"><span class="x">×</span><div>URL이 <code>subject_con.php?code=001&amp;tab=1</code> 형태<small>의미 없는 숫자 파라미터라 페이지 주제를 URL로 전하지 못합니다.</small></div></div>
+          <div class="check"><span class="x">×</span><div>sitemap.xml 330개 URL 전부 <code>http://</code>로 등재<small>실제 사이트는 https입니다.</small></div></div>
+          <div class="check"><span class="x">×</span><div>진료센터 10개 중 관절 · 인공신장 · 건강증진 전용 상세 페이지 없음</div></div>
         </div>
       </div>
-      <div style="display:grid;gap:24px;align-content:start">
+      <div>
         <div class="callout rv">
-          <b>리뉴얼이 아니라, 지금 홈페이지에 코드를 심는 작업입니다.</b>
+          <b>리뉴얼이 아니라 지금 홈페이지에 코드를 심는 일입니다.</b>
           <p>299병상 종합병원, 16개 진료과, 응급의료 9년 연속 최우수 같은 강점이 지금은 텍스트로만 있습니다. 기계가 읽는 데이터로 바꾸면 그대로 AI 답변의 근거가 됩니다.</p>
         </div>
-        <div class="panel rv">
-          <h3>세명종합병원은 이미 강합니다. AI만 모릅니다</h3>
-          <div class="sub">병원이 실제로 보유한 사실인데, AI가 읽을 수 있는 형태로는 없습니다.</div>
-          <div class="tbl-wrap">
+        <div class="assets-wrap rv">
+          <div class="blk-t">세명종합병원은 이미 강합니다. AI만 모를 뿐입니다</div>
+          <div class="blk-s">병원이 실제로 가진 사실인데, AI가 읽을 수 있는 형태로는 없습니다.</div>
+          <div class="tbl" style="margin-top:18px">
           <table class="assets">
             <thead><tr><th>보유 자산</th><th>시점</th><th>AI 답변 근거로 쓰이나</th></tr></thead>
             <tbody>
-              <tr><td>심평원 「혈액투석 잘하는 병원」 선정</td><td class="when">2013.07</td><td><div class="st no"><i>✕</i>홈페이지 어디에도 구조화돼 있지 않음</div></td></tr>
-              <tr><td>응급의료기관 평가 9년 연속 최우수</td><td class="when">2016 기준</td><td><div class="st no"><i>✕</i>연혁 페이지 본문 텍스트로만 존재</div></td></tr>
-              <tr><td>삼성라이온즈 프로야구단 주치의 · 지정병원</td><td class="when">1990~</td><td><div class="st no"><i>✕</i>지역 신뢰 자산인데 답변에 인용되지 않음</div></td></tr>
-              <tr><td>인공관절수술 컴퓨터 내비게이션 시스템 도입</td><td class="when">2010.12</td><td><div class="st no"><i>✕</i>장비 소개 페이지에 항목 자체가 없음</div></td></tr>
-              <tr><td>산재보험 의료평가 최우수기관 선정</td><td class="when">2025.01</td><td><div class="st no"><i>✕</i>최신 성과인데 색인될 근거가 없음</div></td></tr>
-              <tr><td>종합병원 승격 · 허가 299병상 · 16개 진료과</td><td class="when">2023.07</td><td><div class="st half"><i>△</i>병원소개 본문에만 존재 · 스키마 없음</div></td></tr>
+              <tr><td>심평원 「혈액투석 잘하는 병원」 선정</td><td class="when">2013.07</td><td class="no">홈페이지 어디에도 구조화돼 있지 않음</td></tr>
+              <tr><td>응급의료기관 평가 9년 연속 최우수</td><td class="when">2016 기준</td><td class="no">연혁 페이지 본문 텍스트로만 존재</td></tr>
+              <tr><td>삼성라이온즈 프로야구단 주치의 · 지정병원</td><td class="when">1990~</td><td class="no">지역 신뢰 자산인데 답변에 인용되지 않음</td></tr>
+              <tr><td>인공관절수술 컴퓨터 내비게이션 시스템 도입</td><td class="when">2010.12</td><td class="no">장비 소개 페이지에 항목 자체가 없음</td></tr>
+              <tr><td>산재보험 의료평가 최우수기관 선정</td><td class="when">2025.01</td><td class="no">최신 성과인데 색인될 근거가 없음</td></tr>
+              <tr><td>종합병원 승격 · 허가 299병상 · 16개 진료과</td><td class="when">2023.07</td><td class="half">병원소개 본문에만 존재 · 스키마 없음</td></tr>
             </tbody>
           </table>
           </div>
         </div>
       </div>
     </div>
-    <p class="foot">* 2026.08.05 구글 검색결과 관찰 기준. ② 축은 실제 운영 중인 인공신장센터(혈액투석) 기준으로 정리했고 킥오프 때 최종 확정합니다.</p>
+    <p class="note">* 2026.08.05 구글 검색결과 관찰 기준. ② 분야는 실제 운영 중인 인공신장센터(혈액투석) 기준으로 정리했고 킥오프 때 최종 확정합니다.</p>
   </div>
 </section>
 
-<!-- ───────── 실행 ───────── -->
-<section class="sec" id="plan">
+<!-- 실행 -->
+<section class="sec tint" id="plan">
   <div class="wrap">
-    <div class="sec-head rv">
-      <div class="eyebrow">Plan</div>
-      <h2>진단에서 나온 병목 순서대로 실행합니다</h2>
-      <p>위 진단 결과에서 바로 이어지는 항목입니다. 물량과 범위는 STANDARD 플랜 기준입니다.</p>
-    </div>
-
-    <div class="steps">
-      <article class="step rv">
-        <div class="idx"><b>01</b>Tech</div>
-        <div>
-          <h3>홈페이지 최적화 <span class="when">1~2개월차</span></h3>
-          <p>현재 홈페이지는 그대로 둡니다. 기존 개발사가 있으면 코드와 가이드를 넘겨 협업하고, 없으면 리드젠랩이 개발 대행으로 직접 심습니다.</p>
+    <header class="sh"><div><span class="idx">06</span><span class="lab">Plan</span></div><div><h2 class="split">진단에서 드러난 병목 순서대로 진행합니다.</h2><p class="lede rv">위 진단 결과에서 바로 이어지는 항목입니다. 물량과 범위는 STANDARD 플랜 기준으로 적었습니다.</p></div></header>
+    <div class="acc" id="acc">
+      <div class="acc-i open">
+        <button class="acc-h" aria-expanded="true"><span class="n">01</span><span class="t">홈페이지 최적화</span><span class="w">1~2개월차</span><span class="pm" aria-hidden="true"></span></button>
+        <div class="acc-b"><div><div class="acc-in">
+          <p>현재 홈페이지는 그대로 둡니다. 기존 개발사가 있으면 코드와 가이드를 넘겨 함께 진행하고, 없으면 리드젠랩이 개발 대행으로 직접 심습니다.</p>
           <div class="spec"><span><b>Schema</b> Hospital · Physician · MedicalProcedure · FAQPage</span><span><b>H · Meta</b> 태그 재설계</span><span><b>canonical</b> 중복 페이지 정리</span><span><b>sitemap</b> https 정정</span><span><b>URL</b> 의미화</span><span><b>전용 페이지</b> 관절 · 인공신장 · 건강증진</span></div>
-        </div>
-      </article>
-      <article class="step rv">
-        <div class="idx"><b>02</b>Long-form</div>
-        <div>
-          <h3>AI가 출처로 인용하는 전문 콘텐츠 <span class="when">2개월차 ~</span></h3>
-          <p>4대 축 핵심 질의를 겨냥한 시술 가이드와 비교 콘텐츠입니다. 4,000~5,000자를 논문과 학회 가이드라인을 바탕으로 쓰고, 썸네일과 본문 삽화까지 만듭니다.</p>
-          <div class="spec"><span><b>월 7건</b> · 6개월 35건</span><span><b>2개월차</b> 관절 · 투석 전용 페이지부터</span><span><b>3개월차</b> 검진 · 수술장비 축 확대</span></div>
-        </div>
-      </article>
-      <article class="step rv">
-        <div class="idx"><b>03</b>Short-form</div>
-        <div>
-          <h3>용어백과로 지식 기반 축적 <span class="when">1개월차 ~</span></h3>
-          <p>관절 · 신장 · 검진 용어 상위 100여 개를 백과 형태로 쌓습니다. AI가 학습하는 전문 출처가 되고, 롱폼이 인용될 확률을 끌어올립니다.</p>
+        </div></div></div>
+      </div>
+      <div class="acc-i">
+        <button class="acc-h" aria-expanded="false"><span class="n">02</span><span class="t">AI가 출처로 인용하는 전문 콘텐츠</span><span class="w">2개월차 ~</span><span class="pm" aria-hidden="true"></span></button>
+        <div class="acc-b"><div><div class="acc-in">
+          <p>네 분야의 핵심 질문을 겨냥한 시술 가이드와 비교 콘텐츠입니다. 4,000~5,000자를 논문과 학회 가이드라인을 바탕으로 쓰고, 썸네일과 본문 삽화까지 만듭니다.</p>
+          <div class="spec"><span><b>월 7건</b> · 6개월 35건</span><span><b>2개월차</b> 관절 · 투석 전용 페이지부터</span><span><b>3개월차</b> 검진 · 수술장비로 확대</span></div>
+        </div></div></div>
+      </div>
+      <div class="acc-i">
+        <button class="acc-h" aria-expanded="false"><span class="n">03</span><span class="t">용어백과로 지식 기반 쌓기</span><span class="w">1개월차 ~</span><span class="pm" aria-hidden="true"></span></button>
+        <div class="acc-b"><div><div class="acc-in">
+          <p>관절 · 신장 · 검진 용어 상위 100여 개를 백과 형태로 쌓습니다. AI가 학습하는 전문 출처가 되고, 롱폼이 인용될 확률을 높입니다.</p>
           <div class="spec"><span><b>월 16건</b> · 6개월 88건</span><span><b>1,000~2,000자</b> AI 초안 + 사람 사실 검수</span></div>
-        </div>
-      </article>
-      <article class="step rv">
-        <div class="idx"><b>04</b>Track</div>
-        <div>
-          <h3>확산과 측정 <span class="when">전 기간</span></h3>
-          <p>SOHA.ai로 7개 AI × 40질의를 주 1회 측정하고, 5개월차에 커뮤니티 · 위키 등 외부 신뢰 출처를 확보합니다. 언론 보도자료 배포는 PREMIUM에서 3개월차부터 들어갑니다.</p>
-          <div class="spec"><span><b>주 1회</b> AI 인용 스냅샷</span><span><b>월 1회</b> 운영 리포트</span><span><b>분기</b> 전략 리뷰</span></div>
-        </div>
-      </article>
+        </div></div></div>
+      </div>
+      <div class="acc-i">
+        <button class="acc-h" aria-expanded="false"><span class="n">04</span><span class="t">확산과 측정</span><span class="w">전 기간</span><span class="pm" aria-hidden="true"></span></button>
+        <div class="acc-b"><div><div class="acc-in">
+          <p>SOHA.ai로 7개 AI × 40질의를 매주 측정하고, 5개월차에 커뮤니티 · 위키 같은 외부 신뢰 출처를 확보합니다. 언론 보도자료 배포는 PREMIUM에서 3개월차부터 들어갑니다.</p>
+          <div class="spec"><span><b>매주</b> AI 인용 스냅샷</span><span><b>매월</b> 운영 리포트</span><span><b>분기</b> 전략 리뷰</span></div>
+        </div></div></div>
+      </div>
     </div>
-
-    <div class="volume">
+    <div class="vols">
       <div class="vol rv"><div class="v num"><span data-count="35">0</span><small>건</small></div><div class="k">롱폼 전문 콘텐츠<br>6개월 누적</div></div>
       <div class="vol rv"><div class="v num"><span data-count="88">0</span><small>건</small></div><div class="k">숏폼 용어백과<br>6개월 누적</div></div>
       <div class="vol rv"><div class="v num"><span data-count="6">0</span><small>항목</small></div><div class="k">기술 개선 범위<br>스키마부터 전용 페이지까지</div></div>
-      <div class="vol rv"><div class="v num"><span data-count="4">0</span><small>축</small></div><div class="k">관절 · 투석 먼저,<br>검진 · 수술장비 이어서</div></div>
+      <div class="vol rv"><div class="v num"><span data-count="4">0</span><small>분야</small></div><div class="k">관절 · 투석 먼저,<br>검진 · 수술장비는 이어서</div></div>
     </div>
 
-    <div class="sec-head rv" style="margin-top:clamp(64px,8vw,96px)">
-      <div class="eyebrow">First 3 months</div>
-      <h2>첫 3개월, 이 질의부터 가져옵니다</h2>
-      <p>경산만 보지 않습니다. 청도 · 영천 · 대구 근교까지 지역 조합을 함께 겁니다. 추적 질의 40개 가운데 일부입니다.</p>
-    </div>
-    <div class="tabs" role="tablist" aria-label="축별 질의">
+    <header class="sh" style="margin-top:clamp(72px,9vw,120px)"><div><span class="idx">06</span><span class="lab">First 3 months</span></div><div><h2 class="split">첫 석 달은 이 질문부터 잡습니다.</h2><p class="lede rv">경산만 보지 않습니다. 청도 · 영천 · 대구 근교까지 지역 조합을 같이 겁니다. 추적 질의 40개 가운데 일부입니다.</p></div></header>
+    <div class="tabs" role="tablist" aria-label="분야별 질의">
       <button class="tab" role="tab" aria-selected="true" aria-controls="q1" id="t1">① 인공관절 · 관절</button>
       <button class="tab" role="tab" aria-selected="false" aria-controls="q2" id="t2">② 혈액투석</button>
       <button class="tab" role="tab" aria-selected="false" aria-controls="q3" id="t3">③ 종합건강검진</button>
       <button class="tab" role="tab" aria-selected="false" aria-controls="q4" id="t4">④ 수술 장비</button>
     </div>
-    <div class="qpanel on" id="q1" role="tabpanel" aria-labelledby="t1">
-      <div class="qbox"><div class="k">지역 조합 질의</div><ul><li class="first">경산 인공관절 수술 잘하는 병원</li><li>청도 무릎관절 병원</li><li>영천 정형외과 관절 치료</li></ul></div>
-      <div class="qbox"><div class="k">정보형 질의</div><ul><li>무릎 인공관절 수술 시기</li><li>부분치환 vs 전치환</li><li>인공관절 수명</li></ul></div>
+    <div class="qp on" id="q1" role="tabpanel" aria-labelledby="t1">
+      <div class="qb"><div class="k">지역 조합 질의</div><ul><li class="first">경산 인공관절 수술 잘하는 병원</li><li>청도 무릎관절 병원</li><li>영천 정형외과 관절 치료</li></ul></div>
+      <div class="qb"><div class="k">정보형 질의</div><ul><li>무릎 인공관절 수술 시기</li><li>부분치환 vs 전치환</li><li>인공관절 수명</li></ul></div>
     </div>
-    <div class="qpanel" id="q2" role="tabpanel" aria-labelledby="t2">
-      <div class="qbox"><div class="k">지역 조합 질의</div><ul><li class="first">경산 혈액투석 병원</li><li>경산 인공신장실</li><li>청도 · 영천 투석 가능한 병원</li></ul></div>
-      <div class="qbox"><div class="k">정보형 질의</div><ul><li>혈액투석 vs 복막투석</li><li>투석혈관 관리법</li><li>투석 환자 식단</li></ul></div>
+    <div class="qp" id="q2" role="tabpanel" aria-labelledby="t2">
+      <div class="qb"><div class="k">지역 조합 질의</div><ul><li class="first">경산 혈액투석 병원</li><li>경산 인공신장실</li><li>청도 · 영천 투석 가능한 병원</li></ul></div>
+      <div class="qb"><div class="k">정보형 질의</div><ul><li>혈액투석 vs 복막투석</li><li>투석혈관 관리법</li><li>투석 환자 식단</li></ul></div>
     </div>
-    <div class="qpanel" id="q3" role="tabpanel" aria-labelledby="t3">
-      <div class="qbox"><div class="k">지역 조합 질의</div><ul><li class="first">경산 종합건강검진</li><li>경산 국가검진 병원</li><li>영천 건강검진 잘하는 곳</li></ul></div>
-      <div class="qbox"><div class="k">정보형 질의</div><ul><li>종합검진 항목 고르는 법</li><li>위 · 대장내시경 검사 전 준비</li></ul></div>
+    <div class="qp" id="q3" role="tabpanel" aria-labelledby="t3">
+      <div class="qb"><div class="k">지역 조합 질의</div><ul><li class="first">경산 종합건강검진</li><li>경산 국가검진 병원</li><li>영천 건강검진 잘하는 곳</li></ul></div>
+      <div class="qb"><div class="k">정보형 질의</div><ul><li>종합검진 항목 고르는 법</li><li>위 · 대장내시경 검사 전 준비</li></ul></div>
     </div>
-    <div class="qpanel" id="q4" role="tabpanel" aria-labelledby="t4">
-      <div class="qbox"><div class="k">지역 조합 질의</div><ul><li>경산 관절내시경 병원</li><li>대구 근교 인공관절 내비게이션 수술</li></ul></div>
-      <div class="qbox"><div class="k">정보형 질의</div><ul><li>인공관절 내비게이션 수술이란</li><li>관절내시경 회복 기간</li></ul></div>
+    <div class="qp" id="q4" role="tabpanel" aria-labelledby="t4">
+      <div class="qb"><div class="k">지역 조합 질의</div><ul><li>경산 관절내시경 병원</li><li>대구 근교 인공관절 내비게이션 수술</li></ul></div>
+      <div class="qb"><div class="k">정보형 질의</div><ul><li>인공관절 내비게이션 수술이란</li><li>관절내시경 회복 기간</li></ul></div>
     </div>
-    <div class="qlegend"><span><i></i>1개월차에 확정하는 첫 공략 질의</span></div>
-    <p class="foot">* 질의 세트는 계약 후 검색량 데이터로 확정하고 분기마다 다시 짭니다. 병원명이 들어간 질의는 점유율 지표를 왜곡하므로 추적 세트에서 뺍니다.</p>
-  </div>
-</section>
+    <div class="qlegend"><i></i><span>1개월차에 확정하는 첫 공략 질의</span></div>
+    <p class="note">* 질의 세트는 계약 후 검색량 데이터로 확정하고 분기마다 다시 짭니다. 병원명이 들어간 질의는 점유율 지표를 왜곡하므로 추적 세트에서 뺍니다.</p>
 
-<!-- ───────── 콘텐츠 2트랙 ───────── -->
-<section class="sec tint" id="content">
-  <div class="wrap">
-    <div class="sec-head rv">
-      <div class="eyebrow">Content</div>
-      <h2>콘텐츠는 롱폼 × 숏폼 2트랙으로 굴립니다</h2>
-      <p>하나는 직접 인용을 따내고, 하나는 그 아래 지식 기반을 깝니다.</p>
-    </div>
+    <header class="sh" style="margin-top:clamp(72px,9vw,120px)"><div><span class="idx">06</span><span class="lab">Content</span></div><div><h2 class="split">콘텐츠는 롱폼과 숏폼 두 갈래로 운영합니다.</h2><p class="lede rv">하나는 직접 인용을 따내고, 다른 하나는 그 아래 지식 기반을 만듭니다.</p></div></header>
     <div class="tracks">
-      <article class="track rv">
-        <div class="k">Long-form</div>
-        <h4>사람이 쓰는 전문 콘텐츠</h4>
-        <p>4,000~5,000자. 논문 · 학회 가이드라인을 바탕으로 집필하고 썸네일과 본문 삽화까지 제작합니다.</p>
-        <div class="price">건당 <b>30만원</b></div>
-      </article>
-      <article class="track rv">
-        <div class="k">Short-form</div>
-        <h4>AI 자동화 용어백과</h4>
-        <p>1,000~2,000자. AI가 초안을 쓰고 사람이 사실을 검수합니다. 백과 형태로 쌓여 AI 학습 출처가 됩니다.</p>
-        <div class="price">건당 <b>5만원</b></div>
-      </article>
-      <article class="track rv">
-        <div class="k">Tracking</div>
-        <h4>SOHA.ai</h4>
-        <p>리드젠랩이 직접 개발한 AI 인용 추적 플랫폼. 7개 AI 점유율을 실시간으로 재고 월간 리포트로 정리합니다.</p>
-        <div class="price">플랜에 <b>포함</b></div>
-      </article>
+      <article class="track rv"><div class="k">Long-form</div><h4>사람이 쓰는 전문 콘텐츠</h4><p>4,000~5,000자. 논문과 학회 가이드라인을 바탕으로 집필하고 썸네일과 본문 삽화까지 제작합니다.</p><div class="price">건당<b>30만원</b></div></article>
+      <article class="track rv"><div class="k">Short-form</div><h4>AI 초안, 사람 검수 용어백과</h4><p>1,000~2,000자. AI가 초안을 쓰고 사람이 사실을 검수합니다. 백과 형태로 쌓여 AI 학습 출처가 됩니다.</p><div class="price">건당<b>5만원</b></div></article>
+      <article class="track rv"><div class="k">Tracking</div><h4>SOHA.ai</h4><p>리드젠랩이 직접 개발한 AI 인용 추적 플랫폼. 7개 AI 점유율을 실시간으로 재고 월간 리포트로 정리합니다.</p><div class="price">플랜에<b>포함</b></div></article>
     </div>
-
     <div class="bench rv">
-      <div class="panel">
-        <h3>지식백과 · 용어백과를 세명종합병원 이름으로 구축합니다 <span class="chip p" style="vertical-align:middle;margin-left:6px">PREMIUM</span></h3>
-        <div class="sub">AI는 「어디서 읽었나」로 신뢰도를 판단합니다. 백과를 가진 기관이 인용에서 유리합니다.</div>
-        <div class="tbl-wrap" style="margin-top:20px">
-        <table>
-          <thead><tr><th>벤치마크</th><th>무엇을 만들었나</th><th>결과</th><th>세명종합병원 적용안</th></tr></thead>
-          <tbody>
-            <tr><td>서울아산병원</td><td>질환백과 · 의료정보 아카이브</td><td>질환 질의 답변의 표준 출처로 인용</td><td>관절질환 백과 60개 (퇴행성관절염 · 회전근개파열 등)</td></tr>
-            <tr><td>닥터나우</td><td>증상 · 의약품 정보 DB</td><td>비대면진료 카테고리 답변 선점</td><td>검진 항목 백과 (항목별 목적 · 비용 · 소요시간)</td></tr>
-            <tr><td>서울비디치과</td><td>치과 시술 용어사전</td><td>시술명 질의에서 개원가 최상위 인용</td><td>수술 · 장비 용어백과 (인공관절 내비게이션 · 관절경 등)</td></tr>
-            <tr><td>삼성생명</td><td>보험 · 금융 용어백과</td><td>비의료 영역에서도 같은 구조가 작동</td><td>신장 · 투석 백과 (혈액투석 · 복막투석 · 투석혈관 등)</td></tr>
-          </tbody>
-        </table>
-        </div>
-        <p class="foot">* 백과는 숏폼 트랙으로 쌓습니다. 월 20건이면 2~6개월차 다섯 달에 100건 규모의 기관 백과가 완성됩니다.</p>
+      <div class="blk-t">지식백과 · 용어백과를 세명종합병원 이름으로 구축합니다 <span class="st p" style="margin-left:8px;vertical-align:middle">Premium</span></div>
+      <div class="blk-s">AI는 「어디서 읽었나」로 신뢰도를 판단합니다. 백과를 가진 기관이 인용에서 유리합니다.</div>
+      <div class="tbl">
+      <table>
+        <thead><tr><th>벤치마크</th><th>무엇을 만들었나</th><th>결과</th><th>세명종합병원 적용안</th></tr></thead>
+        <tbody>
+          <tr><td>서울아산병원</td><td>질환백과 · 의료정보 아카이브</td><td>질환 질의 답변의 표준 출처로 인용</td><td>관절질환 백과 60개 (퇴행성관절염 · 회전근개파열 등)</td></tr>
+          <tr><td>닥터나우</td><td>증상 · 의약품 정보 DB</td><td>비대면진료 카테고리 답변 선점</td><td>검진 항목 백과 (항목별 목적 · 비용 · 소요시간)</td></tr>
+          <tr><td>서울비디치과</td><td>치과 시술 용어사전</td><td>시술명 질의에서 개원가 최상위 인용</td><td>수술 · 장비 용어백과 (인공관절 내비게이션 · 관절경 등)</td></tr>
+          <tr><td>삼성생명</td><td>보험 · 금융 용어백과</td><td>비의료 영역에서도 같은 구조가 작동</td><td>신장 · 투석 백과 (혈액투석 · 복막투석 · 투석혈관 등)</td></tr>
+        </tbody>
+      </table>
       </div>
+      <p class="note">* 백과는 숏폼 트랙으로 쌓습니다. 월 20건이면 2~6개월차 다섯 달에 100건 규모의 기관 백과가 완성됩니다.</p>
     </div>
   </div>
 </section>
 
-<!-- ───────── 로드맵 ───────── -->
-<section class="sec" id="roadmap">
-  <div class="wrap">
-    <div class="sec-head rv">
-      <div class="eyebrow">Roadmap</div>
-      <h2>6개월, 매월 무엇이 나오는지 먼저 정해 둡니다</h2>
-      <p>STANDARD 기준입니다. GEO · AEO는 3개월 이전에 성과가 드러나지 않아 계약은 6개월 이상 또는 6개월 단위로 합니다.</p>
+<!-- 로드맵 -->
+<section class="dark road-sec" id="roadmap" data-dark>
+  <div class="road-stage" id="roadStage">
+    <div class="wrap">
+      <header class="sh road-sh"><div><span class="idx">07</span><span class="lab">Roadmap</span></div><div><h2 class="split">여섯 달 동안 매달 무엇이 나오는지 먼저 정해 둡니다.</h2><p class="lede rv">STANDARD 기준입니다. GEO · AEO는 석 달 이전에 성과가 드러나지 않아 계약은 6개월 이상 또는 6개월 단위로 합니다.</p></div></header>
+      <div class="road-hint"><i></i>스크롤하면 옆으로 넘어갑니다</div>
     </div>
-    <div class="road">
-      <article class="month rv"><div class="m">Month<b>1</b></div><h4>진단 · 설계 · 채널 구축</h4><p>테크니컬 진단, 스키마 마크업 설계와 가이드 전달, 콘텐츠 채널 구축, 질의 세트 확정</p><div class="out"><span class="hi">진단 리포트</span><span class="hi">스키마 가이드</span><span>블로그 오픈</span><span>숏폼 8</span></div></article>
-      <article class="month rv"><div class="m">Month<b>2</b></div><h4>관절 · 인공신장 전용 페이지</h4><p>1순위 두 축의 전용 페이지 설계, 롱폼 착수</p><div class="out"><span>롱폼 7</span><span>숏폼 16</span></div></article>
-      <article class="month rv mark"><div class="m">Month<b>3</b></div><h4>검진 · 수술장비 축 확대</h4><p>2순위 두 축으로 확장. 첫 인용이 잡히기 시작하는 구간</p><div class="out"><span>롱폼 7</span><span>숏폼 16</span><span class="hi">1차 성과 리포트</span></div></article>
-      <article class="month rv"><div class="m">Month<b>4</b></div><h4>비교 · 기준 콘텐츠 보강</h4><p>권역 경쟁 병원과 견주는 비교 · 선택 기준 콘텐츠</p><div class="out"><span>롱폼 7</span><span>숏폼 16</span></div></article>
-      <article class="month rv"><div class="m">Month<b>5</b></div><h4>외부 신뢰 출처 확보</h4><p>커뮤니티 · 위키 게시. 언론 보도자료는 PREMIUM</p><div class="out"><span>롱폼 7</span><span>숏폼 16</span><span class="hi">외부 게시물 10~30</span></div></article>
-      <article class="month rv"><div class="m">Month<b>6</b></div><h4>목표 검증 · 다음 6개월 설계</h4><p>목표 대비 검증, 차기 6개월 전략안</p><div class="out"><span>롱폼 7</span><span>숏폼 16</span><span class="hi">종합 리포트</span><span class="hi">차기 전략안</span></div></article>
+    <div class="road-track" id="roadTrack">
+      <article class="month"><div class="m">Month<b>1</b></div><h4>진단 · 설계 · 채널 구축</h4><p>테크니컬 진단, 스키마 마크업 설계와 가이드 전달, 콘텐츠 채널 구축, 질의 세트 확정</p><div class="out"><span class="hi">진단 리포트</span><span class="hi">스키마 가이드</span><span>블로그 오픈</span><span>숏폼 8</span></div></article>
+      <article class="month"><div class="m">Month<b>2</b></div><h4>관절 · 인공신장 전용 페이지</h4><p>1순위 두 분야의 전용 페이지 설계, 롱폼 착수</p><div class="out"><span>롱폼 7</span><span>숏폼 16</span></div></article>
+      <article class="month mark"><div class="m">Month<b>3</b></div><h4>검진 · 수술장비로 확대</h4><p>2순위 두 분야로 넓힙니다. 첫 인용이 잡히기 시작하는 구간입니다.</p><div class="out"><span>롱폼 7</span><span>숏폼 16</span><span class="hi">1차 성과 리포트</span></div></article>
+      <article class="month"><div class="m">Month<b>4</b></div><h4>비교 · 기준 콘텐츠 보강</h4><p>권역 경쟁 병원과 견주는 비교 · 선택 기준 콘텐츠</p><div class="out"><span>롱폼 7</span><span>숏폼 16</span></div></article>
+      <article class="month"><div class="m">Month<b>5</b></div><h4>외부 신뢰 출처 확보</h4><p>커뮤니티 · 위키 게시. 언론 보도자료는 PREMIUM.</p><div class="out"><span>롱폼 7</span><span>숏폼 16</span><span class="hi">외부 게시물 10~30</span></div></article>
+      <article class="month"><div class="m">Month<b>6</b></div><h4>목표 검증 · 다음 6개월 설계</h4><p>목표 대비 검증, 차기 6개월 전략안</p><div class="out"><span>롱폼 7</span><span>숏폼 16</span><span class="hi">종합 리포트</span><span class="hi">차기 전략안</span></div></article>
     </div>
-
+  </div>
+  <div class="wrap" style="padding-bottom:clamp(72px,9vw,140px)">
     <div class="cadence">
       <div class="cad rv"><div class="k">Weekly</div><b>AI 인용 스냅샷</b><p>점유율 변동 · 신규 인용 출처 · 콘텐츠 발행 현황</p></div>
       <div class="cad rv"><div class="k">Monthly</div><b>운영 리포트</b><p>목표 대비 진척 · 실행 내역 · 다음 달 액션</p></div>
       <div class="cad rv"><div class="k">Quarterly</div><b>전략 리뷰</b><p>경쟁 병원 지형 변화 · 질의 세트 재설계 · 예산 재배분</p></div>
     </div>
-    <p class="foot">* 1개월차 운영비는 질의 세트 설계 · 콘텐츠 기획 · 채널 세팅 공수에 씁니다. 스키마 코드의 실제 삽입은 개발 대행 또는 병원 측 개발사가 맡습니다.</p>
+    <p class="note">* 1개월차 운영비는 질의 세트 설계 · 콘텐츠 기획 · 채널 세팅 공수에 씁니다. 스키마 코드의 실제 삽입은 개발 대행 또는 병원 측 개발사가 맡습니다.</p>
   </div>
 </section>
 
-<!-- ───────── 목표 ───────── -->
-<section class="sec dark" id="target" data-dark>
+<!-- 목표 -->
+<section class="sec" id="target">
   <div class="wrap">
-    <div class="sec-head rv">
-      <div class="eyebrow">Target</div>
-      <h2>목표 수치와 기한을 먼저 합의합니다</h2>
-      <p>기존 병원 고객사 평균 상승률로 잡은 현실적인 범위입니다. STANDARD 플랜 기준입니다.</p>
-    </div>
-    <div class="kpi-hero">
-      <div class="kh rv"><div class="k">AI 답변 점유율</div><div class="v"><span class="from num">2.8%</span><span class="to num">15~20%</span></div><div class="d">6개월 · 7개 AI 답변 내 인용 비중</div></div>
-      <div class="kh rv"><div class="k">4대 축 노출</div><div class="v"><span class="from">1개 축</span><span class="to">4개 축 전부</span></div><div class="d">관절 · 투석 · 검진 · 수술기기</div></div>
-      <div class="kh rv"><div class="k">AI 답변 내 평균 추천 순위</div><div class="v"><span class="from">10위권 밖</span><span class="to num">1~3위</span></div><div class="d">6개월 · 답변 안 나열 순서</div></div>
-      <div class="kh rv"><div class="k">구글 자연검색 유입</div><div class="v"><span class="from">기준값</span><span class="to num">+120%</span></div><div class="d">6개월차 기준</div></div>
+    <header class="sh"><div><span class="idx">08</span><span class="lab">Target</span></div><div><h2 class="split">목표 수치와 기한을 먼저 합의합니다.</h2><p class="lede rv">기존 병원 고객사 평균 상승률로 잡은 현실적인 범위입니다. STANDARD 플랜 기준입니다.</p></div></header>
+    <div class="kh">
+      <div class="rv"><div class="k">AI 답변 점유율</div><div class="v"><span class="from num">2.8%</span><span class="to num">15~20%</span></div><div class="d">6개월 · 7개 AI 답변 내 인용 비중</div></div>
+      <div class="rv"><div class="k">네 분야 노출</div><div class="v"><span class="from">1개 분야</span><span class="to">네 곳 전부</span></div><div class="d">관절 · 투석 · 검진 · 수술기기</div></div>
+      <div class="rv"><div class="k">AI 답변 내 평균 추천 순위</div><div class="v"><span class="from">10위권 밖</span><span class="to num">1~3위</span></div><div class="d">6개월 · 답변 안 나열 순서</div></div>
+      <div class="rv"><div class="k">구글 자연검색 유입</div><div class="v"><span class="from">기준값</span><span class="to num">+120%</span></div><div class="d">6개월차 기준</div></div>
     </div>
     <div class="kpi-wrap rv">
       <table class="kpi">
         <thead><tr><th>지표</th><th class="r">현재 (예비 스캔)</th><th class="r">3개월</th><th></th><th class="r">6개월</th></tr></thead>
         <tbody>
-          <tr><td>AI 답변 점유율 (SoV)<small>7개 AI × 40질의</small></td><td class="r cur num">2.8%</td><td class="r t3 num">8 ~ 12%</td><td><div class="track"><i data-w="100"></i><em style="left:55%"></em></div></td><td class="r t6 num">15 ~ 20%</td></tr>
-          <tr><td>핵심 질의 커버리지<small>40개 기준</small></td><td class="r cur num">6개 노출</td><td class="r t3 num">20개 이상</td><td><div class="track"><i data-w="100"></i><em style="left:60%"></em></div></td><td class="r t6 num">30개 이상</td></tr>
-          <tr><td>AI 답변 내 평균 추천 순위</td><td class="r cur">10위권 밖</td><td class="r t3 num">5 ~ 7위</td><td><div class="track"><i data-w="100"></i><em style="left:50%"></em></div></td><td class="r t6 num">1 ~ 3위</td></tr>
-          <tr><td>자사 도메인 인용 비중</td><td class="r cur num">3% 내외</td><td class="r t3 num">8 ~ 10%</td><td><div class="track"><i data-w="100"></i><em style="left:58%"></em></div></td><td class="r t6 num">15% 이상</td></tr>
-          <tr><td>구글 자연검색 유입</td><td class="r cur">기준값</td><td class="r t3 num">+40%</td><td><div class="track"><i data-w="100"></i><em style="left:33%"></em></div></td><td class="r t6 num">+120%</td></tr>
-          <tr><td>홈페이지 예약 · 문의 유입</td><td class="r cur">기준값</td><td class="r t3 num">+15 ~ 25%</td><td><div class="track"><i data-w="100"></i><em style="left:40%"></em></div></td><td class="r t6 num">+40 ~ 60%</td></tr>
+          <tr><td>AI 답변 점유율 (SoV)<small>7개 AI × 40질의</small></td><td class="r cur num">2.8%</td><td class="r t3 num">8 ~ 12%</td><td><div class="trk"><i data-w="100"></i><em style="left:55%"></em></div></td><td class="r t6 num">15 ~ 20%</td></tr>
+          <tr><td>핵심 질의 커버리지<small>40개 기준</small></td><td class="r cur num">6개 노출</td><td class="r t3 num">20개 이상</td><td><div class="trk"><i data-w="100"></i><em style="left:60%"></em></div></td><td class="r t6 num">30개 이상</td></tr>
+          <tr><td>AI 답변 내 평균 추천 순위</td><td class="r cur">10위권 밖</td><td class="r t3 num">5 ~ 7위</td><td><div class="trk"><i data-w="100"></i><em style="left:50%"></em></div></td><td class="r t6 num">1 ~ 3위</td></tr>
+          <tr><td>자사 도메인 인용 비중</td><td class="r cur num">3% 내외</td><td class="r t3 num">8 ~ 10%</td><td><div class="trk"><i data-w="100"></i><em style="left:58%"></em></div></td><td class="r t6 num">15% 이상</td></tr>
+          <tr><td>구글 자연검색 유입</td><td class="r cur">기준값</td><td class="r t3 num">+40%</td><td><div class="trk"><i data-w="100"></i><em style="left:33%"></em></div></td><td class="r t6 num">+120%</td></tr>
+          <tr><td>홈페이지 예약 · 문의 유입</td><td class="r cur">기준값</td><td class="r t3 num">+15 ~ 25%</td><td><div class="trk"><i data-w="100"></i><em style="left:40%"></em></div></td><td class="r t6 num">+40 ~ 60%</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="foot">* STANDARD 기준이며 BASIC은 공략 축이 1~2개라 목표 범위가 달라집니다. 기존 병원 고객사 평균 상승률로 추정한 값이고, 예약 · 문의는 상담 전환율에 따라 달라집니다. 검색 순위와 AI 인용은 보장되지 않습니다.</p>
+    <p class="note">* STANDARD 기준이며 BASIC은 공략 분야가 1~2개라 목표 범위가 달라집니다. 기존 병원 고객사 평균 상승률로 추정한 값이고, 예약 · 문의는 상담 전환율에 따라 달라집니다. 검색 순위와 AI 인용은 보장되지 않습니다.</p>
   </div>
 </section>
 
-<!-- ───────── 플랜 ───────── -->
-<section class="sec" id="pricing">
+<!-- 플랜 -->
+<section class="sec tint" id="pricing">
   <div class="wrap">
-    <div class="sec-head rv">
-      <div class="eyebrow">Plans</div>
-      <h2>3개 플랜 가운데 고르실 수 있습니다</h2>
-      <p>롱폼 30만원 · 숏폼 5만원 공통 단가 기준이며 VAT 별도입니다. 4개 축을 한 번에 가야 하는 세명종합병원에는 STANDARD를 권합니다.</p>
-    </div>
+    <header class="sh"><div><span class="idx">09</span><span class="lab">Plans</span></div><div><h2 class="split">세 가지 플랜 가운데 고르실 수 있습니다.</h2><p class="lede rv">롱폼 30만원, 숏폼 5만원 공통 단가 기준이며 VAT 별도입니다. 네 분야를 한 번에 가야 하는 세명종합병원에는 STANDARD를 권해 드립니다.</p></div></header>
     <div class="plans">
       <article class="plan rv">
-        <div><div class="nm">Basic</div><div class="price"><b class="num">250<span style="font-size:18px;font-weight:600">만원</span></b><span>/ 월</span></div></div>
-        <p class="fit">1~2개 축만 먼저 시작할 때. 관절 · 투석 두 축에 집중합니다.</p>
-        <ul>
-          <li><span>롱폼 전문 콘텐츠</span><span>5건 / 월</span></li>
-          <li><span>숏폼 용어백과</span><span>12건 / 월</span></li>
-          <li><span>SOHA.ai 트래킹</span><span>월 1회 리포트</span></li>
-          <li><span>공략 축</span><span>1~2개 축 집중</span></li>
-          <li class="off"><span>언론 보도자료</span><span>없음</span></li>
-          <li class="off"><span>지식백과 구축</span><span>없음</span></li>
-        </ul>
-        <div class="sum"><span>월 발행</span><b class="num">17건</b></div>
+        <div><div class="nm"><span>Basic</span></div><div class="price num">250<small>만원</small><span>/ 월</span></div></div>
+        <p class="fit">한두 분야만 먼저 시작할 때. 관절과 투석에 집중합니다.</p>
+        <ul><li><span>롱폼 전문 콘텐츠</span><span>5건 / 월</span></li><li><span>숏폼 용어백과</span><span>12건 / 월</span></li><li><span>SOHA.ai 트래킹</span><span>월 1회 리포트</span></li><li><span>공략 분야</span><span>1~2개 집중</span></li><li class="off"><span>언론 보도자료</span><span>없음</span></li><li class="off"><span>지식백과 구축</span><span>없음</span></li></ul>
+        <div class="tot"><span>월 발행</span><b class="num">17건</b></div>
       </article>
-      <article class="plan rec rv">
-        <div class="badge">진단 기준 권장</div>
-        <div><div class="nm">Standard</div><div class="price"><b class="num">350<span style="font-size:18px;font-weight:600">만원</span></b><span>/ 월</span></div></div>
-        <p class="fit">4개 축을 동시에 공략합니다. 이 제안서의 로드맵과 목표 수치가 이 플랜 기준입니다.</p>
-        <ul>
-          <li><span>롱폼 전문 콘텐츠</span><span>7건 / 월</span></li>
-          <li><span>숏폼 용어백과</span><span>16건 / 월</span></li>
-          <li><span>SOHA.ai 트래킹</span><span>주 1회 측정</span></li>
-          <li><span>공략 축</span><span>4개 축 동시</span></li>
-          <li class="off"><span>언론 보도자료</span><span>없음</span></li>
-          <li class="off"><span>지식백과 구축</span><span>없음</span></li>
-        </ul>
-        <div class="sum"><span>월 발행</span><b class="num">23건</b></div>
+      <article class="plan is-rec rv">
+        <div><div class="nm"><span>Standard</span><span class="rec">진단 기준 권장</span></div><div class="price num">350<small>만원</small><span>/ 월</span></div></div>
+        <p class="fit">네 분야를 동시에 공략합니다. 이 제안서의 로드맵과 목표 수치가 이 플랜 기준입니다.</p>
+        <ul><li><span>롱폼 전문 콘텐츠</span><span>7건 / 월</span></li><li><span>숏폼 용어백과</span><span>16건 / 월</span></li><li><span>SOHA.ai 트래킹</span><span>주 1회 측정</span></li><li><span>공략 분야</span><span>네 곳 동시</span></li><li class="off"><span>언론 보도자료</span><span>없음</span></li><li class="off"><span>지식백과 구축</span><span>없음</span></li></ul>
+        <div class="tot"><span>월 발행</span><b class="num">23건</b></div>
       </article>
       <article class="plan rv">
-        <div><div class="nm">Premium</div><div class="price"><b class="num">500<span style="font-size:18px;font-weight:600">만원</span></b><span>/ 월</span></div></div>
-        <p class="fit">4개 축에 언론과 기관 백과까지. 제3자 신뢰 출처를 가장 빨리 확보합니다.</p>
-        <ul>
-          <li><span>롱폼 전문 콘텐츠</span><span>8건 / 월</span></li>
-          <li><span>숏폼 용어백과</span><span>20건 / 월</span></li>
-          <li><span>SOHA.ai 트래킹</span><span>주 1회 + 경쟁 리포트</span></li>
-          <li><span>공략 축</span><span>4개 축 + 언론 + 백과</span></li>
-          <li><span>언론 보도자료</span><span>2건 / 월</span></li>
-          <li><span>지식백과 구축</span><span>포함</span></li>
-        </ul>
-        <div class="sum"><span>월 발행</span><b class="num">28건</b></div>
+        <div><div class="nm"><span>Premium</span></div><div class="price num">500<small>만원</small><span>/ 월</span></div></div>
+        <p class="fit">네 분야에 언론과 기관 백과까지. 제3자 신뢰 출처를 가장 빨리 확보합니다.</p>
+        <ul><li><span>롱폼 전문 콘텐츠</span><span>8건 / 월</span></li><li><span>숏폼 용어백과</span><span>20건 / 월</span></li><li><span>SOHA.ai 트래킹</span><span>주 1회 + 경쟁 리포트</span></li><li><span>공략 분야</span><span>네 곳 + 언론 + 백과</span></li><li><span>언론 보도자료</span><span>2건 / 월</span></li><li><span>지식백과 구축</span><span>포함</span></li></ul>
+        <div class="tot"><span>월 발행</span><b class="num">28건</b></div>
       </article>
     </div>
-    <p class="foot">* 초기 구축비 별도. 6개월 총액은 견적서를 참조해 주세요. 홈페이지 개발 대행은 스코프 확정 후 따로 산정합니다.</p>
+    <p class="note">* 초기 구축비 별도. 6개월 총액은 견적서를 참조해 주세요. 홈페이지 개발 대행은 스코프 확정 후 따로 산정합니다.</p>
   </div>
 </section>
 
-<!-- ───────── 다음 단계 ───────── -->
-<section class="cta dark" id="next" data-dark>
+<!-- 다음 단계 -->
+<section class="dark end" id="next" data-dark>
   <div class="wrap">
-    <div>
-      <div class="eyebrow">Next</div>
-      <h2 style="margin-top:14px">시작은<br>첫 달 진단부터입니다.</h2>
-      <p class="lead">미팅에서 플랜과 목표 수치를 같이 정하고, 계약 후 첫 달 안에 스키마 적용을 마칩니다. 콘텐츠는 2개월차부터 나갑니다.</p>
-      <div class="contact">
-        <div class="pill"><span id="mail">growth@lead-gen.team</span><button type="button" data-copy="growth@lead-gen.team">복사</button></div>
-        <div class="pill"><a href="https://www.lead-gen.team" target="_blank" rel="noopener" style="text-decoration:none">www.lead-gen.team</a></div>
+    <span class="mono" style="color:var(--on-black-mute)">10 · Next</span>
+    <h2 class="split" style="margin-top:20px">첫 달 진단부터 시작합니다.</h2>
+    <div class="end-grid">
+      <div>
+        <p class="lede rv">미팅에서 플랜과 목표 수치를 함께 정하고, 계약 후 첫 달 안에 스키마 적용을 마칩니다. 콘텐츠는 2개월차부터 나갑니다.</p>
+        <div class="contact rv">
+          <span class="mail" id="mail">growth@lead-gen.team</span>
+          <button class="cp" type="button" data-copy="growth@lead-gen.team">복사</button>
+          <a class="cp" href="https://www.lead-gen.team" target="_blank" rel="noopener">lead-gen.team</a>
+        </div>
       </div>
+      <ol class="next">
+        <li class="rv"><span class="n">1</span><div><b>제안 검토 미팅</b><p>플랜 선택과 목표 수치 합의. 질의 세트 초안을 함께 봅니다.</p></div></li>
+        <li class="rv"><span class="n">2</span><div><b>계약 체결, 홈페이지 최적화 착수</b><p>6개월 단위. 개발사와 함께할지 이때 정합니다.</p></div></li>
+        <li class="rv"><span class="n">3</span><div><b>1개월차 스키마 적용 완료, 2개월차 콘텐츠 발행 시작</b><p>3개월차 1차 성과 리포트에서 첫 인용 확보 여부를 확인합니다.</p></div></li>
+      </ol>
     </div>
-    <ol class="next">
-      <li class="rv"><span class="n">01</span><div><b>제안 검토 미팅</b><p>플랜 선택과 목표 수치 합의. 질의 세트 초안을 함께 봅니다.</p></div></li>
-      <li class="rv"><span class="n">02</span><div><b>계약 체결 · 홈페이지 최적화 착수</b><p>6개월 단위. 개발사 협업 여부를 이때 정합니다.</p></div></li>
-      <li class="rv"><span class="n">03</span><div><b>1개월차 스키마 적용 완료 · 2개월차 콘텐츠 발행 시작</b><p>3개월차 1차 성과 리포트에서 첫 인용 확보 여부를 확인합니다.</p></div></li>
-    </ol>
   </div>
 </section>
 </main>
@@ -955,180 +913,226 @@ footer img{height:16px;width:auto;opacity:.7}
 
 <script src="assets/vendor/gsap.min.js"></script>
 <script src="assets/vendor/ScrollTrigger.min.js"></script>
+<script src="assets/vendor/SplitText.min.js"></script>
+<script src="assets/vendor/lenis.min.js"></script>
 <script>
 (function(){
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var hasGsap = typeof gsap !== 'undefined';
-  if (hasGsap && typeof ScrollTrigger !== 'undefined') gsap.registerPlugin(ScrollTrigger);
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var G=typeof gsap!=='undefined', ST=G&&typeof ScrollTrigger!=='undefined', SPL=G&&typeof SplitText!=='undefined';
+  if(ST) gsap.registerPlugin(ScrollTrigger);
+  if(SPL) gsap.registerPlugin(SplitText);
+  var motion=G&&ST&&!reduce;
 
-  /* ── 데이터 ─────────────────────────────── */
-  var CORP = ['samsung','gs','doosan','hanwha','jb','maeil','hancom','roborock','speak','remember','banksalad','finda','papa-recipe','klavuu','madup','sm-cnc'];
-  var MED  = ['gc','classys','doctornow','croda','cham-podonamu','shesmedi','seoul-bd','clear-seoul','youandi','avijou','senia','theia','juan','cleartone','curael','yeolbang'];
-  var CORP_NAMES = {samsung:'삼성전자',gs:'GS',doosan:'두산',hanwha:'한화',jb:'JB금융지주',maeil:'매일유업',hancom:'한글과컴퓨터',roborock:'로보락',speak:'스픽',remember:'리멤버',banksalad:'뱅크샐러드',finda:'핀다','papa-recipe':'파파레서피',klavuu:'클라뷰',madup:'매드업','sm-cnc':'SM C&C',gc:'녹십자',classys:'클래시스',doctornow:'닥터나우',croda:'크로다','cham-podonamu':'참포도나무병원',shesmedi:'쉬즈메디병원','seoul-bd':'서울비디치과','clear-seoul':'클리어서울안과',youandi:'유앤아이 피부과',avijou:'아비쥬 피부과',senia:'세니아의원',theia:'테이아의원',juan:'주앤의원',cleartone:'클리어톤의원',curael:'큐라엘',yeolbang:'열방약국'};
-
+  /* 데이터 */
+  var CORP=['samsung','gs','doosan','hanwha','jb','maeil','hancom','roborock','speak','remember','banksalad','finda','papa-recipe','klavuu','madup','sm-cnc'];
+  var MED=['gc','classys','doctornow','croda','cham-podonamu','shesmedi','seoul-bd','clear-seoul','youandi','avijou','senia','theia','juan','cleartone','curael','yeolbang'];
+  var NAMES={samsung:'삼성전자',gs:'GS',doosan:'두산',hanwha:'한화',jb:'JB금융지주',maeil:'매일유업',hancom:'한글과컴퓨터',roborock:'로보락',speak:'스픽',remember:'리멤버',banksalad:'뱅크샐러드',finda:'핀다','papa-recipe':'파파레서피',klavuu:'클라뷰',madup:'매드업','sm-cnc':'SM C&C',gc:'녹십자',classys:'클래시스',doctornow:'닥터나우',croda:'크로다','cham-podonamu':'참포도나무병원',shesmedi:'쉬즈메디병원','seoul-bd':'서울비디치과','clear-seoul':'클리어서울안과',youandi:'유앤아이 피부과',avijou:'아비쥬 피부과',senia:'세니아의원',theia:'테이아의원',juan:'주앤의원',cleartone:'클리어톤의원',curael:'큐라엘',yeolbang:'열방약국'};
   // 발송 전 실제 운영 데이터로 교체할 것 (원본 PPT의 제안용 가안)
-  var CASES = [
-    {n:'참포도나무병원', s:'척추 · 관절 전문 · 7개월', b:1.5, a:15.9, memo:'비수술 치료 · 디스크 질의 상위 인용. 증상 백과 구축이 주효했습니다.'},
-    {n:'서울비디치과', s:'6개월', b:2.1, a:18.4, memo:'임플란트 · 교정 질의 인용 확보. 구글 Top3 키워드 4개에서 27개로.'},
-    {n:'클리어서울안과', s:'6개월', b:4.8, a:21.3, memo:'지역 + 시술 조합 질의 집중. 평균 추천 순위 12위에서 3위로.'},
-    {n:'유앤아이 피부과', s:'5개월', b:0, a:12.7, memo:'전 질의 미노출에서 시작. 비교 · 선택 기준 질의를 먼저 공략했습니다.'},
-    {n:'닥터나우', s:'비대면진료 · 6개월', b:0, a:9.6, memo:'증상 · 서비스 질의 진입. 네이버 AI 브리핑 인용도 함께 확보.'}
+  var CASES=[
+    {n:'참포도나무병원',s:'척추 · 관절 · 7개월',b:1.5,a:15.9,memo:'비수술 치료와 디스크 질문에서 상위 인용. 증상 백과 구축이 주효했습니다.'},
+    {n:'서울비디치과',s:'6개월',b:2.1,a:18.4,memo:'임플란트 · 교정 질문 인용 확보. 구글 Top3 키워드 4개에서 27개로.'},
+    {n:'클리어서울안과',s:'6개월',b:4.8,a:21.3,memo:'지역과 시술을 묶은 질문에 집중. 평균 추천 순위 12위에서 3위로.'},
+    {n:'유앤아이 피부과',s:'5개월',b:0,a:12.7,memo:'전 질문 미노출에서 출발. 비교 · 선택 기준 질문을 먼저 잡았습니다.'},
+    {n:'닥터나우',s:'비대면진료 · 6개월',b:0,a:9.6,memo:'증상 · 서비스 질문에 진입. 네이버 AI 브리핑 인용도 함께 확보.'}
   ];
-
-  var SOV = [
-    {n:'경산중앙병원', v:22.4},{n:'영남대병원', v:15.1},{n:'대구가톨릭대병원', v:12.6},
-    {n:'수성메트로병원', v:8.3},{n:'경산혜인내과', v:5.2},{n:'세명종합병원', v:2.8, me:true}
+  var SOV=[{n:'경산중앙병원',v:22.4},{n:'영남대병원',v:15.1},{n:'대구가톨릭대병원',v:12.6},{n:'수성메트로병원',v:8.3},{n:'경산혜인내과',v:5.2},{n:'세명종합병원',v:2.8,me:true}];
+  // 2, 3순위 병원 순서는 예비 스캔 명단 기반 재구성. 실제 캡처와 맞출 것.
+  var SIM=[
+    {q:'경산 인공관절 수술 잘하는 병원',items:[{n:'경산중앙병원',s:'관절센터 전용 페이지 인용'},{n:'영남대병원',s:''},{n:'대구가톨릭대병원',s:''},{n:'세명병원 (창원 진해)',s:'smhospital.co.kr 정형외과',bad:true}],verdict:{n:'세명종합병원',s:'답변에 없음'}},
+    {q:'경산 종합건강검진 병원 추천',items:[{n:'경산중앙병원',s:'건강검진센터 페이지 인용'},{n:'영남대병원',s:''},{n:'수성메트로병원',s:''}],verdict:{n:'세명종합병원',s:'답변에 없음'}},
+    {q:'경산 혈액투석 병원',items:[{n:'경산중앙병원',s:''},{n:'경산혜인내과',s:''},{n:'세명종합병원',s:'출처: 병원소개 페이지',weak:true}],verdict:{n:'세명종합병원',s:'3순위 · 전용 페이지 없음',weak:true}}
   ];
+  var QUERIES=['경산 인공관절 수술 잘하는 병원','청도 무릎관절 병원','영천 정형외과 관절 치료','무릎 인공관절 수술 시기','경산 혈액투석 병원','경산 인공신장실','혈액투석 vs 복막투석','경산 종합건강검진','경산 국가검진 병원','영천 건강검진 잘하는 곳','위 · 대장내시경 검사 전 준비','경산 관절내시경 병원','인공관절 내비게이션 수술이란','대구 근교 인공관절 내비게이션 수술'];
 
-  // 2·3순위 병원 순서는 예비 스캔 명단 기반 재구성. 실제 캡처와 맞출 것.
-  var SIM = [
-    {q:'경산 인공관절 수술 잘하는 병원', items:[
-      {n:'경산중앙병원', s:'관절센터 전용 페이지 인용'},
-      {n:'영남대병원', s:''},
-      {n:'대구가톨릭대병원', s:''},
-      {n:'세명병원 (창원 진해)', s:'smhospital.co.kr 정형외과', bad:true}
-    ], verdict:{n:'세명종합병원', s:'답변에 없음'}},
-    {q:'경산 종합건강검진 병원 추천', items:[
-      {n:'경산중앙병원', s:'건강검진센터 페이지 인용'},
-      {n:'영남대병원', s:''},
-      {n:'수성메트로병원', s:''}
-    ], verdict:{n:'세명종합병원', s:'답변에 없음'}},
-    {q:'경산 혈액투석 병원', items:[
-      {n:'경산중앙병원', s:''},
-      {n:'경산혜인내과', s:''},
-      {n:'세명종합병원', s:'출처: 병원소개 페이지', weak:true}
-    ], verdict:{n:'세명종합병원', s:'3순위 · 전용 페이지 없음', weak:true}}
-  ];
+  function el(tag,cls,html){var e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
 
-  /* ── 로고 마퀴 ──────────────────────────── */
-  function tile(id){
-    var d=document.createElement('div'); d.className='logo-tile';
-    var i=document.createElement('img'); i.src='assets/clients/'+id+'.png'; i.alt=CORP_NAMES[id]||id; i.loading='lazy';
-    d.appendChild(i); return d;
-  }
-  function fillMq(el, list){ list.concat(list).forEach(function(id){ el.appendChild(tile(id)); }); }
-  fillMq(document.getElementById('mq1'), CORP);
-  fillMq(document.getElementById('mq2'), MED);
+  /* 티커 · 로고 */
+  var tk=document.getElementById('ticker'); QUERIES.concat(QUERIES).forEach(function(q){tk.appendChild(el('span',null,esc(q)));});
+  function tile(id){var d=el('div','logo-tile');var i=document.createElement('img');i.src='assets/clients/'+id+'.png';i.alt=NAMES[id]||id;i.loading='lazy';d.appendChild(i);return d;}
+  CORP.concat(CORP).forEach(function(id){document.getElementById('mq1').appendChild(tile(id));});
+  MED.concat(MED).forEach(function(id){document.getElementById('mq2').appendChild(tile(id));});
 
-  /* ── 사례 카드 ──────────────────────────── */
-  var cg=document.getElementById('caseGrid');
-  var maxA = Math.max.apply(null, CASES.map(function(c){return c.a;}));
+  /* 사례 */
+  var cg=document.getElementById('caseGrid'), maxA=Math.max.apply(null,CASES.map(function(c){return c.a;}));
   CASES.forEach(function(c){
-    var el=document.createElement('article'); el.className='case rv';
-    el.innerHTML =
-      '<div class="nm">'+c.n+'<small>'+c.s+'</small></div>'+
-      '<div class="ba"><div><div class="lab">BEFORE</div><div class="val num"><span data-count="'+c.b+'" data-dec="1">0</span>%</div></div>'+
-      '<div class="arrow">→</div>'+
-      '<div class="after"><div class="lab">AFTER</div><div class="val num"><span data-count="'+c.a+'" data-dec="1">0</span>%</div></div></div>'+
-      '<div class="bars"><div class="bar"><i data-w="'+(c.b/maxA*100)+'"></i></div><div class="bar a"><i data-w="'+(c.a/maxA*100)+'"></i></div></div>'+
-      '<div class="memo">'+c.memo+'</div>';
-    cg.appendChild(el);
+    cg.appendChild(el('article','case rv',
+      '<div class="nm">'+esc(c.n)+'<small>'+esc(c.s)+'</small></div>'+
+      '<div><div class="after num"><span data-count="'+c.a+'" data-dec="1">0</span><small>%</small></div><div class="before">Before<b class="num">'+c.b.toFixed(1)+'%</b></div></div>'+
+      '<div class="bar"><i data-w="'+(c.a/maxA*100)+'"></i></div>'+
+      '<div class="memo">'+esc(c.memo)+'</div>'));
   });
 
-  /* ── SoV 차트 ──────────────────────────── */
-  var sov=document.getElementById('sov');
-  var maxV=Math.max.apply(null, SOV.map(function(s){return s.v;}));
-  SOV.forEach(function(s){
-    var r=document.createElement('div'); r.className='row'+(s.me?' me':'');
-    r.innerHTML='<div class="lab">'+s.n+'</div><div class="trk"><i data-w="'+(s.v/maxV*100)+'"></i></div><div class="v num">'+s.v.toFixed(1)+'</div>';
-    sov.appendChild(r);
+  /* 점유율 */
+  var sov=document.getElementById('sov'), maxV=Math.max.apply(null,SOV.map(function(s){return s.v;}));
+  SOV.forEach(function(s){sov.appendChild(el('div','row'+(s.me?' me':''),'<div class="lab">'+esc(s.n)+'</div><div class="trk"><i data-w="'+(s.v/maxV*100)+'"></i></div><div class="v num">'+s.v.toFixed(1)+'</div>'));});
+
+  /* 아코디언 */
+  [].slice.call(document.querySelectorAll('.acc-h')).forEach(function(h){
+    h.addEventListener('click',function(){
+      var item=h.parentNode, open=item.classList.contains('open');
+      [].slice.call(document.querySelectorAll('.acc-i')).forEach(function(i){i.classList.remove('open');i.querySelector('.acc-h').setAttribute('aria-expanded','false');});
+      if(!open){item.classList.add('open');h.setAttribute('aria-expanded','true');}
+      if(ST) setTimeout(function(){ScrollTrigger.refresh();},600);
+    });
   });
 
-  /* ── 탭 ─────────────────────────────────── */
+  /* 탭 */
   var tabs=[].slice.call(document.querySelectorAll('.tab'));
-  tabs.forEach(function(t){
-    t.addEventListener('click', function(){
-      tabs.forEach(function(x){ x.setAttribute('aria-selected', x===t?'true':'false'); });
-      [].slice.call(document.querySelectorAll('.qpanel')).forEach(function(p){ p.classList.toggle('on', p.id===t.getAttribute('aria-controls')); });
-      if (hasGsap && !reduce) gsap.fromTo('#'+t.getAttribute('aria-controls')+' li',{opacity:0,y:6},{opacity:1,y:0,duration:.35,stagger:.03,ease:'power2.out',overwrite:true});
-    });
-  });
+  tabs.forEach(function(t){t.addEventListener('click',function(){
+    tabs.forEach(function(x){x.setAttribute('aria-selected',x===t?'true':'false');});
+    [].slice.call(document.querySelectorAll('.qp')).forEach(function(p){p.classList.toggle('on',p.id===t.getAttribute('aria-controls'));});
+    if(motion) gsap.fromTo('#'+t.getAttribute('aria-controls')+' li',{opacity:0,y:8},{opacity:1,y:0,duration:.4,stagger:.04,ease:'power2.out',overwrite:true});
+    if(ST) ScrollTrigger.refresh();
+  });});
 
-  /* ── 복사 ───────────────────────────────── */
+  /* 복사 */
   [].slice.call(document.querySelectorAll('[data-copy]')).forEach(function(b){
-    b.addEventListener('click', function(){
-      var v=b.getAttribute('data-copy'), done=function(){ b.textContent='복사됨'; setTimeout(function(){ b.textContent='복사'; },1600); };
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(done, function(){ selectMail(); });
-      else selectMail();
-      function selectMail(){ var r=document.createRange(); r.selectNodeContents(document.getElementById('mail')); var s=window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+    b.addEventListener('click',function(){
+      var v=b.getAttribute('data-copy'); function done(){b.textContent='복사됨';setTimeout(function(){b.textContent='복사';},1600);}
+      function sel(){var r=document.createRange();r.selectNodeContents(document.getElementById('mail'));var s=window.getSelection();s.removeAllRanges();s.addRange(r);}
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(done,sel); else sel();
     });
   });
 
-  /* ── 내비 진행바 · 다크 섹션 감지 · 활성 링크 ── */
-  var nav=document.getElementById('nav'), prog=document.getElementById('progress');
+  /* 스무스 스크롤 */
+  var lenis=null;
+  if(motion&&typeof Lenis!=='undefined'){
+    lenis=new Lenis({lerp:.09,smoothWheel:true});
+    lenis.on('scroll',ScrollTrigger.update);
+    gsap.ticker.add(function(t){lenis.raf(t*1000);});
+    gsap.ticker.lagSmoothing(0);
+  }
+  function scrollTo(target){
+    var t=document.querySelector(target); if(!t) return;
+    if(lenis) lenis.scrollTo(t,{offset:-64,duration:1.4});
+    else { t.scrollIntoView({behavior:reduce?'auto':'smooth'}); }
+  }
+  [].slice.call(document.querySelectorAll('[data-scroll]')).forEach(function(a){
+    a.addEventListener('click',function(e){e.preventDefault();closeMenu();scrollTo(a.getAttribute('href'));});
+  });
+
+  /* 메뉴 */
+  var menuBtn=document.getElementById('menuBtn'), menu=document.getElementById('menu');
+  function closeMenu(){document.body.classList.remove('menu-open');menuBtn.setAttribute('aria-expanded','false');menu.setAttribute('aria-hidden','true');if(lenis)lenis.start();}
+  menuBtn.addEventListener('click',function(){
+    var open=document.body.classList.toggle('menu-open');
+    menuBtn.setAttribute('aria-expanded',open?'true':'false'); menu.setAttribute('aria-hidden',open?'false':'true');
+    if(lenis){ if(open) lenis.stop(); else lenis.start(); }
+  });
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMenu();});
+
+  /* 상단 바 상태 */
+  var top=document.getElementById('top'), prog=document.getElementById('prog'), ct=document.getElementById('ct');
   var darks=[].slice.call(document.querySelectorAll('[data-dark]'));
-  var links=[].slice.call(document.querySelectorAll('.nav-links a'));
-  var secs=links.map(function(a){ return document.querySelector(a.getAttribute('href')); });
+  var midLinks=[].slice.call(document.querySelectorAll('.top-mid a'));
+  var secIds=['hero','summary','leadgen','cases','why','diagnosis','plan','roadmap','target','pricing','next'];
+  var secEls=secIds.map(function(id){return document.getElementById(id);});
   function onScroll(){
-    var h=document.documentElement, max=h.scrollHeight-h.clientHeight;
-    prog.style.width=(max>0? (h.scrollTop/max*100):0)+'%';
-    var y=58+4, onDark=false;
-    darks.forEach(function(s){ var r=s.getBoundingClientRect(); if(r.top<=y && r.bottom>y) onDark=true; });
-    nav.classList.toggle('on-dark', onDark);
-    var cur=-1; secs.forEach(function(s,i){ if(s && s.getBoundingClientRect().top<=140) cur=i; });
-    links.forEach(function(a,i){ a.classList.toggle('active', i===cur); });
+    var h=document.documentElement, max=h.scrollHeight-h.clientHeight, y=window.scrollY||h.scrollTop;
+    prog.style.width=(max>0?(y/max*100):0)+'%';
+    top.classList.toggle('scrolled',y>24);
+    var onDark=false, probe=40;
+    darks.forEach(function(s){var r=s.getBoundingClientRect(); if(r.top<=probe&&r.bottom>probe) onDark=true;});
+    top.classList.toggle('on-dark',onDark);
+    var cur=0; secEls.forEach(function(s,i){if(s&&s.getBoundingClientRect().top<=h.clientHeight*.4) cur=i;});
+    var shown=Math.min(10,Math.max(1,cur)); ct.textContent=(shown<10?'0'+shown:shown)+' / 10';
+    midLinks.forEach(function(a){a.classList.toggle('active',a.getAttribute('href')==='#'+secIds[cur]);});
   }
-  window.addEventListener('scroll', onScroll, {passive:true}); onScroll();
+  window.addEventListener('scroll',onScroll,{passive:true}); onScroll();
 
-  /* ── 숫자 카운트 · 막대 · 등장 ───────────── */
+  /* 커서 · 매그네틱 */
+  if(motion&&window.matchMedia('(pointer:fine)').matches){
+    var cur=document.querySelector('.cursor'), ring=document.querySelector('.cursor-ring'); ring.style.display='block'; document.body.classList.add('has-cursor');
+    var cx=gsap.quickTo(cur,'x',{duration:.12,ease:'power3'}), cy=gsap.quickTo(cur,'y',{duration:.12,ease:'power3'});
+    var rx=gsap.quickTo(ring,'x',{duration:.45,ease:'power3'}), ry=gsap.quickTo(ring,'y',{duration:.45,ease:'power3'});
+    window.addEventListener('mousemove',function(e){cx(e.clientX);cy(e.clientY);rx(e.clientX);ry(e.clientY);},{passive:true});
+    document.addEventListener('mouseover',function(e){if(e.target.closest('a,button,.logo-tile,.sim')) document.body.classList.add('cur-hover');});
+    document.addEventListener('mouseout',function(e){if(e.target.closest('a,button,.logo-tile,.sim')) document.body.classList.remove('cur-hover');});
+    [].slice.call(document.querySelectorAll('.magnet')).forEach(function(b){
+      var mx=gsap.quickTo(b,'x',{duration:.4,ease:'power3'}), my=gsap.quickTo(b,'y',{duration:.4,ease:'power3'});
+      b.addEventListener('mousemove',function(e){var r=b.getBoundingClientRect();mx((e.clientX-r.left-r.width/2)*.28);my((e.clientY-r.top-r.height/2)*.28);});
+      b.addEventListener('mouseleave',function(){mx(0);my(0);});
+    });
+  }
+
+  /* 최종 상태 세팅 (모션 없음) */
   function setFinal(){
-    [].slice.call(document.querySelectorAll('[data-count]')).forEach(function(el){ var d=+el.getAttribute('data-dec')||0; el.textContent=(+el.getAttribute('data-count')).toFixed(d); });
-    [].slice.call(document.querySelectorAll('[data-w]')).forEach(function(el){ el.style.width=el.getAttribute('data-w')+'%'; });
-  }
-  if (!hasGsap || reduce || typeof ScrollTrigger==='undefined'){
-    setFinal();
-  } else {
-    gsap.utils.toArray('.rv').forEach(function(el){
-      gsap.from(el,{opacity:0,y:26,duration:.9,ease:'power3.out',scrollTrigger:{trigger:el,start:'top 90%',once:true}});
-    });
-    gsap.utils.toArray('[data-count]').forEach(function(el){
-      var end=+el.getAttribute('data-count'), dec=+el.getAttribute('data-dec')||0, o={v:0};
-      gsap.to(o,{v:end,duration:1.4,ease:'power2.out',scrollTrigger:{trigger:el,start:'top 92%',once:true},onUpdate:function(){ el.textContent=o.v.toFixed(dec); }});
-    });
-    gsap.utils.toArray('[data-w]').forEach(function(el){
-      gsap.fromTo(el,{width:'0%'},{width:el.getAttribute('data-w')+'%',duration:1.2,ease:'power3.out',scrollTrigger:{trigger:el,start:'top 92%',once:true}});
-    });
-    gsap.from('.hero h1, .hero-sub, .hero-cta, .hero-stats',{opacity:0,y:22,duration:1,stagger:.12,ease:'power3.out',delay:.1});
-    gsap.from('.sim',{opacity:0,y:30,duration:1.1,ease:'power3.out',delay:.35});
+    [].slice.call(document.querySelectorAll('[data-count]')).forEach(function(e){var d=+e.getAttribute('data-dec')||0;e.textContent=(+e.getAttribute('data-count')).toFixed(d);});
+    [].slice.call(document.querySelectorAll('[data-w]')).forEach(function(e){e.style.width=e.getAttribute('data-w')+'%';});
   }
 
-  /* ── AI 검색 시뮬레이션 ──────────────────── */
+  /* 시뮬레이션 */
   var typed=document.getElementById('simTyped'), list=document.getElementById('simList'), verdict=document.getElementById('simVerdict'), snav=document.getElementById('simNav');
-  SIM.forEach(function(){ var b=document.createElement('button'); b.type='button'; b.tabIndex=-1; b.innerHTML='<i></i>'; snav.appendChild(b); });
+  SIM.forEach(function(){var b=document.createElement('button');b.type='button';b.tabIndex=-1;b.innerHTML='<i></i>';snav.appendChild(b);});
   var navBtns=[].slice.call(snav.children), idx=0, timer=null, paused=false, tween=null;
-  function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
-  function render(i, instant){
-    var d=SIM[i];
-    list.innerHTML=''; verdict.className='sim-verdict'+(d.verdict.weak?' weak':''); verdict.style.opacity=0;
+  function render(i,instant){
+    var d=SIM[i]; list.innerHTML=''; verdict.className='sim-verdict'+(d.verdict.weak?' weak':''); verdict.style.opacity=0; verdict.style.transform='';
     verdict.querySelector('.nm').textContent=d.verdict.n; verdict.querySelector('.st').textContent=d.verdict.s;
-    d.items.forEach(function(it,k){
-      var li=document.createElement('li'); if(it.bad) li.className='bad'; if(it.weak) li.className='weak';
-      li.innerHTML='<span class="rk">'+(k+1)+'</span><span class="nm">'+esc(it.n)+'</span><span class="src">'+esc(it.s)+'</span>';
-      list.appendChild(li);
-    });
-    navBtns.forEach(function(b,k){ b.classList.toggle('done',k<i); b.querySelector('i').style.width = k<i?'100%':'0%'; });
+    d.items.forEach(function(it,k){var li=el('li',it.bad?'bad':(it.weak?'weak':''),'<span class="rk">0'+(k+1)+'</span><span class="nm">'+esc(it.n)+'</span><span class="src">'+esc(it.s)+'</span>');list.appendChild(li);});
+    navBtns.forEach(function(b,k){b.classList.toggle('done',k<i);b.querySelector('i').style.width=k<i?'100%':'0%';});
     var lis=[].slice.call(list.children);
-    if (instant || !hasGsap || reduce){
-      typed.textContent=d.q; lis.forEach(function(l){ l.style.opacity=1; l.style.transform='none'; }); verdict.style.opacity=1; verdict.style.transform='none';
-      navBtns[i].querySelector('i').style.width='100%';
-      return;
-    }
-    typed.textContent='';
-    var tl=gsap.timeline(); tween=tl;
-    var chars=d.q.split(''), o={n:0};
-    tl.to(o,{n:chars.length,duration:chars.length*0.06,ease:'none',onUpdate:function(){ typed.textContent=chars.slice(0,Math.round(o.n)).join(''); }});
-    tl.to(lis,{opacity:1,y:0,duration:.45,stagger:.16,ease:'power2.out'},'+=.45');
-    tl.to(verdict,{opacity:1,y:0,duration:.5,ease:'power2.out'},'+=.15');
-    tl.fromTo(navBtns[i].querySelector('i'),{width:'0%'},{width:'100%',duration:5.2,ease:'none'},0);
+    if(instant||!motion){typed.textContent=d.q;lis.forEach(function(l){l.style.opacity=1;l.style.transform='none';});verdict.style.opacity=1;verdict.style.transform='none';navBtns[i].querySelector('i').style.width='100%';return;}
+    typed.textContent=''; var tl=gsap.timeline(); tween=tl; var chars=d.q.split(''), o={n:0};
+    tl.to(o,{n:chars.length,duration:chars.length*.055,ease:'none',onUpdate:function(){typed.textContent=chars.slice(0,Math.round(o.n)).join('');}});
+    tl.to(lis,{opacity:1,y:0,duration:.5,stagger:.18,ease:'power2.out'},'+=.5');
+    tl.to(verdict,{opacity:1,y:0,duration:.5,ease:'power2.out'},'+=.2');
+    tl.fromTo(navBtns[i].querySelector('i'),{width:'0%'},{width:'100%',duration:5.4,ease:'none'},0);
   }
-  function next(){ idx=(idx+1)%SIM.length; render(idx,false); }
-  function schedule(){ clearTimeout(timer); if(paused||reduce||!hasGsap) return; timer=setTimeout(function(){ next(); schedule(); }, 9000); }
-  render(0, reduce||!hasGsap); schedule();
-  var sim=document.getElementById('sim');
-  sim.addEventListener('mouseenter', function(){ paused=true; clearTimeout(timer); if(tween) tween.pause(); });
-  sim.addEventListener('mouseleave', function(){ paused=false; if(tween) tween.resume(); schedule(); });
-  navBtns.forEach(function(b,k){ b.addEventListener('click', function(){ idx=k; clearTimeout(timer); render(k,false); schedule(); }); });
-  document.addEventListener('visibilitychange', function(){ if(document.hidden){ clearTimeout(timer); } else { schedule(); } });
+  function schedule(){clearTimeout(timer);if(paused||!motion)return;timer=setTimeout(function(){idx=(idx+1)%SIM.length;render(idx,false);schedule();},9000);}
+  var simEl=document.getElementById('sim');
+  simEl.addEventListener('mouseenter',function(){paused=true;clearTimeout(timer);if(tween)tween.pause();});
+  simEl.addEventListener('mouseleave',function(){paused=false;if(tween)tween.resume();schedule();});
+  navBtns.forEach(function(b,k){b.addEventListener('click',function(){idx=k;clearTimeout(timer);render(k,false);schedule();});});
+  document.addEventListener('visibilitychange',function(){if(document.hidden)clearTimeout(timer);else schedule();});
+
+  /* 모션 */
+  function startMotion(){
+    if(!motion){ setFinal(); render(0,true); document.getElementById('pre').classList.add('done'); return; }
+    // 텍스트 줄 리빌
+    var splits=[];
+    if(SPL){
+      [].slice.call(document.querySelectorAll('.split')).forEach(function(h){
+        var s=SplitText.create(h,{type:'lines',mask:'lines',linesClass:'line'});
+        splits.push(s);
+        if(h.closest('.hero')) return;
+        gsap.from(s.lines,{yPercent:110,duration:1.1,stagger:.08,ease:'power4.out',scrollTrigger:{trigger:h,start:'top 88%',once:true}});
+      });
+    }
+    gsap.utils.toArray('.rv').forEach(function(e){
+      if(e.closest('.hero')) return;
+      gsap.from(e,{opacity:0,y:28,duration:1,ease:'power3.out',scrollTrigger:{trigger:e,start:'top 90%',once:true}});
+    });
+    gsap.utils.toArray('[data-count]').forEach(function(e){
+      var end=+e.getAttribute('data-count'),dec=+e.getAttribute('data-dec')||0,o={v:0};
+      gsap.to(o,{v:end,duration:1.6,ease:'power2.out',scrollTrigger:{trigger:e,start:'top 92%',once:true},onUpdate:function(){e.textContent=o.v.toFixed(dec);}});
+    });
+    gsap.utils.toArray('[data-w]').forEach(function(e){
+      gsap.fromTo(e,{width:'0%'},{width:e.getAttribute('data-w')+'%',duration:1.3,ease:'power3.out',scrollTrigger:{trigger:e,start:'top 92%',once:true}});
+    });
+    // 로드맵 가로 핀 (데스크톱)
+    var mm=gsap.matchMedia();
+    mm.add('(min-width:1024px)',function(){
+      var track=document.getElementById('roadTrack');
+      var amt=function(){return Math.max(0,track.scrollWidth-window.innerWidth);};
+      gsap.to(track,{x:function(){return -amt();},ease:'none',scrollTrigger:{trigger:'#roadStage',start:'top top',end:function(){return '+='+amt();},pin:true,scrub:.6,invalidateOnRefresh:true,anticipatePin:1}});
+    });
+    // 히어로 입장
+    var heroSplit=splits.filter(function(s){return s.elements&&s.elements[0]&&s.elements[0].closest('.hero');})[0];
+    var intro=gsap.timeline({paused:true});
+    if(heroSplit) intro.from(heroSplit.lines,{yPercent:110,duration:1.2,stagger:.1,ease:'power4.out'},0);
+    intro.from('.hero .rv',{opacity:0,y:24,duration:1,stagger:.1,ease:'power3.out'},.35);
+    intro.add(function(){render(0,false);schedule();},'-=.6');
+    // 프리로더
+    var pre=document.getElementById('pre'), pn=document.getElementById('preN'), o={n:0};
+    document.body.style.overflow='hidden';
+    gsap.timeline({onComplete:function(){pre.classList.add('done');document.body.style.overflow='';ScrollTrigger.refresh();}})
+      .to(o,{n:100,duration:1.1,ease:'power2.inOut',onUpdate:function(){pn.textContent=Math.round(o.n);}})
+      .to(pre,{yPercent:-100,duration:.9,ease:'power4.inOut'},'+=.1')
+      .add(function(){intro.play();},'-=.6');
+    window.addEventListener('load',function(){ScrollTrigger.refresh();});
+  }
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(startMotion); else startMotion();
 })();
 </script>
 </body>
