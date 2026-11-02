@@ -13,12 +13,14 @@ proposals/semyung-geo/
 │   ├── logo-h-white.png       리드젠랩 로고 (어두운 배경용)
 │   ├── clients/*.png          고객사 로고 32개 (원본 PPT에서 추출, 배경 여백 제거)
 │   ├── fonts/
-│   │   ├── HahmletVariable.woff2      제목용 세리프 (KS X 1001 한글 + 라틴 서브셋)
-│   │   ├── WantedSansVariable.woff2   본문용 산세리프 (같은 범위 서브셋)
+│   │   ├── HahmletVariable.woff2      제목 강조용 한글 세리프 (KS X 1001 + 라틴 서브셋)
+│   │   ├── WantedSansVariable.woff2   본문·제목용 산세리프 (같은 범위 서브셋)
+│   │   ├── InstrumentSerif-*.woff2    숫자·영문 강조용 이탤릭 세리프
 │   │   └── OFL-*.txt                  폰트 라이선스
 │   └── vendor/
 │       ├── gsap.min.js, ScrollTrigger.min.js, SplitText.min.js   모션
-│       └── lenis.min.js                                           스무스 스크롤
+│       ├── lenis.min.js                                           스무스 스크롤
+│       └── three.min.js                                           도입부 WebGL 유리 블롭
 └── README.md
 ```
 
@@ -47,7 +49,7 @@ proposals/semyung-geo/
 
 ## 디자인 방향
 
-motionsites.ai에 모이는 AI 랜딩페이지 계열을 기준으로 삼았습니다. 어두운 바탕 위의 글로우, 반투명 글래스 패널, 굵은 산세리프 제목에 세리프 한 줄 강조, 알약형 배지, 벤토 그리드, 추천 카드의 회전하는 그라데이션 테두리가 그 문법입니다. 도입부 배경의 점 구체는 외부 라이브러리 없이 캔버스로 그립니다.
+motionsites.ai에 모이는 AI 랜딩페이지 계열을 기준으로 삼았습니다. 깊은 남색 바탕 위에 WebGL로 그린 유리 블롭과 궤도 링, 입자 필드가 떠 있고, 그 위로 굵은 산세리프 제목과 세리프 강조 한 줄이 놓입니다. 패널은 위쪽 가장자리에 빛이 맺힌 유리(그라데이션 테두리, 안쪽 하이라이트, 마우스 스포트라이트, 미세한 3D 기울임)이고, 숫자는 Instrument Serif 이탤릭으로 통일했습니다. WebGL을 쓸 수 없는 환경에서는 CSS 글로우 구체로 대체됩니다.
 
 ## 동작
 
@@ -56,7 +58,7 @@ motionsites.ai에 모이는 AI 랜딩페이지 계열을 기준으로 삼았습�
 - 로드맵: 데스크톱에서는 화면을 고정한 채 가로로 넘어가고, 모바일에서는 손가락으로 옆으로 넘김
 - 실행 계획: 아코디언. 첫 항목만 펼쳐진 상태로 시작
 - 상단 `목차` 버튼: 전체 화면 메뉴
-- 데스크톱에서 커스텀 커서와 자석 버튼, 글래스 패널 위 마우스를 따라가는 스포트라이트, 전체에 얇은 그레인
+- 데스크톱에서 커스텀 커서와 자석 버튼, 유리 패널 위 마우스를 따라가는 스포트라이트와 3D 기울임, 전체에 얇은 그레인
 - `prefers-reduced-motion`이 켜져 있거나 JS가 꺼져 있으면 모션 없이 최종 상태로 표시
 
 ## 쓰인 오픈소스
@@ -68,4 +70,6 @@ motionsites.ai에 모이는 AI 랜딩페이지 계열을 기준으로 삼았습�
 | [JetBrains Mono](https://fonts.google.com/specimen/JetBrains+Mono) | SIL OFL 1.1 | 작은 라벨 (Google Fonts에서 로드, 오프라인이면 시스템 고정폭으로 대체) |
 | [GSAP](https://gsap.com) 3.13.0 + ScrollTrigger + SplitText | GSAP Standard "no charge" license (2025년부터 상업용 포함 무료) | 리빌 · 카운트업 · 핀 스크롤 · 타이핑 |
 | [Lenis](https://github.com/darkroomengineering/lenis) 1.3.27 | MIT | 스무스 스크롤 |
+| [Three.js](https://threejs.org) r158 | MIT | 도입부 유리 블롭 · 궤도 링 · 입자 |
+| [Instrument Serif](https://fonts.google.com/specimen/Instrument+Serif) | SIL OFL 1.1 | 숫자 · 영문 강조 (로컬 포함) |
 | [im-not-ai](https://github.com/epoko77-ai/im-not-ai) humanize-korean 규칙 | 참고 | 문장 윤문 기준 |
