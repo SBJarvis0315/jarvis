@@ -84,7 +84,7 @@
 - 이그레스 프록시가 TLS 1.3 핸드셰이크를 끊습니다. `curl` 은 1.2 로 내려가지만 Chromium 은
   내려가지 않아 사이트에 닿지 못합니다 → `chromium_args()` 가 프록시 뒤에서
   `--ssl-version-max=tls1.2` 를 붙입니다.
-- 허용 도메인에 `www.zeroclinic1.com` 과 `code.jquery.com` 이 필요합니다(둘 다 추가 완료).
+- 네트워크가 '제한됨'인 환경에서는 허용 도메인에 `www.zeroclinic1.com` 과 `code.jquery.com` 이 필요합니다(2026-11-04부터는 환경이 전체 허용이라 해당 없음).
 
 ## 6. 아직 실제로 해 보지 않은 것
 
