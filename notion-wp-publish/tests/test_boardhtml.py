@@ -166,3 +166,20 @@ def test_the_whole_document_is_cleaned_not_just_the_body():
     html = render([para("본문")], title="📚 가이드", meta_description="📌 요약")
 
     assert max(ord(c) for c in html) <= 0xFFFF
+
+
+def test_markdown_separator_row_is_dropped_from_tables():
+    # 원고를 노션에 넣는 경로에 따라 '| --- | --- |' 가 실제 표 행으로 들어오는 일이 있었습니다.
+    from notionwp.gutenberg import RenderOptions, render as wp_render
+
+    def row(*cells):
+        return {"object": "block", "type": "table_row",
+                "table_row": {"cells": [[rt(c)] for c in cells]}}
+
+    table = {"object": "block", "type": "table", "table": {"has_column_header": True},
+             "_children": [row("구분", "A"), row("---", ":---:"), row("대상", "피하지방")]}
+    board = render_blocks([table])
+    assert "---" not in board and "피하지방" in board
+    assert board.count("<tr>") == 2
+    wp = wp_render([table], RenderOptions()) if callable(wp_render) else ""
+    assert "<td>---</td>" not in wp and ">---<" not in wp

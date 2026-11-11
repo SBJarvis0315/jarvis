@@ -30,7 +30,7 @@ import re
 from typing import Any
 
 from .gutenberg import LIST_TYPES, WP_IMAGE, WP_VIDEO
-from .richtext import to_html
+from .richtext import is_separator_row, to_html
 
 Block = dict[str, Any]
 
@@ -233,7 +233,10 @@ def _render_list(group: list[Block], depth: int = 0) -> str:
 
 def _render_table(block: Block) -> str:
     payload = block.get("table") or {}
-    rows = [c for c in (block.get("_children") or []) if c.get("type") == "table_row"]
+    rows = [
+        c for c in (block.get("_children") or [])
+        if c.get("type") == "table_row" and not is_separator_row(c)
+    ]
     if not rows:
         return ""
     row_header = bool(payload.get("has_row_header"))

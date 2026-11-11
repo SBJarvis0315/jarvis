@@ -12,7 +12,7 @@ import html
 from dataclasses import dataclass
 from typing import Any
 
-from .richtext import to_html
+from .richtext import is_separator_row, to_html
 
 Block = dict[str, Any]
 
@@ -313,7 +313,10 @@ def _render_table(block: Block, opts: RenderOptions) -> str:
         맞추려면 false 를 명시해야 합니다.
     """
     payload = block.get("table") or {}
-    rows = [c for c in (block.get("_children") or []) if c.get("type") == "table_row"]
+    rows = [
+        c for c in (block.get("_children") or [])
+        if c.get("type") == "table_row" and not is_separator_row(c)
+    ]
     if not rows:
         return ""
 

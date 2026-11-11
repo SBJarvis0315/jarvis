@@ -92,3 +92,16 @@ def block_text(block: dict[str, Any]) -> str:
     if isinstance(payload, dict):
         return plain_text(payload.get("rich_text"))
     return ""
+
+
+def is_separator_row(row: dict) -> bool:
+    """마크다운 표 구분선(| --- | :---: |)이 표의 한 줄로 잘못 들어온 행인지.
+
+    원고를 노션에 넣는 경로에 따라 구분선이 실제 표 행으로 들어가는 일이 있었습니다
+    (제로클리닉 숏폼). 발행된 글에 '---'만 든 줄이 보이므로, 발행 단계에서 거릅니다.
+    """
+    import re as _re
+
+    cells = (row.get("table_row") or {}).get("cells") or []
+    texts = ["".join((t.get("plain_text") or (t.get("text") or {}).get("content") or "") for t in c).strip() for c in cells]
+    return bool(texts) and all(_re.fullmatch(r":?-{1,}:?", t) for t in texts)
