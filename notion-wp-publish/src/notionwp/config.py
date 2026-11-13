@@ -261,7 +261,7 @@ def _read_secret(src: Any, name: str) -> str:
     입력 경로에 따라 상하는 일이 있습니다. 비밀번호가 기호로 끝나는 계정에서 이것 때문에
     로그인이 조용히 실패했습니다. Base64 로 넣으면 어떤 기호도 상하지 않습니다.
 
-        BOARD_PASSWORD_ZEROCLINIC1_B64=UDMzMzchQCM=
+        BOARD_PASSWORD_ZEROCLINIC1_B64=<비밀번호를 Base64 로 바꾼 값>
     """
     encoded = (src.get(f"{name}_B64") or "").strip().strip("\"'")
     if encoded:
