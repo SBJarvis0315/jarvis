@@ -165,3 +165,55 @@ def test_low_price_client_without_target_types_stays_shortform():
 
 def test_unset_client_type_counts_as_general():
     assert types_for(CONFIG) == ("숏폼",)
+
+
+# ── 설정표 '썸네일' 칸 ─────────────────────────────────────────────────────────
+
+
+def _with_thumb_column(names, **over) -> dict:
+    r = registry_row(**over)
+    r["properties"]["썸네일"] = {
+        "type": "multi_select",
+        "multi_select": [{"name": n} for n in names],
+    }
+    return r
+
+
+def test_thumbnail_column_decides_types_over_client_tier():
+    cfg, _ = build_config(DEFAULTS, _with_thumb_column(["숏폼"], **{"고객사 유형": "저단가"}))
+    assert types_for(cfg) == ("숏폼",)
+
+
+def test_thumbnail_column_can_list_several_types():
+    cfg, _ = build_config(DEFAULTS, _with_thumb_column(["롱폼", "숏폼", "브랜드 엔티티"]))
+    assert types_for(cfg) == ("롱폼", "숏폼", "브랜드 엔티티")
+
+
+def test_longform_can_be_left_to_the_longform_routine():
+    cfg, _ = build_config(DEFAULTS, _with_thumb_column(["롱폼", "숏폼"]))
+    assert types_for(cfg, exclude=["롱폼"]) == ("숏폼",)
+
+
+def test_empty_thumbnail_column_means_no_thumbnails():
+    cfg, _ = build_config(DEFAULTS, _with_thumb_column([]))
+    assert cfg.thumbnail_types == []
+    assert types_for(cfg) == ()
+
+
+def test_run_makes_nothing_when_no_type_is_left():
+    """빈 유형 목록이 '유형을 따지지 않음' 으로 새면 롱폼에도 숏폼 디자인이 붙습니다."""
+    from notionwp.thumbnails import run
+
+    class Boom:
+        def query_database(self, *_a, **_k):
+            raise AssertionError("유형이 없으면 플래너를 읽지도 말아야 합니다")
+
+    cfg, _ = build_config(DEFAULTS, _with_thumb_column(["롱폼"]))
+    report = run(cfg, Boom(), types=types_for(cfg, exclude=["롱폼"]))
+    assert not report.made and not report.failed
+
+
+def test_missing_thumbnail_column_keeps_old_rule():
+    cfg, _ = build_config(DEFAULTS, registry_row(**{"고객사 유형": "일반"}))
+    assert cfg.thumbnail_types is None
+    assert types_for(cfg) == ("숏폼",)

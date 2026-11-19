@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 
 
 
-def run_thumbnails(configs, secrets, *, dry_run: bool = False) -> int:
+def run_thumbnails(configs, secrets, *, dry_run: bool = False, exclude_types=()) -> int:
     """썸네일 단계. 각 고객사 플래너를 훑어 빈 썸네일 칸을 채웁니다."""
     failed = False
 
@@ -41,7 +41,12 @@ def run_thumbnails(configs, secrets, *, dry_run: bool = False) -> int:
 
         started = time.monotonic()
         notion = NotionClient(secrets.notion_token, cfg.notion)
-        report = thumbs.run(cfg, notion, dry_run=dry_run)
+        types = thumbs.types_for(cfg, exclude_types)
+        if not types:
+            print("  썸네일 대상 유형 없음 (설정표 '썸네일' 칸)")
+            continue
+        print(f"  대상 유형: {', '.join(types)}")
+        report = thumbs.run(cfg, notion, types=types, dry_run=dry_run)
 
         for outcome in report.made:
             print(f"  ✅ {outcome.title[:60]}")
@@ -190,6 +195,16 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     parser.add_argument(
+        "--exclude-type",
+        action="append",
+        default=[],
+        metavar="유형",
+        help=(
+            "--thumbnails 와 함께: 설정표 '썸네일' 칸에 있어도 이 유형은 만들지 않습니다. "
+            "롱폼 전용 썸네일 루틴을 켠 뒤에는 '--exclude-type 롱폼' 으로 돌립니다."
+        ),
+    )
+    parser.add_argument(
         "--skip",
         action="append",
         default=[],
@@ -262,7 +277,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if args.thumbnails:
-        return run_thumbnails(configs, secrets, dry_run=args.dry_run)
+        return run_thumbnails(
+            configs, secrets, dry_run=args.dry_run, exclude_types=args.exclude_type
+        )
     if args.board:
         return run_board(configs, secrets, args)
 

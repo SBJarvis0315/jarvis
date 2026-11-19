@@ -120,8 +120,32 @@ def build_config(
     board = replace(defaults.board, admin_url=board_url)
 
     tier = napi.read_select(props.get(rc.prop("tier")))
+    thumbnail_types = read_thumbnail_types(props, rc)
 
-    return replace(defaults, client=client, notion=notion, wordpress=wordpress, board=board, tier=tier), ""
+    return (
+        replace(
+            defaults,
+            client=client,
+            notion=notion,
+            wordpress=wordpress,
+            board=board,
+            tier=tier,
+            thumbnail_types=thumbnail_types,
+        ),
+        "",
+    )
+
+
+def read_thumbnail_types(props: dict, rc) -> list[str] | None:
+    """설정표 '썸네일' 칸(다중 선택). 칸이 없으면 None — 예전 규칙(고객사 유형)으로 돌아갑니다."""
+    name = rc.properties.get("thumbnails")
+    if not name or name not in props:
+        return None
+    prop = props.get(name) or {}
+    if prop.get("type") == "multi_select":
+        return [o.get("name", "") for o in prop.get("multi_select") or [] if o.get("name")]
+    # 사람이 칸을 글자(텍스트)로 만들었어도 '숏폼, 롱폼' 처럼 쉼표로 적으면 읽습니다.
+    return parse_list(napi.read_text(prop))
 
 
 def _is_board_site(url: str) -> bool:

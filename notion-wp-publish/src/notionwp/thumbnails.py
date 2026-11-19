@@ -41,15 +41,22 @@ DEFAULT_TYPES = ("숏폼",)
 ALL_TYPES_TIER = "저단가"
 
 
-def types_for(cfg: Config) -> tuple[str, ...]:
+def types_for(cfg: Config, exclude: Sequence[str] = ()) -> tuple[str, ...]:
     """이 고객사에 썸네일을 만들 콘텐츠 유형.
 
-    저단가 고객사는 설정표 '대상 유형'에 적힌 유형 전부(롱폼·브랜드 엔티티 등),
-    그 밖에는 숏폼만입니다. 저단가인데 대상 유형이 비어 있으면 숏폼만 만듭니다.
+    설정표 '썸네일' 칸에 고른 유형이 기준입니다. 비어 있으면 만들지 않습니다.
+    `exclude` 에 든 유형은 뺍니다 — 롱폼 전용 루틴을 켜면 이 루틴은 롱폼을 빼고 돕니다.
+
+    설정표에 '썸네일' 칸 자체가 없을 때만 예전 규칙을 씁니다: 저단가 고객사는
+    '대상 유형' 전부, 그 밖에는 숏폼만.
     """
-    if cfg.tier == ALL_TYPES_TIER and cfg.notion.type_filter:
-        return tuple(cfg.notion.type_filter)
-    return DEFAULT_TYPES
+    if cfg.thumbnail_types is not None:
+        chosen: Sequence[str] = cfg.thumbnail_types
+    elif cfg.tier == ALL_TYPES_TIER and cfg.notion.type_filter:
+        chosen = cfg.notion.type_filter
+    else:
+        chosen = DEFAULT_TYPES
+    return tuple(t for t in chosen if t not in set(exclude))
 
 
 @dataclass
@@ -182,6 +189,10 @@ def run(
     report = Report(client=cfg.client)
     if types is None:
         types = types_for(cfg)
+    if not types:
+        # 빈 목록을 그대로 넘기면 eligible() 이 유형을 따지지 않아 전부 대상이 됩니다.
+        report.outcomes.append(Outcome(title="", skipped="설정표 '썸네일' 칸에 이 루틴이 맡을 유형이 없음"))
+        return report
 
     design = load_design(cfg.client)
     if design is None:

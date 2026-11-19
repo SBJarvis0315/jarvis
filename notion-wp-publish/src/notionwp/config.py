@@ -93,6 +93,8 @@ class RegistryConfig:
             "wp_url": "워드프레스 주소",
             "youtube": "유튜브 채널",
             "tier": "고객사 유형",
+            # 썸네일을 만들 콘텐츠 유형(다중 선택). 숏폼은 기존 썸네일 루틴, 롱폼은 롱폼 전용 루틴이 맡습니다.
+            "thumbnails": "썸네일",
             # 워드프레스가 아닌 자체 홈페이지 게시판. 관리자 목록 화면 주소를 적습니다.
             "board_url": "게시판 주소",
         }
@@ -153,6 +155,9 @@ class Config:
     board: BoardConfig = field(default_factory=BoardConfig)
     #: 설정표의 '고객사 유형'(일반·저단가). 비어 있으면 일반으로 봅니다.
     tier: str = ""
+    #: 설정표 '썸네일' 칸에 고른 콘텐츠 유형. None 은 설정표에 그 칸이 아예 없다는 뜻이고,
+    #: 빈 목록은 칸은 있는데 아무것도 고르지 않았다는 뜻(썸네일을 만들지 않음)입니다.
+    thumbnail_types: list[str] | None = None
 
     @property
     def platform(self) -> str:

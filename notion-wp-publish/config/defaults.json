@@ -8,7 +8,8 @@
       "types": "대상 유형",
       "wp_url": "워드프레스 주소",
       "youtube": "유튜브 채널",
-      "tier": "고객사 유형"
+      "tier": "고객사 유형",
+      "thumbnails": "썸네일"
     },
     "state_active": "활성"
   },
