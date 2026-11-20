@@ -341,6 +341,12 @@ function detectAuthEvidence(loginText, doctor) {
   if (/logged in using chatgpt|chatgpt auth/.test(login)) {
     return { verified: true, state: "chatgpt", evidence: "codex login status: ChatGPT" };
   }
+  // ChatGPT Business/Enterprise 워크스페이스의 Codex 액세스 토큰(사람 없이 도는 루틴용 공식 인증).
+  // 구독(워크스페이스) 사용량으로 청구되고 API 요금 경로가 아니므로 ChatGPT 인증과 같게 봅니다.
+  // Bedrock 등 'API key' 가 들어간 문구는 아래 규칙에서 계속 막힙니다.
+  if (/logged in using (?:personal )?access token/.test(login)) {
+    return { verified: true, state: "chatgpt-access-token", evidence: "codex login status: ChatGPT workspace access token" };
+  }
   if (/logged in.*api key|api[- ]key auth|using an api key/.test(login)) {
     return { verified: false, state: "api-key", evidence: "codex login status: API key" };
   }

@@ -14,6 +14,7 @@ Generate or edit one or more raster images, save results under the current works
 - Never use `codex login --with-api-key` or read `~/.codex/auth.json`.
 - Require explicit **ChatGPT auth** before the bridge generates an image.
 - Stop when API-key auth is detected. Replace authentication only after a separate explicit user choice.
+- A ChatGPT Business/Enterprise **Codex access token** (`codex login status` → "Logged in using personal access token") counts as ChatGPT workspace auth, not API billing. Unattended routines may log in with it from the `CODEX_ACCESS_TOKEN` environment variable (`printf '%s' "$CODEX_ACCESS_TOKEN" | codex login --with-access-token`); never print the token.
 
 ## Choose the route
 

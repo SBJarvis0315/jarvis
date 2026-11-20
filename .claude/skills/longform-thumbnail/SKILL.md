@@ -9,18 +9,27 @@ description: 노션 플래너의 롱폼 행 중 썸네일이 비어 있는 행�
 **이 스킬은 롱폼만** 맡습니다. 배경 사진은 ChatGPT 구독으로 만들고(글자 없이),
 글자·로고·효과는 코드 틀이 얹습니다. 작업 디렉터리는 `notion-wp-publish/` 입니다.
 
-## 0. 시작 전 확인 — ChatGPT 로그인
+## 0. 시작 전 확인 — Codex 설치와 ChatGPT 인증
 
-배경 생성은 `gpt-image` 스킬(Codex CLI + ChatGPT 로그인)로만 합니다.
+배경 생성은 `gpt-image` 스킬(Codex CLI + ChatGPT 구독 인증)로만 합니다. 클라우드 루틴은
+매번 새 컴퓨터라, 아래 순서로 매 회차 준비합니다(저장소 루트에서).
 
-```bash
-codex login status
-```
-
-- "Logged in using ChatGPT" 가 아니면 **여기서 멈추고** "ChatGPT 로그인이 없어 롱폼 썸네일을
-  만들지 못했습니다" 라고 보고합니다. 로그인 코드를 띄우지 않습니다(사람이 없는 시간에 돕니다).
+1. Codex 가 없으면 공식 설치기로 설치합니다.
+   ```bash
+   command -v codex || node .claude/skills/gpt-image/scripts/gpt_image.mjs install-codex --yes
+   ```
+2. 로그인 상태를 봅니다: `codex login status`
+   - `Logged in using ChatGPT` 또는 `Logged in using personal access token` 이면 3단계는 건너뜁니다.
+3. 로그인이 없고 환경변수 `CODEX_ACCESS_TOKEN`(ChatGPT Business 워크스페이스의 Codex
+   액세스 토큰)이 있으면 그것으로 로그인합니다. **토큰 값을 화면·로그·커밋에 절대 출력하지 않습니다.**
+   ```bash
+   printf '%s' "$CODEX_ACCESS_TOKEN" | codex login --with-access-token >/dev/null 2>&1; codex login status
+   ```
+4. 그래도 위 두 문구가 아니면 **여기서 멈추고** 보고합니다.
+   - 토큰이 없으면: "Codex 액세스 토큰이 없어 롱폼 썸네일을 만들지 못했습니다"
+   - 토큰 로그인이 실패하면(만료·폐기): "Codex 액세스 토큰이 만료됐거나 무효입니다. 새 토큰으로 교체가 필요합니다"
+   - 로그인 코드를 띄우지 않습니다(사람이 없는 시간에 돕니다).
 - OpenAI API 키·Images API 로 우회하지 않습니다. `OPENAI_API_KEY` 를 찾거나 쓰지 않습니다.
-- Codex 가 없으면 설치하지 말고 같은 문장으로 보고하고 끝냅니다.
 
 ## 1. 대상 행 뽑기
 
