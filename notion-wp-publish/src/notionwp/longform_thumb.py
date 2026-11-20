@@ -180,6 +180,18 @@ def canvas_for(client: str) -> tuple[int, int, tuple[float, ...]]:
     return 1920, 1080, ()
 
 
+def fixed_style(client: str) -> str:
+    """디자인 파일의 `longform_style` — 운영자가 그 고객사 롱폼 틀을 하나로 고정한 경우."""
+    if client:
+        path = path_for(client)
+        if path.exists():
+            style = json.loads(path.read_text(encoding="utf-8")).get("longform_style", "")
+            if style and style not in STYLES:
+                raise ValueError(f"{client} 디자인 파일의 longform_style 이 잘못됐습니다: {style}")
+            return style or ""
+    return ""
+
+
 def safe_box(w: int, h: int, crops: tuple[float, ...], margin: float = 0.0) -> tuple[float, float, float, float]:
     """모든 잘림 비율에서 살아남는 가운데 영역 (x, y, 가로, 세로)."""
     sw, sh = float(w), float(h)
@@ -406,7 +418,10 @@ def main(argv: list[str] | None = None) -> int:
     p_list.add_argument("--client", default="")
 
     p_render = sub.add_parser("render", help="배경 사진 위에 틀로 글자를 얹어 PNG 로 저장")
-    p_render.add_argument("--style", required=True, choices=STYLES)
+    p_render.add_argument(
+        "--style", choices=STYLES, default="",
+        help="생략하면 디자인 파일의 longform_style. 고정된 고객사에 다른 틀을 주면 거부합니다",
+    )
     p_render.add_argument("--bg", required=True)
     p_render.add_argument("--line1", required=True, help="작은 윗줄")
     p_render.add_argument("--line2", required=True, help="큰 제목. 두 줄이면 \\n")
@@ -431,8 +446,14 @@ def main(argv: list[str] | None = None) -> int:
         if args.cmd == "list":
             print(json.dumps(list_targets(args.client), ensure_ascii=False, indent=2))
         elif args.cmd == "render":
+            fixed = fixed_style(args.client)
+            style = args.style or fixed
+            if not style:
+                raise ValueError("--style 을 주거나 디자인 파일에 longform_style 을 적어 주세요.")
+            if fixed and style != fixed:
+                raise ValueError(f"{args.client} 은 롱폼 틀이 '{fixed}' 로 고정돼 있습니다.")
             out = render(
-                args.style, Path(args.bg), args.line1, args.line2, Path(args.out),
+                style, Path(args.bg), args.line1, args.line2, Path(args.out),
                 pill=args.pill, client=args.client, brand=args.brand, accent=args.accent,
             )
             print(out)

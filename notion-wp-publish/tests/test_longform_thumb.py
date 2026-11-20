@@ -96,3 +96,10 @@ def test_text_layer_is_placed_inside_the_safe_band(style, tmp_path):
     assert (w, h) == (1200, 900) and round(w * scale) == 1920
     assert top >= 150 - 0.01 and top + h0 * s <= 750 + 0.01
     assert left >= -0.01 and left + w0 * s <= 1200 + 0.01
+
+
+def test_pilates_longform_style_is_fixed_to_ivory():
+    from notionwp.longform_thumb import fixed_style
+
+    assert fixed_style("지혜로운 필라테스") == "ivory"
+    assert fixed_style("") == ""
