@@ -33,6 +33,20 @@ PYTHONPATH=src python3 -m notionwp.longform_thumb list
 - `[]` 이면 "롱폼 썸네일 대상 없음" 한 줄로 끝냅니다. 흔하고 정상입니다.
 - 한 회차에 **최대 6건**만 처리합니다(구독 사용량 보호). 나머지는 다음 회차로 넘깁니다.
 
+## 1.5 고객사마다: 캔버스와 잘림 확인 (글자 잘림 방지 — 1순위)
+
+틀은 고객사 디자인 파일(`designs/<고객사>.json`)의 `width`·`height` 를 캔버스로 쓰고,
+`view_crops` 에 적힌 비율(가로/세로)로 사이트가 가운데를 잘라 보여 준다고 보고
+**모든 잘림에서 살아남는 영역 안에만** 글자·로고를 넣습니다. 예) 지혜로운 필라테스는
+1200x900 캔버스, `view_crops: [1.3333, 2.0]`(목록 카드 4:3 · 글 상세 커버 2:1).
+
+- 디자인 파일에 `view_crops` 가 **없는** 고객사를 처음 처리할 때는, `wp-thumbnail` 스킬
+  「1.5단계」와 같은 방법(테마 style.css 의 `aspect-ratio`·`object-fit`, srcset 크기)으로
+  그 사이트가 롱폼 썸네일을 어떤 비율로 잘라 보여 주는지 재고, 디자인 파일에
+  `view_crops` 한 줄만 추가해 커밋합니다. 다른 값(색·크기·골격)은 절대 바꾸지 않습니다.
+  자르지 않는 사이트면 `view_crops: []` 로 적어 재 봤다는 표시를 남깁니다.
+- 사이트가 열리지 않아 알 수 없으면 추측해서 적지 말고 비워 둡니다(캔버스 전체를 씁니다).
+
 ## 2. 행마다: 틀 고르기
 
 | 틀 | 어울리는 주제 | 배경 사진 | 글자 |
@@ -65,7 +79,9 @@ node .claude/skills/gpt-image/scripts/gpt_image.mjs generate \
 ```
 
 프롬프트에 **반드시** 넣을 것:
-- `Photorealistic`, `wide 16:9 landscape`
+- `Photorealistic`, 캔버스 비율(`wide 16:9 landscape`, 1200x900 이면 `wide 4:3 landscape`)
+- `view_crops` 로 위아래가 잘리는 고객사면: `the top and bottom N percent may be cropped later, so keep every important element inside the central horizontal band`
+  (N = 잘리는 비율. 필라테스는 17)
 - 틀별 빈자리: card → `the center is soft, uncluttered blur for a headline card`,
   bottomleft → `subject on the right half; the left half is clean, softly lit background`,
   klavuu → `subject center-right; the top-right corner is plain background; the lower part fades into soft white haze`,
@@ -90,6 +106,13 @@ PYTHONPATH=src python3 -m notionwp.longform_thumb render --style card \
 
 - 로고는 `designs/logos/<고객사>.png` 를 씁니다. 없으면 `--brand "<고객사명>"` 으로 글자를 대신 넣습니다.
 - `--accent '#RRGGBB'` 로 card 분류 표시 색·ivory 글자색을 고객사 색에 맞출 수 있습니다(없으면 기본).
+- 사이트가 잘라 보여 주는 모습을 만들어 **직접 열어** 봅니다. 잘린 칸에서 글자·로고가
+  하나라도 잘리면 붙이지 않습니다(틀이 안전 영역에 맞추므로 정상이면 잘리지 않습니다).
+
+```bash
+PYTHONPATH=src python3 -m notionwp.longform_thumb crops --file ../generated-images/lt-xxxxxxxx-final.png --client "<고객사>" --out ../generated-images/lt-xxxxxxxx-crops.png
+```
+
 - 결과 PNG 를 **직접 열어** 글자가 사진과 겹쳐 안 읽히거나 로고가 묻히지 않는지 봅니다.
   문제가 있으면 다른 틀로 다시 얹거나 배경을 다시 만듭니다.
 - 확인되면 붙입니다. 붙이기 직전에 그 행이 아직 비어 있는 롱폼인지 다시 확인하고,

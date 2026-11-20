@@ -35,7 +35,7 @@ from typing import Any
 from . import notion_api as napi
 from .config import ConfigError, load_secrets
 from .designs import load as load_design
-from .designs import safe_name
+from .designs import path_for, safe_name
 from .notion_api import NotionClient
 from .registry import load_clients
 
@@ -162,37 +162,46 @@ NOISE = (
 )
 
 
-def build_html(
-    style: str,
-    bg: Path,
-    line1: str,
-    line2: str,
-    *,
-    pill: str = "",
-    client: str = "",
-    brand: str = "",
-    accent: str = "",
-) -> tuple[str, int, int, float]:
-    """(html, 뷰포트 가로, 세로, 배율)."""
-    if style not in STYLES:
-        raise ValueError(f"모르는 틀입니다: {style} (쓸 수 있는 것: {', '.join(STYLES)})")
-    l1, l2 = _inline(line1), _inline(line2)
+def canvas_for(client: str) -> tuple[int, int, tuple[float, ...]]:
+    """(가로, 세로, 사이트가 잘라 보여 주는 비율들).
+
+    고객사 디자인 파일의 width·height 를 캔버스로 쓰고, `view_crops`(가로/세로 비율 목록)에
+    적힌 비율로 사이트가 가운데를 잘라 보여 준다고 봅니다. 예) 지혜로운 필라테스는
+    1200x900 캔버스를 목록 카드 4:3, 글 상세 커버 2:1 로 잘라 보여 줍니다.
+    디자인 파일이 없으면 1920x1080, 잘림 없음.
+    """
+    if client:
+        path = path_for(client)
+        if path.exists():
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            w, h = int(raw.get("width", 1920)), int(raw.get("height", 1080))
+            crops = tuple(float(r) for r in raw.get("view_crops") or ())
+            return w, h, crops
+    return 1920, 1080, ()
+
+
+def safe_box(w: int, h: int, crops: tuple[float, ...], margin: float = 0.0) -> tuple[float, float, float, float]:
+    """모든 잘림 비율에서 살아남는 가운데 영역 (x, y, 가로, 세로)."""
+    sw, sh = float(w), float(h)
+    for r in crops:
+        if r <= 0:
+            continue
+        if w / h > r:  # 캔버스가 더 넓으면 좌우가 잘림
+            sw = min(sw, h * r)
+        else:  # 위아래가 잘림
+            sh = min(sh, w / r)
+    sw, sh = sw * (1 - 2 * margin), sh * (1 - 2 * margin)
+    return (w - sw) / 2, (h - sh) / 2, sw, sh
+
+
+def _layers(style, bg, l1, l2, logo_tag, pill, accent):
+    """(배경층 css, 배경층 html, 글자층 css, 글자층 html, 글자층 원래 가로, 세로, 글꼴)."""
     bg_uri = bg.resolve().as_uri()
-    logo = _logo_uri(client)
-    logo_tag = f'<img class=logo src="{logo}">' if logo else (
-        f"<div class='logo brandtext'>{html.escape(brand or client)}</div>" if (brand or client) else ""
-    )
-    base = (
-        _font_faces()
-        + "html,body{margin:0}.c{position:relative;overflow:hidden}"
-        ".bg{position:absolute;inset:0;background-size:cover;background-position:center}"
-        f".grain{{position:absolute;inset:0;background-image:url(\"{NOISE}\");opacity:.10;mix-blend-mode:overlay}}"
-    )
+    bg_div = f'<div class=bg style="background-image:url({bg_uri})"></div>'
 
     if style == "card":
         tone = accent or "#c98b8b"
-        css = (
-            ".c{width:1920px;height:1080px;font-family:W}"
+        fg_css = (
             ".logo{position:absolute;top:70px;left:120px;height:84px}"
             ".brandtext{height:auto;font-weight:700;font-size:40px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.25)}"
             ".card{position:absolute;left:50%;top:53%;transform:translate(-50%,-50%);padding:84px 130px 96px;"
@@ -204,65 +213,106 @@ def build_html(
             ".l2{font-weight:700;font-size:132px;letter-spacing:-4px;line-height:1.1}"
         )
         pill_tag = f"<div class=pill>{html.escape(pill)}</div>" if pill else ""
-        body = (
-            f'<div class=bg style="background-image:url({bg_uri})"></div>{logo_tag}'
-            f"<div class=card>{pill_tag}<div class=l1>{l1}</div><div class=l2>{l2}</div></div>"
-        )
-        return f"<style>{base}{css}</style><div class=c>{body}</div>", 1920, 1080, 1.0
+        fg = f"{logo_tag}<div class=card>{pill_tag}<div class=l1>{l1}</div><div class=l2>{l2}</div></div>"
+        return "", bg_div, fg_css, fg, 1920, 1080, "W"
 
     if style == "bottomleft":
         r, g, b = _lighten(_sample_tint(bg, (0, 0.2, 0.3, 0.9)), 0.45)
-        css = (
-            ".c{width:1920px;height:1080px;font-family:W;color:#141414}"
+        bg_css = (
             f".fade{{position:absolute;inset:0;background:linear-gradient(90deg,rgba({r},{g},{b},.92) 0%,"
             f"rgba({r},{g},{b},.55) 40%,rgba({r},{g},{b},0) 60%)}}"
+        )
+        fg_css = (
+            ".stage{color:#141414}"
             ".logo{position:absolute;top:70px;left:120px;height:84px}"
             ".brandtext{height:auto;font-weight:700;font-size:40px}"
             ".t{position:absolute;left:120px;bottom:150px}"
             ".l1{font-weight:600;font-size:62px;letter-spacing:-1.5px;margin-bottom:24px}"
             ".l2{font-weight:700;font-size:100px;letter-spacing:-3px;line-height:1.12}"
         )
-        body = (
-            f'<div class=bg style="background-image:url({bg_uri})"></div><div class=fade></div>'
-            f"{logo_tag}<div class=t><div class=l1>{l1}</div><div class=l2>{l2}</div></div>"
-        )
-        return f"<style>{base}{css}</style><div class=c>{body}</div>", 1920, 1080, 1.0
+        fg = f"{logo_tag}<div class=t><div class=l1>{l1}</div><div class=l2>{l2}</div></div>"
+        return bg_css, bg_div + "<div class=fade></div>", fg_css, fg, 1920, 1080, "W"
 
     if style == "klavuu":
-        # 클라뷰 원본(1024x594)을 픽셀 단위로 잰 값. 1920 폭으로 키워 저장합니다.
-        css = (
-            ".c{width:1024px;height:594px;font-family:P;color:#111}"
+        # 클라뷰 원본(1024x594)을 픽셀 단위로 잰 값.
+        bg_css = (
             ".haze{position:absolute;inset:0;background:linear-gradient(0deg,rgba(255,255,255,.88) 0%,"
             "rgba(255,255,255,.45) 22%,rgba(255,255,255,0) 46%),linear-gradient(90deg,"
             "rgba(255,255,255,.35) 0%,rgba(255,255,255,0) 45%)}"
+        )
+        fg_css = (
+            ".stage{color:#111}"
             ".logo{position:absolute;top:30px;right:35px;width:175px}"
             ".brandtext{width:auto;font-weight:800;font-size:22px;letter-spacing:2px}"
             ".l1{position:absolute;left:70px;top:384px;font-weight:500;font-size:36px;letter-spacing:.2px;white-space:nowrap}"
             ".l2{position:absolute;left:70px;top:439px;font-weight:500;font-size:54px;letter-spacing:1px;white-space:nowrap}"
             ".l1 b,.l2 b{font-weight:800}"
         )
-        body = (
-            f'<div class=bg style="background-image:url({bg_uri})"></div><div class=haze></div>'
-            f"{logo_tag}<div class=l1>{l1}</div><div class=l2>{l2}</div>"
-        )
-        return f"<style>{base}{css}</style><div class=c>{body}</div>", 1024, 594, 1920 / 1024
+        fg = f"{logo_tag}<div class=l1>{l1}</div><div class=l2>{l2}</div>"
+        return bg_css, bg_div + "<div class=haze></div>", fg_css, fg, 1024, 594, "P"
 
     # ivory
-    css = (
-        ".c{width:1920px;height:1080px;font-family:W}"
+    ink = accent or "#1d2a40"
+    bg_css = (
         ".haze{position:absolute;inset:0;background:linear-gradient(90deg,rgba(250,245,237,.96) 0%,"
         "rgba(250,245,237,.86) 30%,rgba(250,245,237,.35) 50%,rgba(250,245,237,0) 62%)}"
-        f".t{{position:absolute;left:120px;top:340px;color:{accent or '#1d2a40'}}}"
+    )
+    fg_css = (
+        f".t{{position:absolute;left:120px;top:340px;color:{ink}}}"
         ".t .l1{color:#6b6255;font-weight:600;font-size:64px;letter-spacing:-1.5px;margin-bottom:24px}"
         ".t .l2{font-weight:700;font-size:112px;letter-spacing:-3.5px;line-height:1.1}"
         ".logo{position:absolute;left:120px;bottom:80px;height:76px}"
-        f".brandtext{{height:auto;font-weight:700;font-size:38px;color:{accent or '#1d2a40'}}}"
+        f".brandtext{{height:auto;font-weight:700;font-size:38px;color:{ink}}}"
     )
-    body = (
-        f'<div class=bg style="background-image:url({bg_uri})"></div><div class=haze></div><div class=grain></div>'
-        f"<div class=t><div class=l1>{l1}</div><div class=l2>{l2}</div></div>{logo_tag}"
+    fg = f"<div class=t><div class=l1>{l1}</div><div class=l2>{l2}</div></div>{logo_tag}"
+    return bg_css, bg_div + "<div class=haze></div><div class=grain></div>", fg_css, fg, 1920, 1080, "W"
+
+
+def build_html(
+    style: str,
+    bg: Path,
+    line1: str,
+    line2: str,
+    *,
+    pill: str = "",
+    client: str = "",
+    brand: str = "",
+    accent: str = "",
+    canvas: tuple[int, int, tuple[float, ...]] | None = None,
+) -> tuple[str, int, int, float]:
+    """(html, 캔버스 가로, 세로, 저장 배율).
+
+    배경·번짐은 캔버스 전체에 깔고, 글자·로고 층은 운영자가 고른 원래 배치(1920x1080,
+    클라뷰는 1024x594)를 그대로 유지한 채 '모든 잘림에서 살아남는 영역' 안에 맞춰
+    줄여 넣습니다. 그래서 사이트가 4:3 카드나 2:1 커버로 잘라도 글자가 잘리지 않습니다.
+    """
+    if style not in STYLES:
+        raise ValueError(f"모르는 틀입니다: {style} (쓸 수 있는 것: {', '.join(STYLES)})")
+    w, h, crops = canvas or canvas_for(client)
+    sx, sy, sw, sh = safe_box(w, h, crops)
+    l1, l2 = _inline(line1), _inline(line2)
+    logo = _logo_uri(client)
+    logo_tag = f'<img class=logo src="{logo}">' if logo else (
+        f"<div class='logo brandtext'>{html.escape(brand or client)}</div>" if (brand or client) else ""
     )
-    return f"<style>{base}{css}</style><div class=c>{body}</div>", 1920, 1080, 1.0
+    bg_css, bg_html, fg_css, fg_html, w0, h0, family = _layers(style, bg, l1, l2, logo_tag, pill, accent)
+    scale = min(sw / w0, sh / h0)
+    left = sx + (sw - w0 * scale) / 2
+    top = sy + (sh - h0 * scale) / 2
+    css = (
+        _font_faces()
+        + "html,body{margin:0}"
+        + f".c{{position:relative;overflow:hidden;width:{w}px;height:{h}px}}"
+        ".bg{position:absolute;inset:0;background-size:cover;background-position:center}"
+        f".grain{{position:absolute;inset:0;background-image:url(\"{NOISE}\");opacity:.10;mix-blend-mode:overlay}}"
+        f".stage{{position:absolute;left:{left:.2f}px;top:{top:.2f}px;width:{w0}px;height:{h0}px;"
+        f"transform-origin:0 0;transform:scale({scale:.5f});font-family:{family}}}"
+        + bg_css
+        + fg_css
+    )
+    doc = f"<style>{css}</style><div class=c>{bg_html}<div class=stage>{fg_html}</div></div>"
+    # 저장 해상도는 가로 1920 이상이 되게 키웁니다(1200 캔버스 → 1920).
+    return doc, w, h, max(1.0, 1920 / w)
 
 
 def render(style: str, bg: Path, line1: str, line2: str, out: Path, **kw: str) -> Path:
@@ -288,6 +338,36 @@ def render(style: str, bg: Path, line1: str, line2: str, out: Path, **kw: str) -
             browser.close()
     finally:
         page_file.unlink(missing_ok=True)
+    return out
+
+
+def crop_previews(file: Path, client: str, out: Path) -> Path:
+    """완성본을 사이트가 자르는 비율대로 잘라 나란히 붙인 확인용 그림."""
+    from PIL import Image, ImageDraw
+
+    _, _, crops = canvas_for(client)
+    with Image.open(file) as im:
+        im = im.convert("RGB")
+        W, H = im.size
+        shots = [("full", im.copy())]
+        for r in crops:
+            if W / H > r:
+                cw, ch = int(H * r), H
+            else:
+                cw, ch = W, int(W / r)
+            x, y = (W - cw) // 2, (H - ch) // 2
+            shots.append((f"{r:.2f}:1", im.crop((x, y, x + cw, y + ch))))
+    tile_h = 360
+    tiles = [(label, s.resize((int(s.width * tile_h / s.height), tile_h))) for label, s in shots]
+    sheet = Image.new("RGB", (sum(t.width for _, t in tiles) + 20 * (len(tiles) + 1), tile_h + 60), "white")
+    x = 20
+    draw = ImageDraw.Draw(sheet)
+    for label, t in tiles:
+        sheet.paste(t, (x, 40))
+        draw.text((x, 12), label, fill=(60, 60, 60))
+        x += t.width + 20
+    out = Path(out)
+    sheet.save(out)
     return out
 
 
@@ -336,6 +416,11 @@ def main(argv: list[str] | None = None) -> int:
     p_render.add_argument("--accent", default="", help="card 분류 표시 색 / ivory 글자색 (#RRGGBB)")
     p_render.add_argument("--out", required=True)
 
+    p_crops = sub.add_parser("crops", help="완성본을 사이트가 자르는 비율대로 잘라 본 확인용 그림")
+    p_crops.add_argument("--file", required=True)
+    p_crops.add_argument("--client", required=True)
+    p_crops.add_argument("--out", required=True)
+
     p_attach = sub.add_parser("attach", help="만든 PNG 를 그 행의 썸네일 칸에 붙임")
     p_attach.add_argument("--page", required=True)
     p_attach.add_argument("--file", required=True)
@@ -351,6 +436,8 @@ def main(argv: list[str] | None = None) -> int:
                 pill=args.pill, client=args.client, brand=args.brand, accent=args.accent,
             )
             print(out)
+        elif args.cmd == "crops":
+            print(crop_previews(Path(args.file), args.client, Path(args.out)))
         else:
             attach(args.page, Path(args.file), args.client)
             print("붙였습니다")

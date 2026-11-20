@@ -21,5 +21,9 @@
   "width": 1200,
   "height": 900,
   "logo": "지혜로운 필라테스.png",
-  "logo_mime": "image/png"
+  "logo_mime": "image/png",
+  "view_crops": [
+    1.3333,
+    2.0
+  ]
 }

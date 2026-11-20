@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from notionwp.longform_thumb import STYLES, _inline, build_html, eligible, wants_longform
+from notionwp.longform_thumb import STYLES, _inline, build_html, eligible, safe_box, wants_longform
 from notionwp.registry import build_config, load_defaults
 
 DEFAULTS = load_defaults()
@@ -71,3 +71,28 @@ def test_every_style_builds_with_both_lines(style, tmp_path):
 def test_unknown_style_is_refused(tmp_path):
     with pytest.raises(ValueError):
         build_html("fancy", Path(tmp_path / "x.png"), "a", "b")
+
+
+def test_safe_box_survives_every_site_crop():
+    # 지혜로운 필라테스: 1200x900 캔버스를 목록 4:3, 커버 2:1 로 자름 → 세로 가운데 600px 띠
+    assert safe_box(1200, 900, (4 / 3, 2.0)) == (0.0, 150.0, 1200.0, 600.0)
+    # 잘림이 없으면 캔버스 전체
+    assert safe_box(1920, 1080, ()) == (0.0, 0.0, 1920.0, 1080.0)
+    # 넓은 캔버스를 4:3 으로 자르면 좌우가 잘림
+    x, y, w, h = safe_box(1920, 1080, (4 / 3,))
+    assert (round(w), h) == (1440, 1080.0) and round(x) == 240
+
+
+@pytest.mark.parametrize("style", STYLES)
+def test_text_layer_is_placed_inside_the_safe_band(style, tmp_path):
+    import re as _re
+
+    bg = tmp_path / "bg.png"
+    bg.write_bytes(b"")
+    doc, w, h, scale = build_html(style, bg, "윗줄", "제목", canvas=(1200, 900, (4 / 3, 2.0)))
+    m = _re.search(r"\.stage\{position:absolute;left:([\d.]+)px;top:([\d.]+)px;width:(\d+)px;height:(\d+)px;"
+                   r"transform-origin:0 0;transform:scale\(([\d.]+)\)", doc)
+    left, top, w0, h0, s = (float(v) for v in m.groups())
+    assert (w, h) == (1200, 900) and round(w * scale) == 1920
+    assert top >= 150 - 0.01 and top + h0 * s <= 750 + 0.01
+    assert left >= -0.01 and left + w0 * s <= 1200 + 0.01
